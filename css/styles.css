@@ -1,0 +1,70 @@
+ 
+body, html {
+    height: 100%;
+}
+
+#application {
+    height: 100%;
+}
+
+.application-container {
+    height: 100%;
+}
+
+.application-container > .row1 {
+    height: 50px;
+    padding-top: 5px;
+}
+
+.application-container > .row2 {
+    height: calc(100% - 50px);
+}
+
+.application-container > .row2 > .tab-content {
+    height: calc(100% - 42px);
+}
+
+.application-container > .row2 > .tab-content > .tab-pane {
+    height: 100%;
+}
+
+.application-container > .row2 > .tab-content > .tab-pane > .container-fluid {
+    height: 100%;
+}
+
+.application-container > .row2 > .tab-content > .tab-pane > .container-fluid > .row {
+    height: 100%;
+}
+
+.tags-sidebar {
+    border-right: 1px solid rgba(0,0,0,.1);
+}
+
+.articles-sidebar {
+    border-right: 1px solid rgba(0,0,0,.1);
+}
+
+.page-content {
+    border-right: 1px solid rgba(0,0,0,.1);
+}
+
+.close-tab-button {
+    text-decoration: none;
+}
+
+.close-tab-button:hover {
+    text-decoration: none;
+}
+
+.filter-row > div {
+    padding: 5px 0px 5px 0px;
+}
+
+.filter-row .btn {
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+.tab-pane:focus {
+    outline: none;
+}
