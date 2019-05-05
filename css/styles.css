@@ -48,6 +48,10 @@ body, html {
     border-right: 1px solid rgba(0,0,0,.1);
 }
 
+.page-content > div {
+    height: 100%;
+}
+
 .close-tab-button {
     text-decoration: none;
 }
@@ -74,5 +78,5 @@ body, html {
 }
 
 .CodeMirror {
-    height: calc(100% - 135px);
+    height: calc(100% - 165px);
 }
