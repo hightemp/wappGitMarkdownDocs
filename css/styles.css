@@ -68,3 +68,11 @@ body, html {
 .tab-pane:focus {
     outline: none;
 }
+
+.buttons-row > div {
+    padding: 5px 0px 5px 0px;
+}
+
+.CodeMirror {
+    height: calc(100% - 135px);
+}

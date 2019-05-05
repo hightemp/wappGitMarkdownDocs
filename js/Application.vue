@@ -21,7 +21,10 @@
             >
                 <template slot="title">
                     {{ oItem.sName }}
-                    <b-link class="close-tab-button">&#10005;</b-link>
+                    <b-link 
+                        class="close-tab-button"
+                        @click="fnCloseTab(iIndex)"
+                    >&#10005;</b-link>
                 </template>
                 <repository-tab-content
                     :oRepository="oItem"
@@ -69,13 +72,32 @@ export default Vue.extend({
                         "article1",
                         "articles2"
                     ]
+                },
+                {
+                    sName: "test2",
+                    sURL: "git@github.com:hightemp/wappGitMarkdownDocs.git",
+                    oTags: {
+                        "tag1": [
+                            "article21"
+                        ],
+                        "tag2": [
+                            "articles22"
+                        ]
+                    },
+                    aArticles: [
+                        "article21",
+                        "articles22"
+                    ]
                 }
             ]
         }
     },
   
     methods: {
-        
+        fnCloseTab: function(iIndex)
+        {
+            this.oRepositories.splice(iIndex, 1);
+        }
     },
     
     mounted: function()
