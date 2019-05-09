@@ -41,6 +41,16 @@ import RepositoryTabContent from '../js/RepositoryTabContent.vue'
 
 import Vue, { VueConstructor } from 'vue'
 
+import Snotify, { SnotifyPosition } from 'vue-snotify'
+
+const oOptions = {
+    toast: {
+        position: SnotifyPosition.rightTop
+    }
+}
+
+Vue.use(Snotify, oOptions)
+
 export default Vue.extend({
     name: 'Application',
     
@@ -97,6 +107,28 @@ export default Vue.extend({
         fnCloseTab: function(iIndex)
         {
             this.oRepositories.splice(iIndex, 1);
+        },
+        fnGetRepositories: function()
+        {
+            this
+                .$http
+                .post(
+                    '',
+                    {
+                        action: 'get_repositories'
+                    },
+                    {
+                        emulateJSON: true
+                    }
+                ).then(function(oResponse)
+                {
+                    if (oResponse.body.status=='error') {
+                        vm.$snotify.error('Error', oResponse.body.message);
+                        return;
+                    }
+                    
+                    console.log(oResponse.body.data);
+                });
         }
     },
     

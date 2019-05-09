@@ -5,14 +5,29 @@
             <div class="tags-sidebar col-xl-2">
                 <div class="container-fluid">
                     <div class="filter-row row flex-xl-nowrap2">
-                        <div class="col-xl-10">
+                        <div class="col-xl-8">
                             <b-form-input 
                                 placeholder="Filter"
                                 v-model="sTagFilterString"
                             ></b-form-input>
                         </div>
                         <div class="col-xl-2">
-                            <b-button variant="success">Add</b-button>
+                            <b-button 
+                                variant="success"
+                                @click="fnAddTag"
+                                block
+                            >
+                                <i class="fa fa-plus"></i>
+                            </b-button>
+                        </div>
+                        <div class="col-xl-2">
+                            <b-button 
+                                variant="danger" 
+                                @click="fnRemoveTag"
+                                block
+                            >
+                                <i class="fa fa-trash"></i>
+                            </b-button>
                         </div>
                     </div>
                 </div>
@@ -40,14 +55,29 @@
             <div class="articles-sidebar col-xl-2">
                 <div class="container-fluid">
                     <div class="filter-row row flex-xl-nowrap2">
-                        <div class="col-xl-10">
+                        <div class="col-xl-8">
                             <b-form-input 
                                 placeholder="Filter"
                                 v-model="sArticleFilterString"
                             ></b-form-input>
                         </div>
                         <div class="col-xl-2">
-                            <b-button variant="success">Add</b-button>
+                            <b-button 
+                                variant="success"
+                                @click="fnAddArticle" 
+                                block
+                            >
+                                <i class="fa fa-plus"></i>
+                            </b-button>
+                        </div>
+                        <div class="col-xl-2">
+                            <b-button 
+                                variant="danger" 
+                                @click="fnRemoveArticle"
+                                block
+                            >
+                                <i class="fa fa-trash"></i>
+                            </b-button>
                         </div>
                     </div>
                 </div>
@@ -57,8 +87,8 @@
                         href="#"
                         :active="iActiveArticle==iIndex"
                         v-if="sArticleFilterString=='' 
-                            || sArticleFilterString!='' 
-                            && sItem.indexOf(sArticleFilterString)!=-1"
+                            || (sArticleFilterString!='' 
+                                && sItem.indexOf(sArticleFilterString)!=-1)"
                         @click="fnSelectArticle(iIndex)"
                     >
                     {{ sItem }}
@@ -78,6 +108,47 @@
                     </div>
                     
                     <textarea class="page-content-textarea"></textarea>
+                    
+                    <div class="container-fluid">
+                        <div class="filter-row row flex-xl-nowrap2">
+                            <div class="col-xl-11">
+                                <b-form-input 
+                                    placeholder="Filter"
+                                    v-model="sCurrentArticleTagFilterString"
+                                ></b-form-input>
+                            </div>
+                            <b-form-checkbox 
+                                v-model="bCurrentArticleFilterSelectedTags" 
+                                button
+                                class="col-xl-1"
+                                button-variant="info"
+                            >
+                                <i class="fa fa-check-square"></i>
+                            </b-form-checkbox>
+                        </div>
+                    </div>
+                    <div class="current-article-tags-block">
+                        <b-list-group>
+                            <b-list-group-item 
+                                v-for="(aItem, sKey) in oRepository.oTags"
+                                v-if="(sCurrentArticleTagFilterString=='' 
+                                        || (sCurrentArticleTagFilterString!='' 
+                                            && sKey.indexOf(sCurrentArticleTagFilterString)!=-1)
+                                      )
+                                      && (!bCurrentArticleFilterSelectedTags 
+                                            || (bCurrentArticleFilterSelectedTags 
+                                                && fnFindArticleInTag(aArticles[iActiveArticle], sKey)!=-1)
+                                      )"
+                            >
+                                <b-form-checkbox
+                                    :checked="fnFindArticleInTag(aArticles[iActiveArticle], sKey)==-1 ? false : true"
+                                    @change="$event ? fnAddArticleTag(aArticles[iActiveArticle], sKey) : fnRemoveArticleTag(aArticles[iActiveArticle], sKey)"
+                                >
+                                    {{ sKey }}
+                                </b-form-checkbox>
+                            </b-list-group-item>
+                        </b-list-group>
+                    </div> 
                 </div>
             </div>
             <div class="page-preview col-xl-4">
@@ -127,6 +198,8 @@ export default {
             iActiveArticle: -1,
             sTagFilterString: "",
             sArticleFilterString: "",
+            sCurrentArticleTagFilterString: "",
+            bCurrentArticleFilterSelectedTags: false,
             oSimpleMDE: null
         };
     },
@@ -139,20 +212,83 @@ export default {
             }
             
             return this.oRepository.oTags[this.sActiveTag];
-        }
+        },
     },
     
     methods: {
+        fnAddTag: function()
+        {
+            
+        },
+        fnRemoveTag: function()
+        {
+            if (this.sActiveTag=="__all__") {
+                return false;
+            }
+            
+            var sActiveTag = this.sActiveTag;
+            var sArticle = this.oRepository.oTags[sActiveTag][this.iActiveArticle];
+                
+            this.fnSelectTag('__all__');
+            this.fnSelectArticleWithName(sArticle);
+            
+            delete this.oRepository.oTags[sActiveTag];
+        },
+        fnAddArticle: function()
+        {
+            
+        },
+        fnRemoveArticle: function()
+        {
+            var iActiveArticle = this.iActiveArticle;
+            
+            if (this.iActiveArticle>0) {
+                this.iActiveArticle--;
+            }
+            
+            var sArticle = this.aArticles[iActiveArticle];
+            
+            var iIndex = this.oRepository.aArticles.indexOf(sArticle);
+            this.oRepository.aArticles.splice(iIndex, 1);
+            
+            for (var sTag in this.oRepository.oTags) {
+                var iIndex = this.oRepository.oTags[sTag].indexOf(sArticle);
+                if (iIndex>-1) {
+                    this.oRepository.oTags[sTag].splice(iIndex, 1);
+                }
+            }
+        },
+        fnAddArticleTag(sArticle, sTag)
+        {
+            this.oRepository.oTags[sTag].push(sArticle);
+        },
+        fnRemoveArticleTag(sArticle, sTag)
+        {
+            var iIndex = this.fnFindArticleInTag(sArticle, sTag);
+            if (this.iActiveArticle == iIndex) {
+                var sArticle = this.oRepository.oTags[sTag][iIndex];
+                
+                this.fnSelectTag('__all__');
+                this.fnSelectArticleWithName(sArticle);
+            }
+            this.oRepository.oTags[sTag].splice(iIndex, 1);
+        },
+        fnFindArticleInTag(sArticle, sTag)
+        {
+            return this.oRepository.oTags[sTag].indexOf(sArticle);
+        },
         fnSelectTag: function(sTagName)
         {
             this.iActiveArticle = -1;
             this.sActiveTag = sTagName;
         },
+        fnSelectArticleWithName: function(sName)
+        {
+            this.fnSelectArticle(this.aArticles.indexOf(sName));
+        },
         fnSelectArticle: function(iIndex)
         {
             this.iActiveArticle = iIndex;
-            
-            console.log(this.iActiveArticle, this.aArticles[this.iActiveArticle]);
             
             var oThis = this;
             

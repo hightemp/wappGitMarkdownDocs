@@ -11,11 +11,7 @@ import '../css/styles.css'
 
 Vue.use(BootstrapVue)
 
-//import { Layout } from 'bootstrap-vue/es/components'
-
-//Vue.use(Layout)
-
-new Vue({
+window.oApplication = new Vue({
   el: '#application',
   render: h => h(App)
 })
