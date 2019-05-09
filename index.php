@@ -5,6 +5,15 @@ function fnPath(...$aArguments)
     return join(DIRECTORY_SEPARATOR, $aArguments);
 }
 
+function fnRemoveDirectory($sDir) 
+{ 
+    $aFiles = array_diff(scandir($sDir), array('.','..'));
+    foreach ($aFiles as $sFile) {
+      (is_dir("$sDir/$sFile")) ? fnRemoveDirectory("$sDir/$sFile") : unlink("$sDir/$sFile"); 
+    } 
+    return rmdir($sDir); 
+}
+
 function fnGetRepositoryInfo($sRepositoryName)
 {
     global $sRepositoriesDir;
@@ -15,6 +24,7 @@ function fnGetRepositoryInfo($sRepositoryName)
     
     $aResult = [
         'sName' => $sRepositoryName,
+        'sURL' => '',
         'sPath' => $sRepositoryDir,
         'aArticles' => [],
         'oTags' => []
@@ -56,18 +66,36 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             $aRepositories = [];
             
             foreach ($aGitDirectories as $sDir) {
-                $aRepositories[] = fnGetRepositoryInfo($sDir);
+                $aRepositories[] = fnGetRepositoryInfo(basename(dirname($sDir)));
             }
             
             $aResponse['data'] = $aRepositories;
         }
+        
         if ($_POST['action']=='add_repository') {
+            if (!preg_match("/git@github\.com:\w+\/(\w+)\.git/i", $_POST['url'], $aMatches)) {
+                throw new Exception("Wrong repository url");
+            }
+            
+            $sRepositoryName = $aMatches[1];
+
+            if (is_dir(fnPath($sRepositoriesDir, $sRepositoryName))) {
+                throw new Exception("Dir $sRepositoryName exists");
+            }
+            
             chdir($sRepositoriesDir);
             shell_exec('git clone '.$_POST['url']);
+            
+            $aResponse['data'] = fnGetRepositoryInfo($sRepositoryName);
+        }
+        
+        if ($_POST['action']=='remove_repository') {
+            fnRemoveDirectory(fnPath($sRepositoriesDir, $_POST['name']));
         }
     } catch (Exception $oException) {
         $aResponse['status'] = 'error';
-        $aResponse['message'] = $oException->getLine().": ".$oException->getMessage();
+        $aResponse['message'] = $oException->getMessage();
+        $aResponse['line'] = $oException->getLine();
     }
     
     die(json_encode($aResponse));

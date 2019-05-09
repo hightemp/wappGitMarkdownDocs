@@ -5,18 +5,25 @@
             <div class="container-fluid">
                 <div class="row flex-xl-nowrap2">
                     <div class="col-xl-11">
-                        <b-form-input placeholder="git@github.com:hightemp/wappGitMarkdownDocs.git">
+                        <b-form-input 
+                            placeholder="git@github.com:hightemp/wappGitMarkdownDocs.git"
+                            ref="repository_url"
+                        >
                         </b-form-input>
                     </div>
                     <div class="col-xl-1">
-                        <b-button variant="success" block>Add</b-button>
+                        <b-button 
+                            variant="success"
+                            @click="fnAddRepository"
+                            block
+                        >Add</b-button>
                     </div>
                 </div>
             </div>
         </div>
         <b-tabs class="row2">
             <b-tab 
-                v-for="(oItem, iIndex) in oRepositories" 
+                v-for="(oItem, iIndex) in aRepositories" 
                 :active="iActiveTab == -1 && iIndex == 0 || iActiveTab == iIndex"
             >
                 <template slot="title">
@@ -32,6 +39,7 @@
                 </repository-tab-content>
             </b-tab>
         </b-tabs>
+        <vue-snotify/>
     </div>
 </template>
 
@@ -40,16 +48,6 @@
 import RepositoryTabContent from '../js/RepositoryTabContent.vue'
 
 import Vue, { VueConstructor } from 'vue'
-
-import Snotify, { SnotifyPosition } from 'vue-snotify'
-
-const oOptions = {
-    toast: {
-        position: SnotifyPosition.rightTop
-    }
-}
-
-Vue.use(Snotify, oOptions)
 
 export default Vue.extend({
     name: 'Application',
@@ -66,7 +64,8 @@ export default Vue.extend({
     {
         return {
             iActiveTab: -1,
-            oRepositories: [
+            aRepositories: [
+            /*
                 {
                     sName: "test",
                     sURL: "git@github.com:hightemp/wappGitMarkdownDocs.git",
@@ -99,6 +98,7 @@ export default Vue.extend({
                         "articles22"
                     ]
                 }
+            */
             ]
         }
     },
@@ -106,7 +106,23 @@ export default Vue.extend({
     methods: {
         fnCloseTab: function(iIndex)
         {
-            this.oRepositories.splice(iIndex, 1);
+            this
+                .$http
+                .post(
+                    '',
+                    {
+                        action: 'remove_repository',
+                        name: this.aRepositories[iIndex].sName
+                    }
+                ).then(function(oResponse)
+                {
+                    if (oResponse.body.status=='error') {
+                        this.$snotify.error(oResponse.body.message, 'Error');
+                        return;
+                    }
+                    
+                    this.aRepositories.splice(iIndex, 1);
+                });
         },
         fnGetRepositories: function()
         {
@@ -116,25 +132,46 @@ export default Vue.extend({
                     '',
                     {
                         action: 'get_repositories'
-                    },
-                    {
-                        emulateJSON: true
                     }
                 ).then(function(oResponse)
                 {
                     if (oResponse.body.status=='error') {
-                        vm.$snotify.error('Error', oResponse.body.message);
+                        this.$snotify.error(oResponse.body.message, 'Error');
                         return;
                     }
                     
-                    console.log(oResponse.body.data);
+                    console.log('fnGetRepositories', oResponse.body.data);
+                    
+                    this.aRepositories = oResponse.body.data;
+                });
+        },
+        fnAddRepository: function()
+        {
+            this
+                .$http
+                .post(
+                    '',
+                    {
+                        action: 'add_repository',
+                        url: this.$refs.repository_url.$el.value
+                    }
+                ).then(function(oResponse)
+                {
+                    if (oResponse.body.status=='error') {
+                        this.$snotify.error(oResponse.body.message, 'Error');
+                        return;
+                    }//git@github.com:hightemp/docLinux.git
+                    
+                    this.aRepositories.push(oResponse.body.data);
+                    
+                    console.log('fnAddRepository', oResponse.body.data, this.aRepositories);
                 });
         }
     },
     
     mounted: function()
     {
-        console.log(this.oRepositories);
+        this.fnGetRepositories();
     }
 });
 
