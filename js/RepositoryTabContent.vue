@@ -14,7 +14,7 @@
                         <div class="col-xl-2">
                             <b-button 
                                 variant="success"
-                                @click="fnAddTag"
+                                v-b-modal.add-new-tag-modal
                                 block
                             >
                                 <i class="fa fa-plus"></i>
@@ -24,6 +24,7 @@
                             <b-button 
                                 variant="danger" 
                                 @click="fnRemoveTag"
+                                :disabled="sActiveTag=='__all__'"
                                 block
                             >
                                 <i class="fa fa-trash"></i>
@@ -64,7 +65,7 @@
                         <div class="col-xl-2">
                             <b-button 
                                 variant="success"
-                                @click="fnAddArticle" 
+                                v-b-modal.add-new-article-modal 
                                 block
                             >
                                 <i class="fa fa-plus"></i>
@@ -74,6 +75,7 @@
                             <b-button 
                                 variant="danger" 
                                 @click="fnRemoveArticle"
+                                :disabled="!aArticles.length"
                                 block
                             >
                                 <i class="fa fa-trash"></i>
@@ -102,7 +104,11 @@
                             <div class="col-xl-10">
                             </div>
                             <div class="col-xl-2">
-                                <b-button variant="success" block>Push</b-button>
+                                <b-button 
+                                    variant="success" 
+                                    @click="fnPushRepository"
+                                    block
+                                >Push</b-button>
                             </div>
                         </div>
                     </div>
@@ -165,7 +171,63 @@
                 <div>
                 </div>
             </div>
-        </div> 
+        </div>
+        
+        <b-modal
+            id="add-new-tag-modal"
+            ref="add_new_tag_modal"
+            title="Add new tag"
+            @show="fnResetNewTagModal"
+            @ok="fnNewTagFormSubmit"
+        >
+            <form 
+                ref="add_new_tag_modal_form" 
+                @submit.stop.prevent="fnNewTagFormSubmit"
+            >
+                <b-form-group
+                    :state="sNewTagFieldState"
+                    label="Tag"
+                    label-for="tag-input"
+                    :invalid-feedback="sNewTagInvalidFeedback"
+                >
+                    <b-form-input
+                        id="tag-input"
+                        v-model="sNewTag"
+                        :state="sNewTagFieldState"
+                        ref="add_new_tag_modal_tag_input"
+                        required
+                    ></b-form-input>
+                </b-form-group>
+            </form>
+        </b-modal>
+        
+        <b-modal
+            id="add-new-article-modal"
+            ref="add_new_article_modal"
+            title="Add new article"
+            @show="fnResetNewArticleModal"
+            @ok="fnNewArticleFormSubmit"
+        >
+            <form 
+                ref="add_new_article_modal_form" 
+                @submit.stop.prevent="fnNewArticleFormSubmit"
+            >
+                <b-form-group
+                    :state="sNewArticleFieldState"
+                    label="Article"
+                    label-for="article-name-input"
+                    :invalid-feedback="sNewArticleInvalidFeedback"
+                >
+                    <b-form-input
+                        id="article-name-input"
+                        v-model="sNewArticle"
+                        :state="sNewArticleFieldState"
+                        ref="add_new_article_modal_article_name_input"
+                        required
+                    ></b-form-input>
+                </b-form-group>
+            </form>
+        </b-modal>
     </div>
 </template>
 
@@ -194,6 +256,13 @@ export default {
     data: function()
     {
         return {
+            sNewTag: '',
+            sNewTagFieldState: '',
+            sNewTagInvalidFeedback: '',
+            sNewArticle: '',
+            sNewArticleFieldState: '',
+            sNewArticleInvalidFeedback: '',
+            
             sActiveTag: "__all__",
             iActiveArticle: -1,
             sTagFilterString: "",
@@ -216,65 +285,303 @@ export default {
     },
     
     methods: {
+        fnPushRepository: function()
+        {            
+            this
+                .$http
+                .post(
+                    '',
+                    {
+                        action: 'push_repository',
+                        repository: this.oRepository.sName,
+                        article: this.aArticles[this.iActiveArticle],
+                        data: this.oSimpleMDE.value()
+                    }
+                ).then(function(oResponse)
+                {
+                    if (oResponse.body.status=='error') {
+                        this.$snotify.error(oResponse.body.message, 'Error');
+                        return;
+                    }
+                    
+                    this.$snotify.success("Repository successfully pushed");
+                });            
+        },
+        fnCheckNewTagForm: function()
+        {
+            console.log('fnCheckNewTagForm');
+            var bValid = this.$refs.add_new_tag_modal_form.checkValidity()
+            
+            if (this.oRepository.oTags[this.sNewTag]) {
+                this.sNewTagInvalidFeedback = "Tag already exists";
+                console.log(this.sNewTagInvalidFeedback);
+                return false;
+            }
+            
+            this.sNewTagInvalidFeedback = "Tag is required";
+            console.log(this.sNewTagInvalidFeedback);
+            
+            this.sNewTagFieldState = bValid ? 'valid' : 'invalid'
+            
+            return bValid
+        },
+        fnNewTagFormSubmit: function(oEvent)
+        {
+            console.log('fnNewTagFormSubmit');
+            
+            oEvent.preventDefault();
+            
+            if (!this.fnCheckNewTagForm()) {
+                return;
+            }
+
+            this.$nextTick(function() {
+                this.$refs.add_new_tag_modal.hide();
+            })
+            
+            this.fnAddTag();
+        },
+        fnResetNewTagModal: function ()
+        {
+            console.log('fnResetNewTagModal');
+            this.sNewTag = '';
+            this.sNewTagFieldState = '';
+            
+            var oThis = this;
+            
+            setTimeout(function() {
+                oThis.$refs.add_new_tag_modal_tag_input.$el.focus();
+            }, 300);
+        },
         fnAddTag: function()
         {
+            console.log('fnAddNewTag', this.sNewTag);
             
+            this
+                .$http
+                .post(
+                    '',
+                    {
+                        action: 'create_tag',
+                        repository: this.oRepository.sName,
+                        tag: this.sNewTag
+                    }
+                ).then(function(oResponse)
+                {
+                    if (oResponse.body.status=='error') {
+                        this.$snotify.error(oResponse.body.message, 'Error');
+                        return;
+                    }
+                    
+                    Vue.set(this.oRepository.oTags, this.sNewTag, []);
+                    
+                    //this.fnSelectTag(this.sNewTag);
+                });
         },
         fnRemoveTag: function()
         {
             if (this.sActiveTag=="__all__") {
                 return false;
             }
+
+            if (!confirm("Delete tag '"+sActiveTag+"'?")) {
+                return;
+            }
             
-            var sActiveTag = this.sActiveTag;
-            var sArticle = this.oRepository.oTags[sActiveTag][this.iActiveArticle];
-                
-            this.fnSelectTag('__all__');
-            this.fnSelectArticleWithName(sArticle);
-            
-            delete this.oRepository.oTags[sActiveTag];
+            this
+                .$http
+                .post(
+                    '',
+                    {
+                        action: 'remove_tag',
+                        repository: this.oRepository.sName,
+                        tag: this.sActiveTag
+                    }
+                ).then(function(oResponse)
+                {
+                    if (oResponse.body.status=='error') {
+                        this.$snotify.error(oResponse.body.message, 'Error');
+                        return;
+                    }
+                    
+                    var sActiveTag = this.sActiveTag;
+                    var sArticle = this.oRepository.oTags[sActiveTag][this.iActiveArticle];
+                        
+                    this.fnSelectTag('__all__');
+                    this.fnSelectArticleWithName(sArticle);
+                    
+                    delete this.oRepository.oTags[sActiveTag];
+                });
         },
+        
+        fnCheckNewArticleForm: function()
+        {
+            console.log('fnCheckNewArticleForm');
+            var bValid = this.$refs.add_new_article_modal_form.checkValidity()
+            
+            if (this.oRepository.aArticles.indexOf(this.sNewArticle)!=-1) {
+                this.sNewArticleInvalidFeedback = "Article already exists";
+                return false;
+            }
+
+            this.sNewArticleInvalidFeedback = "Article name is required";
+            
+            this.sNewArticleFieldState = bValid ? 'valid' : 'invalid'
+            
+            return bValid
+        },
+        fnNewArticleFormSubmit: function(oEvent)
+        {
+            console.log('fnNewTagFormSubmit');
+            oEvent.preventDefault();
+            
+            if (!this.fnCheckNewArticleForm()) {
+                return;
+            }
+
+            this.$nextTick(function() {
+                this.$refs.add_new_article_modal.hide();
+            })
+            
+            this.fnAddArticle();
+        },
+        fnResetNewArticleModal: function ()
+        {
+            console.log('fnResetNewTagModal');
+            this.sNewArticle = '';
+            this.sNewArticleFieldState = '';
+            
+            var oThis = this;
+            
+            setTimeout(function() {
+                oThis.$refs.add_new_article_modal_article_name_input.$el.focus();
+            }, 300);
+        },        
         fnAddArticle: function()
         {
+            console.log('fnAddArticle');
             
+            this
+                .$http
+                .post(
+                    '',
+                    {
+                        action: 'create_article',
+                        repository: this.oRepository.sName,
+                        article: this.sNewArticle
+                    }
+                ).then(function(oResponse)
+                {
+                    if (oResponse.body.status=='error') {
+                        this.$snotify.error(oResponse.body.message, 'Error');
+                        return;
+                    }
+                    
+                    this.oRepository.aArticles.push(this.sNewArticle);
+                    
+                    if (this.sActiveTag!='__all__') {
+                        this.oRepository.oTags[this.sActiveTag].push(this.sNewArticle);
+                        this.iActiveArticle = this.oRepository.oTags[this.sActiveTag].length-1;
+                    } else {
+                        this.iActiveArticle = this.oRepository.aArticles.length-1;
+                    }
+                });
         },
         fnRemoveArticle: function()
         {
-            var iActiveArticle = this.iActiveArticle;
-            
-            if (this.iActiveArticle>0) {
-                this.iActiveArticle--;
+            if (!confirm("Delete article '"+this.aArticles[iActiveArticle]+"'?")) {
+                return;
             }
-            
-            var sArticle = this.aArticles[iActiveArticle];
-            
-            var iIndex = this.oRepository.aArticles.indexOf(sArticle);
-            this.oRepository.aArticles.splice(iIndex, 1);
-            
-            for (var sTag in this.oRepository.oTags) {
-                var iIndex = this.oRepository.oTags[sTag].indexOf(sArticle);
-                if (iIndex>-1) {
-                    this.oRepository.oTags[sTag].splice(iIndex, 1);
-                }
-            }
+                
+            this
+                .$http
+                .post(
+                    '',
+                    {
+                        action: 'remove_article',
+                        repository: this.oRepository.sName,
+                        article: this.aArticles[iActiveArticle]
+                    }
+                ).then(function(oResponse)
+                {
+                    if (oResponse.body.status=='error') {
+                        this.$snotify.error(oResponse.body.message, 'Error');
+                        return;
+                    }
+                    
+                    var iActiveArticle = this.iActiveArticle;
+                    
+                    if (this.iActiveArticle>0) {
+                        this.iActiveArticle--;
+                    }
+                    
+                    var sArticle = this.aArticles[iActiveArticle];
+                    
+                    var iIndex = this.oRepository.aArticles.indexOf(sArticle);
+                    this.oRepository.aArticles.splice(iIndex, 1);
+                    
+                    for (var sTag in this.oRepository.oTags) {
+                        var iIndex = this.oRepository.oTags[sTag].indexOf(sArticle);
+                        if (iIndex>-1) {
+                            this.oRepository.oTags[sTag].splice(iIndex, 1);
+                        }
+                    }
+                });
         },
         fnAddArticleTag(sArticle, sTag)
         {
-            this.oRepository.oTags[sTag].push(sArticle);
+            this
+                .$http
+                .post(
+                    '',
+                    {
+                        action: 'add_tag_to_article',
+                        repository: this.oRepository.sName,
+                        article: sArticle,
+                        tag: sTag
+                    }
+                ).then(function(oResponse)
+                {
+                    if (oResponse.body.status=='error') {
+                        this.$snotify.error(oResponse.body.message, 'Error');
+                        return;
+                    }
+                    
+                    this.oRepository.oTags[sTag].push(sArticle);
+                });
         },
         fnRemoveArticleTag(sArticle, sTag)
         {
-            var iIndex = this.fnFindArticleInTag(sArticle, sTag);
-            if (this.iActiveArticle == iIndex) {
-                var sArticle = this.oRepository.oTags[sTag][iIndex];
-                
-                this.fnSelectTag('__all__');
-                this.fnSelectArticleWithName(sArticle);
-            }
-            this.oRepository.oTags[sTag].splice(iIndex, 1);
+            this
+                .$http
+                .post(
+                    '',
+                    {
+                        action: 'remove_tag_from_article',
+                        repository: this.oRepository.sName,
+                        article: sArticle,
+                        tag: sTag
+                    }
+                ).then(function(oResponse)
+                {
+                    if (oResponse.body.status=='error') {
+                        this.$snotify.error(oResponse.body.message, 'Error');
+                        return;
+                    }
+                    
+                    var iIndex = this.fnFindArticleInTag(sArticle, sTag);
+                    if (this.iActiveArticle == iIndex) {
+                        var sArticle = this.oRepository.oTags[sTag][iIndex];
+                        
+                        this.fnSelectTag('__all__');
+                        this.fnSelectArticleWithName(sArticle);
+                    }
+                    this.oRepository.oTags[sTag].splice(iIndex, 1);
+                });
         },
         fnFindArticleInTag(sArticle, sTag)
         {
+            console.log('fnFindArticleInTag', sArticle, sTag);
             return this.oRepository.oTags[sTag].indexOf(sArticle);
         },
         fnSelectTag: function(sTagName)
@@ -288,17 +595,34 @@ export default {
         },
         fnSelectArticle: function(iIndex)
         {
-            this.iActiveArticle = iIndex;
-            
-            var oThis = this;
-            
-            setTimeout(
-                function()
+            this
+                .$http
+                .post(
+                    '',
+                    {
+                        action: 'load_article',
+                        repository: this.oRepository.sName,
+                        article: this.aArticles[iIndex]
+                    }
+                ).then(function(oResponse)
                 {
-                    oThis.oSimpleMDE.value(oThis.aArticles[oThis.iActiveArticle]);
-                }, 
-                100
-            );
+                    if (oResponse.body.status=='error') {
+                        this.$snotify.error(oResponse.body.message, 'Error');
+                        return;
+                    }
+                    
+                    this.iActiveArticle = iIndex;
+            
+                    var oThis = this;
+                    
+                    setTimeout(
+                        function()
+                        {
+                            oThis.oSimpleMDE.value(oResponse.body.data);
+                        }, 
+                        100
+                    );
+                });
         },
         fnGetState: function (cm, pos) 
         {

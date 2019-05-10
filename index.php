@@ -1,5 +1,7 @@
 <?php
 
+//error_reporting(E_ALL);
+
 function fnPath(...$aArguments)
 {
     return join(DIRECTORY_SEPARATOR, $aArguments);
@@ -19,25 +21,40 @@ function fnGetRepositoryInfo($sRepositoryName)
     global $sRepositoriesDir;
     
     $sRepositoryDir = fnPath($sRepositoriesDir, $sRepositoryName);
-    $sRepositoryTagDir = fnPath($sRepositoryDir, "tags");
-    $sRepositoryArticlesDir = fnPath($sRepositoryDir, "articles");
+    $sTagsDir = fnPath($sRepositoryDir, "tags");
+    $sArticlesDir = fnPath($sRepositoryDir, "articles");
     
     $aResult = [
         'sName' => $sRepositoryName,
         'sURL' => '',
         'sPath' => $sRepositoryDir,
         'aArticles' => [],
-        'oTags' => []
+        'oTags' => new stdClass()
     ];
     
-    if (!is_dir($sRepositoryTagDir)) {
-        mkdir($sRepositoryTagDir);
+    if (!is_dir($sTagsDir)) {
+        mkdir($sTagsDir);
     }
-    if (!is_dir($sRepositoryArticlesDir)) {
-        mkdir($sRepositoryArticlesDir);
+    if (!is_dir($sArticlesDir)) {
+        mkdir($sArticlesDir);
     }
     
+    $aArticlesFiles = glob(fnPath($sArticlesDir, "*.md"));
     
+    foreach ($aArticlesFiles as $sArticleFile) {
+        $aResult['aArticles'][] = str_replace(".md", basename($sArticleFile), '');
+    }
+    
+    $aTagsFiles = glob(fnPath($sTagsDir, "*.md"));
+    
+    foreach ($aTagsFiles as $sTagFile) {
+        $sTagFileContents = file_get_contents($sTagFile);
+        $sTag = str_replace(".md", basename($sTagFile), '');
+        
+        if (preg_match_all("/\[([^\]]+)\]/", $sTagFileContents, $aMatches)) {
+            $aResult['oTags'][$sTag] = $aMatches[1];
+        }
+    }
     
     return $aResult;
 }
@@ -90,7 +107,159 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
         }
         
         if ($_POST['action']=='remove_repository') {
-            fnRemoveDirectory(fnPath($sRepositoriesDir, $_POST['name']));
+            fnRemoveDirectory(fnPath($sRepositoriesDir, $_POST['repository']));
+        }
+        
+        if ($_POST['action']=='push_repository') {
+            $sRepositoryDir = fnPath($sRepositoriesDir, $_POST['repository']);
+            
+            if (isset($_POST['article'])) {
+                $sArticlesDir = fnPath($sRepositoryDir, 'articles');
+                $sArticleFile = fnPath($sArticlesDir, $_POST['article'].'.md');
+                
+                if (file_put_contents($sArticleFile, @$_POST['data'])===false) {
+                    throw new Exception("Can't write to file '$sArticleFile'");
+                }
+            }
+            
+            chdir($sRepositoryDir);
+            
+            shell_exec('git commit -am "'.date("d.m.Y").'"');
+            shell_exec('git push');
+        }
+        
+        if ($_POST['action']=='load_article') {
+            $sRepositoryDir = fnPath($sRepositoriesDir, $_POST['repository']);
+            $sArticlesDir = fnPath($sRepositoryDir, 'articles');
+            $sArticleFile = fnPath($sArticlesDir, $_POST['article'].'.md');
+            
+            $aResponse['data'] = file_get_contents($sArticleFile);
+        }
+
+        if ($_POST['action']=='save_article' || $_POST['action']=='create_article') {
+            $sRepositoryDir = fnPath($sRepositoriesDir, $_POST['repository']);
+            $sArticlesDir = fnPath($sRepositoryDir, 'articles');
+            $sArticleFile = fnPath($sArticlesDir, $_POST['article'].'.md');
+            
+            if (file_put_contents($sArticleFile, @$_POST['data'])===false) {
+                throw new Exception("Can't write to file '$sArticleFile'");
+            }
+        }
+        
+        if ($_POST['action']=='remove_article') {
+            $sRepositoryDir = fnPath($sRepositoriesDir, $_POST['repository']);
+            $sArticlesDir = fnPath($sRepositoryDir, 'articles');
+            $sArticleFile = fnPath($sArticlesDir, $_POST['article'].'.md');
+            $sTagsDir = fnPath($sRepositoryDir, 'tags');
+            
+            unlink($sArticleFile);
+            
+            $aTagFiles = glob(fnPath($sTagsDir, "*.md"));
+            $sArticleLink = "[".$_POST['article']."]/articles/".$_POST['article'].".md\n";
+            
+            foreach ($aTagFiles as $sTagFile) {
+                $sTagFileContents = file_get_contents($sTagFile);
+            
+                if (($iLinkPos = mb_strpos($sTagFileContents, $sArticleLink))!==false) {
+                    $sTagFileContents = substr_replace($sTagFileContents, $iLinkPos, mb_strlen($sArticleLink));
+                
+                    if (file_put_contents($sTagFile, $sTagFileContents)===false) {
+                        throw new Exception("Can't write to file '$sTagFile'");
+                    }
+                }
+            }
+        }
+
+        if ($_POST['action']=='create_tag') {
+            $sRepositoryDir = fnPath($sRepositoriesDir, $_POST['repository']);
+            $sTagsDir = fnPath($sRepositoryDir, 'tags');
+            $sTagFile = fnPath($sTagsDir, $_POST['tag'].'.md');
+            
+            if (file_put_contents($sTagFile, '')===false) {
+                throw new Exception("Can't write to file '$sTagFile'");
+            }
+        }
+        
+        if ($_POST['action']=='remove_tag') {
+            $sRepositoryDir = fnPath($sRepositoriesDir, $_POST['repository']);
+            $sArticlesDir = fnPath($sRepositoryDir, 'articles');
+            $sTagsDir = fnPath($sRepositoryDir, 'tags');
+            $sTagFile = fnPath($sTagsDir, $_POST['tag'].'.md');
+            
+            unlink($sTagFile);
+            
+            $aArticlesFiles = glob(fnPath($sArticlesDir, "*.md"));
+            $sTagLink = "[".$_POST['tag']."]/tags/".$_POST['tag'].".md\n";
+            
+            foreach ($aArticlesFiles as $aArticleFile) {
+                $sArticleFileContents = file_get_contents($aArticleFile);
+            
+                if (($iLinePos = mb_strpos($sArticleFileContents, "***\n"))!==false) {
+                    if (($iLinkPos = mb_strpos($sArticleFileContents, $sTagLink, $iLinePos))!==false) {
+                        $sArticleFileContents = substr_replace($sArticleFileContents, $iLinkPos, mb_strlen($sTagLink));
+                    
+                        if (file_put_contents($aArticleFile, $sArticleFileContents)===false) {
+                            throw new Exception("Can't write to file '$aArticleFile'");
+                        }
+                    }
+                }
+            }
+        }
+        
+        if ($_POST['action']=='add_tag_to_article') {
+            $sRepositoryDir = fnPath($sRepositoriesDir, $_POST['repository']);
+            $sArticlesDir = fnPath($sRepositoryDir, 'articles');
+            $sArticleFile = fnPath($sArticlesDir, $_POST['article'].'.md');
+            $sTagsDir = fnPath($sRepositoryDir, 'tags');
+            $sTagFile = fnPath($sTagsDir, $_POST['tag'].'.md');
+            
+            $sArticleFileContents = file_get_contents($sArticleFile);
+            $sTagFileContents = file_get_contents($sTagFile);
+            
+            if (($iLinePos = mb_strpos($sArticleContents, "***\n"))===false) {
+                $sArticleFileContents .= "***\n";
+            }
+            
+            $sArticleFileContents .= "[".$_POST['tag']."]/tags/".$_POST['tag'].".md\n";
+            $sTagFileContents .= "[".$_POST['article']."]/articles/".$_POST['article'].".md\n";
+            
+            if (file_put_contents($sArticleFile, $sArticleFileContents)===false) {
+                throw new Exception("Can't write to file '$aArticleFile'");
+            }
+            if (file_put_contents($sTagFile, $sTagFileContents)===false) {
+                throw new Exception("Can't write to file '$sTagFile'");
+            }
+        }
+        
+        if ($_POST['action']=='remove_tag_from_article') {
+            $sRepositoryDir = fnPath($sRepositoriesDir, $_POST['repository']);
+            $sArticlesDir = fnPath($sRepositoryDir, 'articles');
+            $sArticleFile = fnPath($sArticlesDir, $_POST['article'].'.md');
+            $sTagsDir = fnPath($sRepositoryDir, 'tags');
+            $sTagFile = fnPath($sTagsDir, $_POST['tag'].'.md');
+            
+            $sArticleFileContents = file_get_contents($sArticleFile);
+            $sTagFileContents = file_get_contents($sTagFile);
+            
+            $sTagLink = "[".$_POST['tag']."]/tags/".$_POST['tag'].".md\n";
+            $sArticleLink = "[".$_POST['article']."]/articles/".$_POST['article'].".md\n";
+            
+            if (($iLinePos = mb_strpos($sArticleFileContents, "***\n"))!==false) {
+                if (($iLinkPos = mb_strpos($sArticleFileContents, $sTagLink, $iLinePos))!==false) {
+                    $sArticleFileContents = substr_replace($sArticleFileContents, $iLinkPos, mb_strlen($sTagLink));
+                
+                    if (file_put_contents($sArticleFile, $sArticleFileContents)===false) {
+                        throw new Exception("Can't write to file '$aArticleFile'");
+                    }
+                }
+            }
+            if (($iLinkPos = mb_strpos($sTagFileContents, $sArticleLink))!==false) {
+                $sTagFileContents = substr_replace($sTagFileContents, $iLinkPos, mb_strlen($sArticleLink));
+            
+                if (file_put_contents($sTagFile, $sTagFileContents)===false) {
+                    throw new Exception("Can't write to file '$sTagFile'");
+                }
+            }
         }
     } catch (Exception $oException) {
         $aResponse['status'] = 'error';

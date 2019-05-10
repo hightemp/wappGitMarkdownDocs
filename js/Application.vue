@@ -8,6 +8,7 @@
                         <b-form-input 
                             placeholder="git@github.com:hightemp/wappGitMarkdownDocs.git"
                             ref="repository_url"
+                            v-model="sRepositoryURL"
                         >
                         </b-form-input>
                     </div>
@@ -63,6 +64,7 @@ export default Vue.extend({
     data: function()
     {
         return {
+            sRepositoryURL: '',
             iActiveTab: -1,
             aRepositories: [
             /*
@@ -140,8 +142,6 @@ export default Vue.extend({
                         return;
                     }
                     
-                    console.log('fnGetRepositories', oResponse.body.data);
-                    
                     this.aRepositories = oResponse.body.data;
                 });
         },
@@ -153,7 +153,7 @@ export default Vue.extend({
                     '',
                     {
                         action: 'add_repository',
-                        url: this.$refs.repository_url.$el.value
+                        url: this.sRepositoryURL
                     }
                 ).then(function(oResponse)
                 {
@@ -164,7 +164,7 @@ export default Vue.extend({
                     
                     this.aRepositories.push(oResponse.body.data);
                     
-                    console.log('fnAddRepository', oResponse.body.data, this.aRepositories);
+                    this.sRepositoryURL = '';
                 });
         }
     },
