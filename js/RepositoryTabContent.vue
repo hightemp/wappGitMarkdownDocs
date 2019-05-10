@@ -108,7 +108,7 @@
                                     variant="success" 
                                     @click="fnPushRepository"
                                     block
-                                >Push</b-button>
+                                >Save</b-button>
                             </div>
                         </div>
                     </div>
@@ -384,7 +384,7 @@ export default {
                 return false;
             }
 
-            if (!confirm("Delete tag '"+sActiveTag+"'?")) {
+            if (!confirm("Delete tag '"+this.sActiveTag+"'?")) {
                 return;
             }
             
@@ -468,6 +468,7 @@ export default {
                     {
                         action: 'create_article',
                         repository: this.oRepository.sName,
+                        tag: this.sActiveTag,
                         article: this.sNewArticle
                     }
                 ).then(function(oResponse)
@@ -481,15 +482,15 @@ export default {
                     
                     if (this.sActiveTag!='__all__') {
                         this.oRepository.oTags[this.sActiveTag].push(this.sNewArticle);
-                        this.iActiveArticle = this.oRepository.oTags[this.sActiveTag].length-1;
+                        this.fnSelectArticle(this.oRepository.oTags[this.sActiveTag].length-1);
                     } else {
-                        this.iActiveArticle = this.oRepository.aArticles.length-1;
+                        this.fnSelectArticle(this.oRepository.aArticles.length-1);
                     }
                 });
         },
         fnRemoveArticle: function()
         {
-            if (!confirm("Delete article '"+this.aArticles[iActiveArticle]+"'?")) {
+            if (!confirm("Delete article '"+this.aArticles[this.iActiveArticle]+"'?")) {
                 return;
             }
                 
@@ -500,7 +501,7 @@ export default {
                     {
                         action: 'remove_article',
                         repository: this.oRepository.sName,
-                        article: this.aArticles[iActiveArticle]
+                        article: this.aArticles[this.iActiveArticle]
                     }
                 ).then(function(oResponse)
                 {
@@ -548,6 +549,8 @@ export default {
                     }
                     
                     this.oRepository.oTags[sTag].push(sArticle);
+                    
+                    this.fnSelectArticle(this.iActiveArticle);
                 });
         },
         fnRemoveArticleTag(sArticle, sTag)
@@ -577,6 +580,8 @@ export default {
                         this.fnSelectArticleWithName(sArticle);
                     }
                     this.oRepository.oTags[sTag].splice(iIndex, 1);
+                    
+                    this.fnSelectArticle(this.iActiveArticle);
                 });
         },
         fnFindArticleInTag(sArticle, sTag)
