@@ -85,3 +85,8 @@ body, html {
     height: 150px;
     overflow-y: scroll;
 }
+
+.article-view-contents {
+    height: calc(100% - 50px);
+    overflow-y: scroll;
+}

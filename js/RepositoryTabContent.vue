@@ -115,6 +115,13 @@
                     
                     <textarea class="page-content-textarea"></textarea>
                     
+                    <b-form-file 
+                        ref="uploaded_file_input"
+                        v-model="oUploadedFile" 
+                        @change="fnUploadFile"
+                        plain
+                    ></b-form-file>
+                    
                     <div class="container-fluid">
                         <div class="filter-row row flex-xl-nowrap2">
                             <div class="col-xl-11">
@@ -263,6 +270,10 @@ export default {
     data: function()
     {
         return {
+            oEditor: null,
+            oSimpleMDE: null,
+            oUploadedFile: null,
+            
             sNewTag: '',
             sNewTagFieldState: '',
             sNewTagInvalidFeedback: '',
@@ -277,8 +288,7 @@ export default {
             sTagFilterString: "",
             sArticleFilterString: "",
             sCurrentArticleTagFilterString: "",
-            bCurrentArticleFilterSelectedTags: false,
-            oSimpleMDE: null
+            bCurrentArticleFilterSelectedTags: false
         };
     },
     
@@ -663,6 +673,35 @@ export default {
                     this.sArticleViewContents = oResponse.body.data;
                 });
         },
+        fnUploadFile: function()
+        {
+            var oFormData = new FormData();
+
+            oFormData.append('action', 'upload_file');
+            oFormData.append('repository', this.oRepository.sName);
+            //oFormData.append('file', this.oUploadedFile);
+            oFormData.append('file', this.$refs.uploaded_file_input.$el.files[0]);
+            
+            this
+                .$http
+                .post(
+                    '',
+                    oFormData
+                ).then(function(oResponse)
+                {
+                    if (oResponse.body.status=='error') {
+                        this.$snotify.error(oResponse.body.message, 'Error');
+                        return;
+                    }
+                    
+                    var cm = this.oEditor.codemirror;
+                    var stat = this.fnGetState(cm);
+                    var options = this.oEditor.options;
+                    var url = oResponse.body.data;
+                    
+                    this.fnReplaceSelection(cm, stat.image, options.insertTexts.image, url);
+                });
+        },
         fnGetState: function (cm, pos) 
         {
             pos = pos || cm.getCursor("start");
@@ -772,13 +811,9 @@ export default {
                 {
                     name: "insert-picture",
                     action: function customFunction(oEditor)
-                    {                        
-                        var cm = oEditor.codemirror;
-                        var stat = oThis.fnGetState(cm);
-                        var options = oEditor.options;
-                        var url = "test";
-                        
-                        oThis.fnReplaceSelection(cm, stat.image, options.insertTexts.image, url);
+                    {
+                        oThis.oEditor = oEditor;
+                        oThis.$refs.uploaded_file_input.$el.click();
                     },
                     className: "fa fa-picture-o",
                     title: "Insert local picture",

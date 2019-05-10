@@ -140,10 +140,18 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
         }
         
         if ($_POST['action']=='remove_repository') {
+            if (empty($_POST['repository'])) {
+                throw new Exception("Empty repository name");
+            }
+            
             fnRemoveDirectory(fnPath($sRepositoriesDir, $_POST['repository']));
         }
         
         if ($_POST['action']=='push_repository') {
+            if (empty($_POST['repository'])) {
+                throw new Exception("Empty repository name");
+            }
+            
             $sRepositoryDir = fnPath($sRepositoriesDir, $_POST['repository']);
             
             if (isset($_POST['article'])) {
@@ -163,6 +171,10 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
         }
         
         if ($_POST['action']=='load_article') {
+            if (empty($_POST['repository'])) {
+                throw new Exception("Empty repository name");
+            }
+            
             $sRepositoryDir = fnPath($sRepositoriesDir, $_POST['repository']);
             $sArticlesDir = fnPath($sRepositoryDir, 'articles');
             $sArticleFile = fnPath($sArticlesDir, $_POST['article'].'.md');
@@ -171,6 +183,10 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
         }
 
         if ($_POST['action']=='save_article') {
+            if (empty($_POST['repository'])) {
+                throw new Exception("Empty repository name");
+            }
+            
             $sRepositoryDir = fnPath($sRepositoriesDir, $_POST['repository']);
             $sArticlesDir = fnPath($sRepositoryDir, 'articles');
             $sArticleFile = fnPath($sArticlesDir, $_POST['article'].'.md');
@@ -181,6 +197,10 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
         }
         
         if ($_POST['action']=='create_article') {
+            if (empty($_POST['repository'])) {
+                throw new Exception("Empty repository name");
+            }
+            
             $sRepositoryDir = fnPath($sRepositoriesDir, $_POST['repository']);
             $sArticlesDir = fnPath($sRepositoryDir, 'articles');
             $sArticleFile = fnPath($sArticlesDir, $_POST['article'].'.md');
@@ -213,6 +233,10 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
         }
         
         if ($_POST['action']=='remove_article') {
+            if (empty($_POST['repository'])) {
+                throw new Exception("Empty repository name");
+            }
+            
             $sRepositoryDir = fnPath($sRepositoriesDir, $_POST['repository']);
             $sArticlesDir = fnPath($sRepositoryDir, 'articles');
             $sArticleFile = fnPath($sArticlesDir, $_POST['article'].'.md');
@@ -237,6 +261,10 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
         }
 
         if ($_POST['action']=='create_tag') {
+            if (empty($_POST['repository'])) {
+                throw new Exception("Empty repository name");
+            }
+            
             $sRepositoryDir = fnPath($sRepositoriesDir, $_POST['repository']);
             $sTagsDir = fnPath($sRepositoryDir, 'tags');
             $sTagFile = fnPath($sTagsDir, $_POST['tag'].'.md');
@@ -247,6 +275,10 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
         }
         
         if ($_POST['action']=='remove_tag') {
+            if (empty($_POST['repository'])) {
+                throw new Exception("Empty repository name");
+            }
+            
             $sRepositoryDir = fnPath($sRepositoriesDir, $_POST['repository']);
             $sArticlesDir = fnPath($sRepositoryDir, 'articles');
             $sTagsDir = fnPath($sRepositoryDir, 'tags');
@@ -273,6 +305,10 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
         }
         
         if ($_POST['action']=='add_tag_to_article') {
+            if (empty($_POST['repository'])) {
+                throw new Exception("Empty repository name");
+            }
+            
             $sRepositoryDir = fnPath($sRepositoriesDir, $_POST['repository']);
             $sArticlesDir = fnPath($sRepositoryDir, 'articles');
             $sArticleFile = fnPath($sArticlesDir, $_POST['article'].'.md');
@@ -298,6 +334,10 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
         }
         
         if ($_POST['action']=='remove_tag_from_article') {
+            if (empty($_POST['repository'])) {
+                throw new Exception("Empty repository name");
+            }
+            
             $sRepositoryDir = fnPath($sRepositoriesDir, $_POST['repository']);
             $sArticlesDir = fnPath($sRepositoryDir, 'articles');
             $sArticleFile = fnPath($sArticlesDir, $_POST['article'].'.md');
@@ -329,6 +369,10 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
         }
         
         if ($_POST['action']=='get_article_page') {
+            if (empty($_POST['repository'])) {
+                throw new Exception("Empty repository name");
+            }
+            
             $sUser = fnGetRepositoryUserName($_POST['repository']);
             
             if (function_exists("curl_init")) {
@@ -350,8 +394,38 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             
             if (preg_match("/<article class=\"markdown-body entry-content p-3 p-md-6\" itemprop=\"text\">(.*?)<\/article>/s", $sPageContents, $aMatches)) {
                 $aResponse['data'] = $aMatches[1];
-                $aResponse['data'] = preg_replace("/(\/$sUser\/{$_POST['repository']}\/blob\/master\/.*?\.md)/i", "https://github.com$1", $aResponse['data']);
+                $aResponse['data'] = preg_replace("/(\/$sUser\/{$_POST['repository']}\/(blob|raw)\/master\/.*?[\"'])/i", "https://github.com$1", $aResponse['data']);
             }
+        }
+        
+        if ($_POST['action']=='upload_file') {
+            if (empty($_POST['repository'])) {
+                throw new Exception("Empty repository name");
+            }
+            
+            $sRepositoryDir = fnPath($sRepositoriesDir, $_POST['repository']);
+            $sImagesDir = fnPath($sRepositoryDir, 'images');
+            
+            if (!is_dir($sImagesDir)) {
+                mkdir($sImagesDir);
+            }
+            if (!is_dir($sImagesDir)) {
+                throw new Exception("Can't create dir");
+            }
+            
+            if (!isset($_FILES['file'])) {
+                throw new Exception("There is no file in request");
+            }
+            
+            $sImagesFile = fnPath($sImagesDir, $_FILES['file']['name']);
+            
+            //if (!is_file($sImagesFile)) {
+                if (!move_uploaded_file($_FILES['file']['tmp_name'], $sImagesFile)) {
+                    throw new Exception("Can't move file to directory");
+                }
+            //}
+            
+            $aResponse['data'] = str_replace($sRepositoryDir, '', $sImagesFile);
         }
     } catch (Exception $oException) {
         $aResponse['status'] = 'error';
