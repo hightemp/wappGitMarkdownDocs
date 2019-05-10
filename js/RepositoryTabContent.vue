@@ -157,18 +157,25 @@
                     </div> 
                 </div>
             </div>
-            <div class="page-preview col-xl-4">
+            <div class="article-view col-xl-4">
                 <div class="container-fluid">
                     <div class="buttons-row row flex-xl-nowrap2">
                         <div class="col-xl-10">
                         </div>
                         <div class="col-xl-2">
-                            <b-button variant="success" block>Resfresh</b-button>
+                            <b-button 
+                                variant="success" 
+                                @click="fnRefreshArticleViewer"
+                                block
+                            >Resfresh</b-button>
                         </div>
                     </div>
                 </div>
             
-                <div>
+                <div 
+                    class="article-view-contents"
+                    v-html="sArticleViewContents"
+                >
                 </div>
             </div>
         </div>
@@ -263,6 +270,8 @@ export default {
             sNewArticleFieldState: '',
             sNewArticleInvalidFeedback: '',
             
+            sArticleViewContents: '',
+            
             sActiveTag: "__all__",
             iActiveArticle: -1,
             sTagFilterString: "",
@@ -304,7 +313,9 @@ export default {
                         return;
                     }
                     
-                    this.$snotify.success("Repository successfully pushed");
+                    this.$snotify.success("Repository successfully saved");
+                    
+                    this.fnRefreshArticleViewer();
                 });            
         },
         fnCheckNewTagForm: function()
@@ -627,6 +638,29 @@ export default {
                         }, 
                         100
                     );
+                    
+                    this.fnRefreshArticleViewer();
+                });
+        },
+        fnRefreshArticleViewer()
+        {
+            this
+                .$http
+                .post(
+                    '',
+                    {
+                        action: 'get_article_page',
+                        repository: this.oRepository.sName,
+                        article: this.aArticles[this.iActiveArticle]
+                    }
+                ).then(function(oResponse)
+                {
+                    if (oResponse.body.status=='error') {
+                        this.$snotify.error(oResponse.body.message, 'Error');
+                        return;
+                    }
+                    
+                    this.sArticleViewContents = oResponse.body.data;
                 });
         },
         fnGetState: function (cm, pos) 

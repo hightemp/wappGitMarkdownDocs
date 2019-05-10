@@ -1,6 +1,7 @@
 <?php
 
-//error_reporting(E_ALL);
+ini_set("display_errors", 1);
+error_reporting(E_ALL);
 
 function fnPath(...$aArguments)
 {
@@ -16,6 +17,24 @@ function fnRemoveDirectory($sDir)
     return rmdir($sDir); 
 }
 
+function fnGetRepositoryUserName($sRepositoryName)
+{
+    global $sRepositoriesDir;
+
+    $sRepositoryDir = fnPath($sRepositoriesDir, $sRepositoryName);
+    $sGitConfigFile = fnPath($sRepositoryDir, ".git", "config");
+
+    $sGitConfigContents = file_get_contents($sGitConfigFile);
+    
+    if (preg_match("/url = (.*)$/m", $sGitConfigContents, $aMatches)) {
+        $sURL = $aMatches[1];
+        
+        if (preg_match("/(\w+)\/\w+\.git/m", $sURL, $aMatches)) {
+            return $aMatches[1];
+        }
+    }
+}
+
 function fnGetRepositoryInfo($sRepositoryName)
 {
     global $sRepositoriesDir;
@@ -23,10 +42,12 @@ function fnGetRepositoryInfo($sRepositoryName)
     $sRepositoryDir = fnPath($sRepositoriesDir, $sRepositoryName);
     $sTagsDir = fnPath($sRepositoryDir, "tags");
     $sArticlesDir = fnPath($sRepositoryDir, "articles");
+    $sGitConfigFile = fnPath($sRepositoryDir, ".git", "config");
     
     $aResult = [
         'sName' => $sRepositoryName,
         'sURL' => '',
+        'sUser' => '',
         'sPath' => $sRepositoryDir,
         'aArticles' => [],
         'oTags' => (object) []
@@ -37,6 +58,16 @@ function fnGetRepositoryInfo($sRepositoryName)
     }
     if (!is_dir($sArticlesDir)) {
         mkdir($sArticlesDir);
+    }
+    
+    $sGitConfigContents = file_get_contents($sGitConfigFile);
+    
+    if (preg_match("/url = (.*)$/m", $sGitConfigContents, $aMatches)) {
+        $aResult['sURL'] = $aMatches[1];
+        
+        if (preg_match("/(\w+)\/\w+\.git/m", $aResult['sURL'], $aMatches)) {
+            $aResult['sUser'] = $aMatches[1];
+        }
     }
     
     $aArticlesFiles = glob(fnPath($sArticlesDir, "*.md"));
@@ -294,6 +325,32 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 if (file_put_contents($sTagFile, $sTagFileContents)===false) {
                     throw new Exception("Can't write to file '$sTagFile'");
                 }
+            }
+        }
+        
+        if ($_POST['action']=='get_article_page') {
+            $sUser = fnGetRepositoryUserName($_POST['repository']);
+            
+            if (function_exists("curl_init")) {
+                $resCURL = curl_init();
+
+                curl_setopt($resCURL, CURLOPT_HEADER, 0);
+                curl_setopt($resCURL, CURLOPT_RETURNTRANSFER, 1);
+                curl_setopt($resCURL, CURLOPT_URL, "https://github.com/$sUser/{$_POST['repository']}/blob/master/articles/{$_POST['article']}.md");
+
+                $sPageContents = curl_exec($resCURL);
+                curl_close($resCURL);
+            } else if (ini_get('allow_url_fopen')==1) {
+                $sPageContents = file_get_contents("https://github.com/$sUser/{$_POST['repository']}/blob/master/articles/{$_POST['article']}.md");
+            } else {
+                throw new Exception("Can't get page due to disabled functions");
+            }
+            
+            $aResponse['data'] = '';
+            
+            if (preg_match("/<article class=\"markdown-body entry-content p-3 p-md-6\" itemprop=\"text\">(.*?)<\/article>/s", $sPageContents, $aMatches)) {
+                $aResponse['data'] = $aMatches[1];
+                $aResponse['data'] = preg_replace("/(\/$sUser\/{$_POST['repository']}\/blob\/master\/.*?\.md)/i", "https://github.com$1", $aResponse['data']);
             }
         }
     } catch (Exception $oException) {
