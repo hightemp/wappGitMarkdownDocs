@@ -108,7 +108,14 @@
                                     variant="success" 
                                     @click="fnPushRepository"
                                     block
-                                >Save</b-button>
+                                >
+                                    <b-spinner 
+                                        v-if="bShowSaveButtonSpinner"
+                                        small 
+                                        type="grow"
+                                    ></b-spinner>
+                                    Save
+                                </b-button>
                             </div>
                         </div>
                     </div>
@@ -176,13 +183,19 @@
             <div class="article-view col-xl-4">
                 <div class="container-fluid">
                     <div class="buttons-row row flex-xl-nowrap2">
-                        <div class="col-xl-8">
+                        <div class="col-xl-6">
                         </div>
                         <div class="col-xl-2">
                             <b-button 
                                 @click="fnShowImagesModal"
                                 block
                             >Images</b-button>
+                        </div>
+                        <div class="col-xl-2">
+                            <b-button 
+                                @click="fnShowFilesModal"
+                                block
+                            >Files</b-button>
                         </div>
                         <div class="col-xl-2">
                             <b-button 
@@ -194,7 +207,18 @@
                     </div>
                 </div>
             
+                <div
+                    v-if="bShowArticleViewContentsSpinner"
+                    class="article-view-contents-spinner d-flex justify-content-center"
+                >
+                    <b-spinner 
+                        variant="primary"
+                        style="width: 100px; height: 100px;" 
+                        type="grow"
+                    ></b-spinner>
+                </div>
                 <div 
+                    v-if="!bShowArticleViewContentsSpinner"
                     class="article-view-contents"
                     v-html="sArticleViewContents"
                 >
@@ -311,6 +335,56 @@
                 </div>
             </div>
         </b-modal>
+        
+        <b-modal
+            id="files-modal"
+            ref="files_modal"
+            title="Files"
+            @show="fnResetFilesModal"
+            @ok="fnInsertFileFromModal"
+        >
+            <div class="container-fluid">
+                <div class="files-modal-filter-row row flex-xl-nowrap2">
+                    <div class="col-xl-10">
+                        <b-form-input 
+                            placeholder="Filter"
+                            v-model="sFilesFilterString"
+                        ></b-form-input>
+                    </div>
+                    <div class="col-xl-1">
+                        <b-button 
+                            variant="success"
+                            @click="fnAddFile"
+                            block
+                        >
+                            <i class="fa fa-plus"></i>
+                        </b-button>
+                    </div>
+                    <div class="col-xl-1">
+                        <b-button 
+                            variant="danger" 
+                            @click="fnRemoveFile"
+                            block
+                        >
+                            <i class="fa fa-trash"></i>
+                        </b-button>
+                    </div>
+                </div>
+            </div>
+            <div class="files-modal-list">
+                <div 
+                    v-for="(sFile, iIndex) in aFilesModalFiles"
+                    class="files-modal-list-item"
+                    v-bind:class="{ active: aFilesModalSelectedFiles.indexOf(sFile)!=-1 }"
+                    @click="fnToggleFileSelection(sFile)"
+                    v-if="sFilesFilterString=='' 
+                            || (sFilesFilterString!='' 
+                                && sFile.indexOf(sFilesFilterString)!=-1)"
+                >
+                    {{ sFile }}
+                </div>
+            </div>
+        </b-modal>
     </div>
 </template>
 
@@ -342,6 +416,9 @@ export default {
     data: function()
     {
         return {
+            bShowSaveButtonSpinner: false,
+            bShowArticleViewContentsSpinner: false,
+            
             oEditor: null,
             oSimpleMDE: null,
             oUploadedFile: null,
@@ -387,7 +464,9 @@ export default {
     
     methods: {
         fnPushRepository: function()
-        {            
+        {
+            this.bShowSaveButtonSpinner = true;
+            
             this
                 .$http
                 .post(
@@ -406,6 +485,7 @@ export default {
                     }
                     
                     this.$snotify.success("Repository successfully saved");
+                    this.bShowSaveButtonSpinner = false;
                     
                     this.fnRefreshArticleViewer();
                 });            
@@ -741,6 +821,8 @@ export default {
         },
         fnRefreshArticleViewer()
         {
+            this.bShowArticleViewContentsSpinner = true;
+            
             this
                 .$http
                 .post(
@@ -756,6 +838,8 @@ export default {
                         this.$snotify.error(oResponse.body.message, 'Error');
                         return;
                     }
+                    
+                    this.bShowArticleViewContentsSpinner = false;
                     
                     this.sArticleViewContents = oResponse.body.data;
                 });
@@ -802,7 +886,14 @@ export default {
                     
                     if (this.sUploadImagesMode=='update-modal') {
                         for (var iIndex=0; iIndex<oResponse.body.data.length; iIndex++) {
-                            this.aImagesModalFiles.push(oResponse.body.data[iIndex].replace(/^\/images\//, ''));
+                            var sImage = oResponse.body.data[iIndex].replace(/^\/images\//, '');
+                            var iIndex = this.aImagesModalFiles.indexOf(sImage);
+                            
+                            if (iIndex>-1) {
+                                this.aImagesModalFiles.splice(iIndex, 1, sImage);
+                            } else {
+                                this.aImagesModalFiles.push(sImage);
+                            }
                         }
                     } else if (this.sUploadImagesMode=='insert') {
                         for (var iIndex=0; iIndex<oResponse.body.data.length; iIndex++) {
@@ -816,7 +907,6 @@ export default {
             this.sUploadImagesMode = 'update-modal';
             this.$refs.images_modal.hideFooter = true;
             this.$refs.images_modal.show();
-            console.log(this.$refs.images_modal);
         },
         fnUpdateImagesList: function()
         {
@@ -894,9 +984,143 @@ export default {
                 });
         },
         
+        fnInsertFile: function(sURL)
+        {
+            var cm = this.oEditor.codemirror;
+            var stat = this.fnGetState(cm);
+            var options = this.oEditor.options;
+            var url = sURL;
+            
+            this.fnReplaceSelection(cm, stat.link, options.insertTexts.link, url);
+        },
         fnUploadFiles: function()
         {
+            var oFiles = this.$refs.uploaded_files_input.$el.files;
+
+            if (!oFiles.length) {
+                return;
+            }
+
+            var oFormData = new FormData();
+
+            oFormData.append('action', 'upload_files');
+            oFormData.append('repository', this.oRepository.sName);
             
+            for (var iIndex=0; iIndex<oFiles.length; iIndex++) {
+                oFormData.append('files[]', oFiles[iIndex]);
+            }
+                        
+            this
+                .$http
+                .post(
+                    '',
+                    oFormData
+                ).then(function(oResponse)
+                {
+                    if (oResponse.body.status=='error') {
+                        this.$snotify.error(oResponse.body.message, 'Error');
+                        this.fnUpdateFilesList();
+                        return;
+                    }
+                    
+                    if (this.sUploadFilesMode=='update-modal') {
+                        for (var iIndex=0; iIndex<oResponse.body.data.length; iIndex++) {
+                            var sFile = oResponse.body.data[iIndex].replace(/^\/files\//, '');
+                            var iIndex = this.aFilesModalFiles.indexOf(sFile);
+                            
+                            if (iIndex>-1) {
+                                
+                            } else {
+                                this.aFilesModalFiles.push(sFile);
+                            }
+                        }
+                    } else if (this.sUploadFilesMode=='insert') {
+                        for (var iIndex=0; iIndex<oResponse.body.data.length; iIndex++) {
+                            this.fnInsertFile(oResponse.body.data[iIndex]);
+                        }
+                    }
+                });
+        },
+        fnShowFilesModal: function()
+        {
+            this.sUploadFilesMode = 'update-modal';
+            this.$refs.files_modal.hideFooter = true;
+            this.$refs.files_modal.show();
+        },
+        fnUpdateFilesList: function()
+        {
+            this
+                .$http
+                .post(
+                    '',
+                    {
+                        action: 'get_files',
+                        repository: this.oRepository.sName
+                    }
+                ).then(function(oResponse)
+                {
+                    if (oResponse.body.status=='error') {
+                        this.$snotify.error(oResponse.body.message, 'Error');
+                        return;
+                    }
+                    
+                    this.aFilesModalFiles = oResponse.body.data;
+                });
+        },
+        fnResetFilesModal: function()
+        {
+            this.aFilesModalFiles = [];
+            this.aFilesModalSelectedFiles = [];
+            this.fnUpdateFilesList();
+        },
+        fnToggleFileSelection: function(sFile)
+        {
+            var iIndex = this.aFilesModalSelectedFiles.indexOf(sFile);
+            
+            if (iIndex==-1) {
+                this.aFilesModalSelectedFiles.push(sFile);
+            } else {
+                this.aFilesModalSelectedFiles.splice(iIndex, 1);
+            }
+        },
+        fnInsertFileFromModal: function()
+        {
+            for (var iIndex=0; iIndex<this.aFilesModalSelectedFiles.length; iIndex++) {
+                this.fnInsertFile('/files/'+this.aFilesModalSelectedFiles[iIndex]);
+            }
+            this.$refs.files_modal.hide();
+        },
+        fnAddFile: function()
+        {
+            this.$refs.uploaded_files_input.$el.click();
+        },
+        fnRemoveFile: function()
+        {
+            this
+                .$http
+                .post(
+                    '',
+                    {
+                        action: 'remove_files',
+                        repository: this.oRepository.sName,
+                        files: this.aFilesModalSelectedFiles
+                    }
+                ).then(function(oResponse)
+                {
+                    if (oResponse.body.status=='error') {
+                        this.$snotify.error(oResponse.body.message, 'Error');
+                        return;
+                    }
+                    
+                    for (var iIndex=0; iIndex<this.aFilesModalSelectedFiles.length; iIndex++) {
+                        var iFileIndex = this.aFilesModalFiles.indexOf(this.aFilesModalSelectedFiles[iIndex]);
+                        if (iFileIndex>-1) {
+                            this.aFilesModalFiles.splice(iFileIndex, 1);
+                        }
+                    }
+                    
+                    this.aFilesModalSelectedFiles = [];
+                });
         },
         
         fnGetState: function (cm, pos) 
@@ -1027,7 +1251,6 @@ export default {
                         oThis.sUploadImagesMode = 'update-modal';
                         oThis.$refs.images_modal.hideFooter = false;
                         oThis.$refs.images_modal.show();
-                        //oThis.$bvModal.show('images-modal');
                     },
                     className: "fa fa-picture-o",
                     title: "Insert local picture",
@@ -1040,7 +1263,6 @@ export default {
                         oThis.sUploadFilesMode = 'update-modal';
                         oThis.$refs.files_modal.hideFooter = false;
                         oThis.$refs.files_modal.show();
-                        //oThis.$bvModal.show('files-modal');
                     },
                     className: "fa fa-file-o",
                     title: "Insert file from collection",

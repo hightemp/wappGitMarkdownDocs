@@ -2,22 +2,24 @@
 <template>
     <div class="application-container container-fluid">
         <div class="row1 row">
-            <div class="container-fluid">
-                <div class="row flex-xl-nowrap2">
-                    <div class="col-xl-11">
-                        <b-form-input 
-                            placeholder="git@github.com:hightemp/wappGitMarkdownDocs.git"
-                            ref="repository_url"
-                            v-model="sRepositoryURL"
-                        >
-                        </b-form-input>
-                    </div>
-                    <div class="col-xl-1">
-                        <b-button 
-                            variant="success"
-                            @click="fnAddRepository"
-                            block
-                        >Add</b-button>
+            <div class="col-xl-12">
+                <div class="container-fluid">
+                    <div class="row flex-xl-nowrap2">
+                        <div class="col-xl-11">
+                            <b-form-input 
+                                placeholder="git@github.com:hightemp/wappGitMarkdownDocs.git"
+                                ref="repository_url"
+                                v-model="sRepositoryURL"
+                            >
+                            </b-form-input>
+                        </div>
+                        <div class="col-xl-1">
+                            <b-button 
+                                variant="success"
+                                @click="fnAddRepository"
+                                block
+                            >Add</b-button>
+                        </div>
                     </div>
                 </div>
             </div>

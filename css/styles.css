@@ -16,6 +16,11 @@ body, html {
     padding-top: 5px;
 }
 
+.application-container > .row1 .row > div {
+    padding-left: 0px;
+    padding-right: 0px;
+}
+
 .application-container > .row2 {
     height: calc(100% - 50px);
 }
@@ -91,6 +96,15 @@ body, html {
     overflow-y: scroll;
 }
 
+.article-view {
+    height: 100%;
+}
+
+.article-view-contents-spinner {
+    height: 100%;
+}
+
+
 .images-modal-list {
     height: 400px;
     overflow-y: scroll;
@@ -111,6 +125,7 @@ body, html {
     overflow: hidden;
     cursor: pointer;
     margin-right: 5px;
+    margin-bottom: 5px;
 }
 
 .images-modal-list-item:hover {
@@ -122,6 +137,44 @@ body, html {
 }
 
 .images-modal-list-item.active {
+    z-index: 2;
+    color: #fff;
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+
+.files-modal-list {
+    height: 400px;
+    overflow-y: scroll;
+}
+
+.files-modal-filter-row > div {
+    padding: 0px 0px 5px 0px;
+}
+
+.files-modal-filter-row .btn {
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+.files-modal-list-item {
+    cursor: pointer;
+    padding: 0.25rem;
+    border-top: 1px solid #dee2e6;
+    border-left: 1px solid #dee2e6;
+    border-right: 1px solid #dee2e6;
+}
+
+.files-modal-list-item:last-child {
+    border-bottom: 1px solid #dee2e6;
+}
+
+.files-modal-list-item:hover {
+    background: #00abff;
+}
+
+.files-modal-list-item.active {
     z-index: 2;
     color: #fff;
     background-color: #007bff;

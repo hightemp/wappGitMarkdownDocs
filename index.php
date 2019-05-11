@@ -135,6 +135,10 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
     ];
     
     try {
+        if (!isset($_POST['action'])) {
+            throw new Exception("'action' is not set");
+        }
+        
         if ($_POST['action']=='get_repositories') {
             if (!is_dir($sRepositoriesDir)) {
                 mkdir($sRepositoriesDir);
@@ -531,7 +535,38 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             $sImagesDir = fnPath($sRepositoryDir, 'images');
             
             foreach ($_POST['files'] as $sImage) {
-                unlink(fnPath($sImagesDir, $sImage));
+                if (!unlink(fnPath($sImagesDir, $sImage))) {
+                    throw new Exception("Can't delete file '$sImage'");
+                }
+            }
+        }
+        
+        if ($_POST['action']=='get_files') {
+            if (empty($_POST['repository'])) {
+                throw new Exception("Empty repository name");
+            }
+            
+            $sRepositoryDir = fnPath($sRepositoriesDir, $_POST['repository']);
+            $sFilesDir = fnPath($sRepositoryDir, 'files');
+            
+            $aResponse['data'] = glob(fnPath($sFilesDir, "*"));
+            
+            foreach ($aResponse['data'] as &$sFile) {
+                $sFile = basename($sFile);
+            }
+        }
+        if ($_POST['action']=='remove_files') {
+            if (empty($_POST['repository'])) {
+                throw new Exception("Empty repository name");
+            }
+            
+            $sRepositoryDir = fnPath($sRepositoriesDir, $_POST['repository']);
+            $sFilesDir = fnPath($sRepositoryDir, 'files');
+            
+            foreach ($_POST['files'] as $sFile) {
+                if (!unlink(fnPath($sFilesDir, $sFile))) {
+                    throw new Exception("Can't delete file '$sFile'");
+                }
             }
         }
     } catch (Exception $oException) {
