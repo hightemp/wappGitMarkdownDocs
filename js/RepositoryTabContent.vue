@@ -116,9 +116,18 @@
                     <textarea class="page-content-textarea"></textarea>
                     
                     <b-form-file 
-                        ref="uploaded_file_input"
-                        v-model="oUploadedFile" 
-                        @change="fnUploadFile"
+                        ref="uploaded_images_input"
+                        @change="fnUploadImages"
+                        v-show="false"
+                        multiple
+                        plain
+                    ></b-form-file>
+                    
+                    <b-form-file 
+                        ref="uploaded_files_input"
+                        @change="fnUploadFiles"
+                        v-show="false"
+                        multiple
                         plain
                     ></b-form-file>
                     
@@ -167,7 +176,13 @@
             <div class="article-view col-xl-4">
                 <div class="container-fluid">
                     <div class="buttons-row row flex-xl-nowrap2">
-                        <div class="col-xl-10">
+                        <div class="col-xl-8">
+                        </div>
+                        <div class="col-xl-2">
+                            <b-button 
+                                @click="fnShowImagesModal"
+                                block
+                            >Images</b-button>
                         </div>
                         <div class="col-xl-2">
                             <b-button 
@@ -242,6 +257,60 @@
                 </b-form-group>
             </form>
         </b-modal>
+        
+        <b-modal
+            id="images-modal"
+            ref="images_modal"
+            title="Images"
+            @show="fnResetImagesModal"
+            @ok="fnInsertImageFromModal"
+        >
+            <div class="container-fluid">
+                <div class="images-modal-filter-row row flex-xl-nowrap2">
+                    <div class="col-xl-10">
+                        <b-form-input 
+                            placeholder="Filter"
+                            v-model="sImagesFilterString"
+                        ></b-form-input>
+                    </div>
+                    <div class="col-xl-1">
+                        <b-button 
+                            variant="success"
+                            @click="fnAddImage"
+                            block
+                        >
+                            <i class="fa fa-plus"></i>
+                        </b-button>
+                    </div>
+                    <div class="col-xl-1">
+                        <b-button 
+                            variant="danger" 
+                            @click="fnRemoveImage"
+                            block
+                        >
+                            <i class="fa fa-trash"></i>
+                        </b-button>
+                    </div>
+                </div>
+            </div>
+            <div class="images-modal-list d-flex flex-wrap">
+                <div 
+                    v-for="(sImage, iIndex) in aImagesModalFiles"
+                    class="images-modal-list-item img-thumbnail d-flex"
+                    v-bind:class="{ active: aImagesModalSelectedFiles.indexOf(sImage)!=-1 }"
+                    @click="fnToggleImageSelection(sImage)"
+                    v-if="sImagesFilterString=='' 
+                            || (sImagesFilterString!='' 
+                                && sImage.indexOf(sImagesFilterString)!=-1)"
+                >
+                    <b-img 
+                        :src="'/repositories/'+oRepository.sName+'/images/'+sImage" 
+                        :alt="sImage"
+                        class="align-self-center"
+                    ></b-img>
+                </div>
+            </div>
+        </b-modal>
     </div>
 </template>
 
@@ -257,6 +326,9 @@ export default {
     name: 'RepositoryTabContent',
     
     props: {
+        iIndex: {
+            type: Number
+        },
         oRepository: {
             type: Object,
             required: true
@@ -273,6 +345,16 @@ export default {
             oEditor: null,
             oSimpleMDE: null,
             oUploadedFile: null,
+            
+            aImagesModalFiles: [],
+            aImagesModalSelectedFiles: [],
+            sImagesFilterString: '',
+            sUploadImagesMode: '',
+            
+            aFilesModalFiles: [],           
+            aFilesModalSelectedFiles: [],
+            sFilesFilterString: '',
+            sUploadFilesMode: '',
             
             sNewTag: '',
             sNewTagFieldState: '',
@@ -532,10 +614,13 @@ export default {
                     }
                     
                     var iActiveArticle = this.iActiveArticle;
+                    var iNewiActiveArticle = this.iActiveArticle;
                     
-                    if (this.iActiveArticle>0) {
-                        this.iActiveArticle--;
+                    if (iNewiActiveArticle>0) {
+                        iNewiActiveArticle--;
                     }
+                    
+                    this.fnSelectArticle(iNewiActiveArticle);
                     
                     var sArticle = this.aArticles[iActiveArticle];
                     
@@ -614,6 +699,7 @@ export default {
         {
             this.iActiveArticle = -1;
             this.sActiveTag = sTagName;
+            localStorage.setItem(this.iIndex+'sActiveTag', sTagName);
         },
         fnSelectArticleWithName: function(sName)
         {
@@ -638,6 +724,7 @@ export default {
                     }
                     
                     this.iActiveArticle = iIndex;
+                    localStorage.setItem(this.iIndex+'iActiveArticle', iIndex);
             
                     var oThis = this;
                     
@@ -673,15 +760,33 @@ export default {
                     this.sArticleViewContents = oResponse.body.data;
                 });
         },
-        fnUploadFile: function()
+        
+        fnInsertImage: function(sURL)
         {
+            var cm = this.oEditor.codemirror;
+            var stat = this.fnGetState(cm);
+            var options = this.oEditor.options;
+            var url = sURL;
+            
+            this.fnReplaceSelection(cm, stat.image, options.insertTexts.image, url);
+        },
+        fnUploadImages: function()
+        {
+            var oFiles = this.$refs.uploaded_images_input.$el.files;
+
+            if (!oFiles.length) {
+                return;
+            }
+
             var oFormData = new FormData();
 
-            oFormData.append('action', 'upload_file');
+            oFormData.append('action', 'upload_images');
             oFormData.append('repository', this.oRepository.sName);
-            //oFormData.append('file', this.oUploadedFile);
-            oFormData.append('file', this.$refs.uploaded_file_input.$el.files[0]);
             
+            for (var iIndex=0; iIndex<oFiles.length; iIndex++) {
+                oFormData.append('files[]', oFiles[iIndex]);
+            }
+                        
             this
                 .$http
                 .post(
@@ -691,17 +796,109 @@ export default {
                 {
                     if (oResponse.body.status=='error') {
                         this.$snotify.error(oResponse.body.message, 'Error');
+                        this.fnUpdateImagesList();
                         return;
                     }
                     
-                    var cm = this.oEditor.codemirror;
-                    var stat = this.fnGetState(cm);
-                    var options = this.oEditor.options;
-                    var url = oResponse.body.data;
-                    
-                    this.fnReplaceSelection(cm, stat.image, options.insertTexts.image, url);
+                    if (this.sUploadImagesMode=='update-modal') {
+                        for (var iIndex=0; iIndex<oResponse.body.data.length; iIndex++) {
+                            this.aImagesModalFiles.push(oResponse.body.data[iIndex].replace(/^\/images\//, ''));
+                        }
+                    } else if (this.sUploadImagesMode=='insert') {
+                        for (var iIndex=0; iIndex<oResponse.body.data.length; iIndex++) {
+                            this.fnInsertImage(oResponse.body.data[iIndex]);
+                        }
+                    }
                 });
         },
+        fnShowImagesModal: function()
+        {
+            this.sUploadImagesMode = 'update-modal';
+            this.$refs.images_modal.hideFooter = true;
+            this.$refs.images_modal.show();
+            console.log(this.$refs.images_modal);
+        },
+        fnUpdateImagesList: function()
+        {
+            this
+                .$http
+                .post(
+                    '',
+                    {
+                        action: 'get_images',
+                        repository: this.oRepository.sName
+                    }
+                ).then(function(oResponse)
+                {
+                    if (oResponse.body.status=='error') {
+                        this.$snotify.error(oResponse.body.message, 'Error');
+                        return;
+                    }
+                    
+                    this.aImagesModalFiles = oResponse.body.data;
+                });
+        },
+        fnResetImagesModal: function()
+        {
+            this.aImagesModalFiles = [];
+            this.aImagesModalSelectedFiles = [];
+            this.fnUpdateImagesList();
+        },
+        fnToggleImageSelection: function(sImage)
+        {
+            var iIndex = this.aImagesModalSelectedFiles.indexOf(sImage);
+            
+            if (iIndex==-1) {
+                this.aImagesModalSelectedFiles.push(sImage);
+            } else {
+                this.aImagesModalSelectedFiles.splice(iIndex, 1);
+            }
+        },
+        fnInsertImageFromModal: function()
+        {
+            for (var iIndex=0; iIndex<this.aImagesModalSelectedFiles.length; iIndex++) {
+                this.fnInsertImage('/images/'+this.aImagesModalSelectedFiles[iIndex]);
+            }
+            this.$refs.images_modal.hide();
+        },
+        fnAddImage: function()
+        {
+            this.$refs.uploaded_images_input.$el.click();
+        },
+        fnRemoveImage: function()
+        {
+            this
+                .$http
+                .post(
+                    '',
+                    {
+                        action: 'remove_images',
+                        repository: this.oRepository.sName,
+                        files: this.aImagesModalSelectedFiles
+                    }
+                ).then(function(oResponse)
+                {
+                    if (oResponse.body.status=='error') {
+                        this.$snotify.error(oResponse.body.message, 'Error');
+                        return;
+                    }
+                    
+                    for (var iIndex=0; iIndex<this.aImagesModalSelectedFiles.length; iIndex++) {
+                        var iImageIndex = this.aImagesModalFiles.indexOf(this.aImagesModalSelectedFiles[iIndex]);
+                        if (iImageIndex>-1) {
+                            this.aImagesModalFiles.splice(iImageIndex, 1);
+                        }
+                    }
+                    
+                    this.aImagesModalSelectedFiles = [];
+                });
+        },
+        
+        fnUploadFiles: function()
+        {
+            
+        },
+        
         fnGetState: function (cm, pos) 
         {
             pos = pos || cm.getCursor("start");
@@ -774,13 +971,16 @@ export default {
                 }
             }
             cm.setSelection(startPoint, endPoint);
+            var oCursorPosition = cm.getCursor(); 
+            oCursorPosition.ch += url.length+end.length;
+            cm.setCursor(oCursorPosition);
             cm.focus();
         }
     },
     
     mounted: function()
     {
-        console.log('mounted', this.oRepository, this.bActive);
+        console.log('tab mounted', this.oRepository, this.bActive);
         
         var oThis = this;
         
@@ -813,14 +1013,43 @@ export default {
                     action: function customFunction(oEditor)
                     {
                         oThis.oEditor = oEditor;
-                        oThis.$refs.uploaded_file_input.$el.click();
+                        oThis.sUploadImagesMode = 'insert';
+                        oThis.$refs.uploaded_images_input.$el.click();
+                    },
+                    className: "fa fa-file-image-o",
+                    title: "Insert local picture",
+                },
+                {
+                    name: "insert-picture-from-collection",
+                    action: function customFunction(oEditor)
+                    {
+                        oThis.oEditor = oEditor;
+                        oThis.sUploadImagesMode = 'update-modal';
+                        oThis.$refs.images_modal.hideFooter = false;
+                        oThis.$refs.images_modal.show();
+                        //oThis.$bvModal.show('images-modal');
                     },
                     className: "fa fa-picture-o",
                     title: "Insert local picture",
                 },
-                
+                {
+                    name: "insert-files-from-collection",
+                    action: function customFunction(oEditor)
+                    {
+                        oThis.oEditor = oEditor;
+                        oThis.sUploadFilesMode = 'update-modal';
+                        oThis.$refs.files_modal.hideFooter = false;
+                        oThis.$refs.files_modal.show();
+                        //oThis.$bvModal.show('files-modal');
+                    },
+                    className: "fa fa-file-o",
+                    title: "Insert file from collection",
+                },                
             ]
         });
+        
+        oThis.fnSelectTag(localStorage.getItem(oThis.iIndex+'sActiveTag'));
+        oThis.fnSelectArticle(localStorage.getItem(oThis.iIndex+'iActiveArticle'));
     },
     
     created: function()

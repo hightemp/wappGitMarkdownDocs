@@ -22,7 +22,10 @@
                 </div>
             </div>
         </div>
-        <b-tabs class="row2">
+        <b-tabs 
+            class="row2"
+            @input="fnSelectTab"
+        >
             <b-tab 
                 v-for="(oItem, iIndex) in aRepositories" 
                 :active="iActiveTab == -1 && iIndex == 0 || iActiveTab == iIndex"
@@ -36,6 +39,7 @@
                 </template>
                 <repository-tab-content
                     :oRepository="oItem"
+                    :iIndex="iIndex"
                 >
                 </repository-tab-content>
             </b-tab>
@@ -166,11 +170,17 @@ export default Vue.extend({
                     
                     this.sRepositoryURL = '';
                 });
+        },
+        fnSelectTab: function(iIndex)
+        {
+            this.iActiveTab = iIndex;
+            localStorage.setItem('iActiveTab', iIndex);
         }
     },
     
     mounted: function()
     {
+        this.iActiveTab = localStorage.getItem('iActiveTab');
         this.fnGetRepositories();
     }
 });

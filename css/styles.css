@@ -90,3 +90,40 @@ body, html {
     height: calc(100% - 50px);
     overflow-y: scroll;
 }
+
+.images-modal-list {
+    height: 400px;
+    overflow-y: scroll;
+}
+
+.images-modal-filter-row > div {
+    padding: 0px 0px 5px 0px;
+}
+
+.images-modal-filter-row .btn {
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+.images-modal-list-item {
+    width: 145px;
+    height: 145px;
+    overflow: hidden;
+    cursor: pointer;
+    margin-right: 5px;
+}
+
+.images-modal-list-item:hover {
+    background: #00abff;
+}
+
+.images-modal-list-item img {
+    width: 100%;
+}
+
+.images-modal-list-item.active {
+    z-index: 2;
+    color: #fff;
+    background-color: #007bff;
+    border-color: #007bff;
+}

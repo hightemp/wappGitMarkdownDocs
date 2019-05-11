@@ -3,10 +3,41 @@
 ini_set("display_errors", 1);
 error_reporting(E_ALL);
 
+// UPDATE: /etc/php/7.2/cli/php.ini
+// upload_max_filesize 1000000M
+// post_max_size 1000000M
+
 function fnPath(...$aArguments)
 {
     return join(DIRECTORY_SEPARATOR, $aArguments);
 }
+
+function fnFileErrorCodeToMessage($iCode) 
+{ 
+    switch ($iCode) { 
+        case UPLOAD_ERR_INI_SIZE: 
+            return "The uploaded file exceeds the upload_max_filesize directive in php.ini"; 
+            break; 
+        case UPLOAD_ERR_FORM_SIZE: 
+            return "The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form";
+            break; 
+        case UPLOAD_ERR_PARTIAL: 
+            return "The uploaded file was only partially uploaded"; 
+            break; 
+        case UPLOAD_ERR_NO_FILE: 
+            return "No file was uploaded"; 
+            break; 
+        case UPLOAD_ERR_NO_TMP_DIR: 
+            return "Missing a temporary folder"; 
+            break; 
+        case UPLOAD_ERR_CANT_WRITE: 
+            return "Failed to write file to disk"; 
+            break; 
+        case UPLOAD_ERR_EXTENSION: 
+            return "File upload stopped by extension"; 
+            break; 
+    } 
+} 
 
 function fnRemoveDirectory($sDir) 
 { 
@@ -398,7 +429,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             }
         }
         
-        if ($_POST['action']=='upload_file') {
+        if ($_POST['action']=='upload_images') {
             if (empty($_POST['repository'])) {
                 throw new Exception("Empty repository name");
             }
@@ -413,19 +444,95 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 throw new Exception("Can't create dir");
             }
             
-            if (!isset($_FILES['file'])) {
+            if (!isset($_FILES['files'])) {
                 throw new Exception("There is no file in request");
             }
             
-            $sImagesFile = fnPath($sImagesDir, $_FILES['file']['name']);
+            $aResponse['data'] = [];
             
-            //if (!is_file($sImagesFile)) {
-                if (!move_uploaded_file($_FILES['file']['tmp_name'], $sImagesFile)) {
-                    throw new Exception("Can't move file to directory");
+            foreach ($_FILES['files']['name'] as $iIndex => $sName) {
+                $sImagesFile = fnPath($sImagesDir, $sName);
+                
+                $sErrorMessage = fnFileErrorCodeToMessage($_FILES['files']['error'][$iIndex]);
+                if (!empty($sErrorMessage)) {
+                    throw new Exception($sErrorMessage);
                 }
-            //}
+                
+                //if (!is_file($sImagesFile)) {
+                    if (!move_uploaded_file($_FILES['files']['tmp_name'][$iIndex], $sImagesFile)) {
+                        throw new Exception("Can't move file to directory '$sImagesFile'");
+                    }
+                //}
+                
+                $aResponse['data'][] = str_replace($sRepositoryDir, '', $sImagesFile);
+            }
+        }
+        
+        if ($_POST['action']=='upload_files') {
+            if (empty($_POST['repository'])) {
+                throw new Exception("Empty repository name");
+            }
             
-            $aResponse['data'] = str_replace($sRepositoryDir, '', $sImagesFile);
+            $sRepositoryDir = fnPath($sRepositoriesDir, $_POST['repository']);
+            $sFilesDir = fnPath($sRepositoryDir, 'files');
+            
+            if (!is_dir($sFilesDir)) {
+                mkdir($sFilesDir);
+            }
+            if (!is_dir($sFilesDir)) {
+                throw new Exception("Can't create dir");
+            }
+            
+            if (!isset($_FILES['files'])) {
+                throw new Exception("There is no file in request");
+            }
+            
+            $aResponse['data'] = [];
+            
+            foreach ($_FILES['files']['name'] as $iIndex => $sName) {
+                $sFile = fnPath($sFilesDir, $sName);
+                
+                $sErrorMessage = fnFileErrorCodeToMessage($_FILES['files']['error'][$iIndex]);
+                if (!empty($sErrorMessage)) {
+                    throw new Exception($sErrorMessage);
+                }
+                
+                //if (!is_file($sFile)) {
+                    if (!move_uploaded_file($_FILES['files']['tmp_name'][$iIndex], $sFile)) {
+                        throw new Exception("Can't move file to directory");
+                    }
+                //}
+                
+                $aResponse['data'][] = str_replace($sRepositoryDir, '', $sFile);
+            }
+        }
+        
+        if ($_POST['action']=='get_images') {
+            if (empty($_POST['repository'])) {
+                throw new Exception("Empty repository name");
+            }
+            
+            $sRepositoryDir = fnPath($sRepositoriesDir, $_POST['repository']);
+            $sImagesDir = fnPath($sRepositoryDir, 'images');
+            
+            $aResponse['data'] = glob(fnPath($sImagesDir, "*"));
+            
+            foreach ($aResponse['data'] as &$sImage) {
+                //$sImage = str_replace($sRepositoryDir, '', $sImage);
+                $sImage = basename($sImage);
+            }
+        }
+        if ($_POST['action']=='remove_images') {
+            if (empty($_POST['repository'])) {
+                throw new Exception("Empty repository name");
+            }
+            
+            $sRepositoryDir = fnPath($sRepositoriesDir, $_POST['repository']);
+            $sImagesDir = fnPath($sRepositoryDir, 'images');
+            
+            foreach ($_POST['files'] as $sImage) {
+                unlink(fnPath($sImagesDir, $sImage));
+            }
         }
     } catch (Exception $oException) {
         $aResponse['status'] = 'error';
