@@ -403,6 +403,43 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             }
         }
         
+        if ($_POST['action']=='search_article') {
+            if (empty($_POST['repository'])) {
+                throw new Exception("Empty repository name");
+            }
+            
+            $sRepositoryDir = fnPath($sRepositoriesDir, $_POST['repository']);
+            $sArticlesDir = fnPath($sRepositoryDir, 'articles');
+            
+            $aInfo = fnGetRepositoryInfo($_POST['repository']);
+            
+            $aResponse['data'] = [];
+            
+            if (!empty($_POST['search_text'])) {
+                if ($_POST['tag']=='__all__') {
+                    foreach ($aInfo['aArticles'] as $sArticle) {
+                        $sArticleFile = fnPath($sArticlesDir, $sArticle.'.md');
+                        
+                        $sConents = file_get_contents($sArticleFile);
+                        
+                        if (@strpos($sConents, $_POST['search_text'])!==false) {
+                            $aResponse['data'] = $sArticle;
+                        }
+                    }
+                } else {
+                    foreach ($aInfo['oTags']->{$_POST['tag']} as $sArticle) {
+                        $sArticleFile = fnPath($sArticlesDir, $sArticle.'.md');
+                    
+                        $sConents = file_get_contents($sArticleFile);
+                        
+                        if (@strpos($sConents, $_POST['search_text'])!==false) {
+                            $aResponse['data'] = $sArticle;
+                        }
+                    }
+                }
+            }
+        }
+        
         if ($_POST['action']=='get_article_page') {
             if (empty($_POST['repository'])) {
                 throw new Exception("Empty repository name");

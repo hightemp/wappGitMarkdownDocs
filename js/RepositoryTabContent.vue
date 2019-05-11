@@ -60,6 +60,7 @@
                             <b-form-input 
                                 placeholder="Filter"
                                 v-model="sArticleFilterString"
+                                @input="fnSearchArticle"
                             ></b-form-input>
                         </div>
                         <div class="col-xl-2">
@@ -89,8 +90,16 @@
                         href="#"
                         :active="iActiveArticle==iIndex"
                         v-if="sArticleFilterString=='' 
-                            || (sArticleFilterString!='' 
-                                && sItem.indexOf(sArticleFilterString)!=-1)"
+                            || (
+                                (sArticleFilterString!=''
+                                    && sArticleFilterString[0]=='%'
+                                    && aArticlesSearchResults.indexOf(sItem)!=-1
+                                )
+                                || (sArticleFilterString!='' 
+                                    && sArticleFilterString[0]!='%' 
+                                    && sItem.indexOf(sArticleFilterString)!=-1
+                                )
+                            )"
                         @click="fnSelectArticle(iIndex)"
                     >
                     {{ sItem }}
@@ -432,6 +441,8 @@ export default {
             aFilesModalSelectedFiles: [],
             sFilesFilterString: '',
             sUploadFilesMode: '',
+            
+            aArticlesSearchResults: [],
             
             sNewTag: '',
             sNewTagFieldState: '',
@@ -819,7 +830,7 @@ export default {
                     this.fnRefreshArticleViewer();
                 });
         },
-        fnRefreshArticleViewer()
+        fnRefreshArticleViewer: function()
         {
             this.bShowArticleViewContentsSpinner = true;
             
@@ -842,6 +853,34 @@ export default {
                     this.bShowArticleViewContentsSpinner = false;
                     
                     this.sArticleViewContents = oResponse.body.data;
+                });
+        },
+        fnSearchArticle: function()
+        {
+            if (this.sArticleFilterString[0]!='%') {
+                return;
+            }
+            
+            this.aArticlesSearchResults = [];
+            
+            this
+                .$http
+                .post(
+                    '',
+                    {
+                        action: 'search_article',
+                        repository: this.oRepository.sName,
+                        tag: this.sActiveTag,
+                        search_text: this.sArticleFilterString.replace(/^%/, '')
+                    }
+                ).then(function(oResponse)
+                {
+                    if (oResponse.body.status=='error') {
+                        this.$snotify.error(oResponse.body.message, 'Error');
+                        return;
+                    }
+                    
+                    this.aArticlesSearchResults = oResponse.body.data;
                 });
         },
         
