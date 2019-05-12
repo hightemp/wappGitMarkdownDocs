@@ -613,7 +613,7 @@ export default {
                 oThis.$refs.add_new_tag_modal_tag_input.$el.focus();
             }, 300);
         },
-        fnRenameTag: function()
+        fnRenameTag: function(fnCallback)
         {
             console.log('fnRenameTag', this.sNewTag);
             
@@ -652,9 +652,11 @@ export default {
                     var iActiveArticle = this.iActiveArticle;
                     this.fnSelectTag(this.sNewTag);
                     this.fnSelectArticle(iActiveArticle);
+                    
+                    if (fnCallback) fnCallback.call(this);
                 });            
         },
-        fnAddTag: function()
+        fnAddTag: function(fnCallback)
         {
             console.log('fnAddTag', this.sNewTag);
             
@@ -677,9 +679,11 @@ export default {
                     Vue.set(this.oRepository.oTags, this.sNewTag, []);
                     
                     //this.fnSelectTag(this.sNewTag);
+                    
+                    if (fnCallback) fnCallback.call(this);
                 });
         },
-        fnRemoveTag: function()
+        fnRemoveTag: function(fnCallback)
         {
             if (this.sActiveTag=="__all__") {
                 return false;
@@ -712,6 +716,8 @@ export default {
                     this.fnSelectArticleWithName(sArticle);
                     
                     delete this.oRepository.oTags[sActiveTag];
+                    
+                    if (fnCallback) fnCallback.call(this);
                 });
         },
         
@@ -791,7 +797,7 @@ export default {
             this.fnResetNewArticleModal();
             this.sNewArticle = this.aArticles[this.iActiveArticle];
         },
-        fnRenameArticle: function()
+        fnRenameArticle: function(fnCallback)
         {
             console.log('fnRenameArticle', this.sNewTag);
             
@@ -829,10 +835,12 @@ export default {
                         this.oRepository.aArticles.splice(iIndex, 1, this.sNewArticle);
                     }
                     
+                    if (fnCallback) fnCallback.call(this);
+                    
                     //this.fnPushRepository(true);
                 });            
         },        
-        fnAddArticle: function()
+        fnAddArticle: function(fnCallback)
         {
             console.log('fnAddArticle');
             
@@ -861,9 +869,11 @@ export default {
                     } else {
                         this.fnSelectArticle(this.oRepository.aArticles.length-1);
                     }
+                    
+                    if (fnCallback) fnCallback.call(this);
                 });
         },
-        fnRemoveArticle: function()
+        fnRemoveArticle: function(fnCallback)
         {
             if (!confirm("Delete article '"+this.aArticles[this.iActiveArticle]+"'?")) {
                 return;
@@ -905,6 +915,8 @@ export default {
                             this.oRepository.oTags[sTag].splice(iIndex, 1);
                         }
                     }
+                    
+                    if (fnCallback) fnCallback.call(this);
                 });
         },
         fnAddArticleTag(sArticle, sTag)
