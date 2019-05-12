@@ -240,6 +240,37 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             }
         }
         
+        if ($_POST['action']=='rename_article') {
+            if (empty($_POST['repository'])) {
+                throw new Exception("Empty repository name");
+            }
+            
+            $sRepositoryDir = fnPath($sRepositoriesDir, $_POST['repository']);
+            $sArticlesDir = fnPath($sRepositoryDir, 'articles');
+            $sTagsDir = fnPath($sRepositoryDir, 'tags');
+            $sFromArticleFile = fnPath($sArticlesDir, $_POST['from_article'].'.md');
+            $sToArticleFile = fnPath($sArticlesDir, $_POST['to_article'].'.md');
+            
+            $sFromArticleLink = "[".$_POST['from_article']."](/articles/".$_POST['from_article'].".md)\n";
+            $sToArticleLink = "[".$_POST['to_article']."](/articles/".$_POST['to_article'].".md)\n";
+            
+            if (!rename($sFromArticleFile, $sToArticleFile)) {
+                throw new Exception("Can't rename file");
+            }
+            
+            foreach ($_POST['tags'] as $sTag) {
+                $sTagFile = fnPath($sTagsDir, $sTag.".md");
+                $sTagFileContents = file_get_contents($sTagFile);
+                
+                $sTagFileContents = str_replace($sFromArticleLink, $sToArticleLink, $sTagFileContents);
+                
+                if (!file_put_contents($sTagFile, $sTagFileContents)) {
+                    throw new Exception("Can't write to file");
+                }
+            }
+            
+        }
+        
         if ($_POST['action']=='create_article') {
             if (empty($_POST['repository'])) {
                 throw new Exception("Empty repository name");
@@ -318,6 +349,36 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             }
         }
         
+        if ($_POST['action']=='rename_tag') {
+            if (empty($_POST['repository'])) {
+                throw new Exception("Empty repository name");
+            }
+            
+            $sRepositoryDir = fnPath($sRepositoriesDir, $_POST['repository']);
+            $sArticlesDir = fnPath($sRepositoryDir, 'articles');
+            $sTagsDir = fnPath($sRepositoryDir, 'tags');
+            $sFromTagFile = fnPath($sTagsDir, $_POST['from_tag'].'.md');
+            $sToTagFile = fnPath($sTagsDir, $_POST['to_tag'].'.md');
+            
+            $sFromTagLink = "[".$_POST['from_tag']."](/tags/".$_POST['from_tag'].".md)\n";
+            $sToTagLink = "[".$_POST['to_tag']."](/tags/".$_POST['to_tag'].".md)\n";
+            
+            if (!rename($sFromTagFile, $sToTagFile)) {
+                throw new Exception("Can't rename file");
+            }
+            
+            foreach ($_POST['articles'] as $sArticle) {
+                $sArticleFile = fnPath($sArticlesDir, $sArticle.".md");
+                $sArticleFileContents = file_get_contents($sArticleFile);
+                
+                $sArticleFileContents = str_replace($sFromTagLink, $sToTagLink, $sArticleFileContents);
+                
+                if (!file_put_contents($sArticleFile, $sArticleFileContents)) {
+                    throw new Exception("Can't write to file");
+                }
+            }
+        }
+        
         if ($_POST['action']=='remove_tag') {
             if (empty($_POST['repository'])) {
                 throw new Exception("Empty repository name");
@@ -333,15 +394,15 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             $aArticlesFiles = glob(fnPath($sArticlesDir, "*.md"));
             $sTagLink = "[".$_POST['tag']."](/tags/".$_POST['tag'].".md)\n";
             
-            foreach ($aArticlesFiles as $aArticleFile) {
-                $sArticleFileContents = file_get_contents($aArticleFile);
+            foreach ($aArticlesFiles as $sArticleFile) {
+                $sArticleFileContents = file_get_contents($sArticleFile);
             
                 if (($iLinePos = strpos($sArticleFileContents, "***\n"))!==false) {
                     if (($iLinkPos = strpos($sArticleFileContents, $sTagLink, $iLinePos))!==false) {
                         $sArticleFileContents = substr_replace($sArticleFileContents, '', $iLinkPos, strlen($sTagLink));
                     
-                        if (file_put_contents($aArticleFile, $sArticleFileContents)===false) {
-                            throw new Exception("Can't write to file '$aArticleFile'");
+                        if (file_put_contents($sArticleFile, $sArticleFileContents)===false) {
+                            throw new Exception("Can't write to file '$sArticleFile'");
                         }
                     }
                 }
@@ -455,18 +516,19 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             }
             
             $sUser = fnGetRepositoryUserName($_POST['repository']);
+            $sArticle = str_replace(' ', '%20', $_POST['article']);
             
             if (function_exists("curl_init")) {
                 $resCURL = curl_init();
 
                 curl_setopt($resCURL, CURLOPT_HEADER, 0);
                 curl_setopt($resCURL, CURLOPT_RETURNTRANSFER, 1);
-                curl_setopt($resCURL, CURLOPT_URL, "https://github.com/$sUser/{$_POST['repository']}/blob/master/articles/{$_POST['article']}.md");
+                curl_setopt($resCURL, CURLOPT_URL, "https://github.com/$sUser/{$_POST['repository']}/blob/master/articles/{$sArticle}.md");
 
                 $sPageContents = curl_exec($resCURL);
                 curl_close($resCURL);
             } else if (ini_get('allow_url_fopen')==1) {
-                $sPageContents = file_get_contents("https://github.com/$sUser/{$_POST['repository']}/blob/master/articles/{$_POST['article']}.md");
+                $sPageContents = file_get_contents("https://github.com/$sUser/{$_POST['repository']}/blob/master/articles/{$sArticle}.md");
             } else {
                 throw new Exception("Can't get page due to disabled functions");
             }

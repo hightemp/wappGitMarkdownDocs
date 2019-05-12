@@ -5,16 +5,25 @@
             <div class="tags-sidebar col-xl-2">
                 <div class="container-fluid">
                     <div class="filter-row row flex-xl-nowrap2">
-                        <div class="col-xl-8">
+                        <div class="col-xl-6">
                             <b-form-input 
                                 placeholder="Filter"
                                 v-model="sTagFilterString"
                             ></b-form-input>
                         </div>
                         <div class="col-xl-2">
+                            <b-button
+                                @click="fnShowRenameTagModal"
+                                :disabled="sActiveTag=='__all__'"
+                                block
+                            >
+                                <i class="fa fa-pencil"></i>
+                            </b-button>
+                        </div>
+                        <div class="col-xl-2">
                             <b-button 
                                 variant="success"
-                                v-b-modal.add-new-tag-modal
+                                @click="fnShowNewTagModal"
                                 block
                             >
                                 <i class="fa fa-plus"></i>
@@ -56,12 +65,21 @@
             <div class="articles-sidebar col-xl-2">
                 <div class="container-fluid">
                     <div class="filter-row row flex-xl-nowrap2">
-                        <div class="col-xl-8">
+                        <div class="col-xl-6">
                             <b-form-input 
                                 placeholder="Filter"
                                 v-model="sArticleFilterString"
                                 @input="fnSearchArticle"
                             ></b-form-input>
+                        </div>
+                        <div class="col-xl-2">
+                            <b-button
+                                @click="fnShowRenameArticleModal"
+                                :disabled="!fnArticleExists()"
+                                block
+                            >
+                                <i class="fa fa-pencil"></i>
+                            </b-button>
                         </div>
                         <div class="col-xl-2">
                             <b-button 
@@ -107,7 +125,7 @@
                 </b-list-group>            
             </div>
             <div class="page-content col-xl-4">
-                <div v-show="iActiveArticle!=-1"> 
+                <div v-show="fnArticleExists()"> 
                     <div class="container-fluid">
                         <div class="buttons-row row flex-xl-nowrap2">
                             <div class="col-xl-10">
@@ -227,7 +245,7 @@
                     ></b-spinner>
                 </div>
                 <div 
-                    v-if="!bShowArticleViewContentsSpinner"
+                    v-if="!bShowArticleViewContentsSpinner && fnArticleExists()"
                     class="article-view-contents"
                     v-html="sArticleViewContents"
                 >
@@ -238,8 +256,7 @@
         <b-modal
             id="add-new-tag-modal"
             ref="add_new_tag_modal"
-            title="Add new tag"
-            @show="fnResetNewTagModal"
+            title=""
             @ok="fnNewTagFormSubmit"
         >
             <form 
@@ -266,8 +283,7 @@
         <b-modal
             id="add-new-article-modal"
             ref="add_new_article_modal"
-            title="Add new article"
-            @show="fnResetNewArticleModal"
+            title=""
             @ok="fnNewArticleFormSubmit"
         >
             <form 
@@ -447,9 +463,12 @@ export default {
             sNewTag: '',
             sNewTagFieldState: '',
             sNewTagInvalidFeedback: '',
+            sNewTagModalMode: '',
+            
             sNewArticle: '',
             sNewArticleFieldState: '',
             sNewArticleInvalidFeedback: '',
+            sNewArticleModalMode: '',
             
             sArticleViewContents: '',
             
@@ -465,8 +484,13 @@ export default {
     computed: {
         aArticles: function() 
         {
+            console.log('aArticles', this.oRepository.aArticles, this.oRepository.oTags[this.sActiveTag]);
             if (this.sActiveTag=="__all__") {
                 return this.oRepository.aArticles;
+            }
+            
+            if (typeof this.oRepository.oTags[this.sActiveTag] == 'undefined') {
+                return [];
             }
             
             return this.oRepository.oTags[this.sActiveTag];
@@ -474,21 +498,26 @@ export default {
     },
     
     methods: {
-        fnPushRepository: function()
+        fnPushRepository: function(bPushOnly)
         {
-            this.bShowSaveButtonSpinner = true;
+            
+            var oData = {
+                action: 'push_repository',
+                repository: this.oRepository.sName,
+            };
+            
+            if (!bPushOnly) {
+                this.bShowSaveButtonSpinner = true;
+                oData['article'] = this.aArticles[this.iActiveArticle];
+                oData['tags'] = this.fnFindArticleInTags(this.aArticles[this.iActiveArticle]);
+                oData['data'] = this.oSimpleMDE.value();
+            }
             
             this
                 .$http
                 .post(
                     '',
-                    {
-                        action: 'push_repository',
-                        repository: this.oRepository.sName,
-                        article: this.aArticles[this.iActiveArticle],
-                        tags: this.fnFindArticleInTags(this.aArticles[this.iActiveArticle]),
-                        data: this.oSimpleMDE.value()
-                    }
+                    oData
                 ).then(function(oResponse)
                 {
                     if (oResponse.body.status=='error') {
@@ -497,7 +526,10 @@ export default {
                     }
                     
                     this.$snotify.success("Repository successfully saved");
-                    this.bShowSaveButtonSpinner = false;
+                    
+                    if (!bPushOnly) {
+                        this.bShowSaveButtonSpinner = false;
+                    }
                     
                     this.fnRefreshArticleViewer();
                 });            
@@ -514,7 +546,6 @@ export default {
             }
             
             this.sNewTagInvalidFeedback = "Tag is required";
-            console.log(this.sNewTagInvalidFeedback);
             
             this.sNewTagFieldState = bValid ? 'valid' : 'invalid'
             
@@ -534,7 +565,41 @@ export default {
                 this.$refs.add_new_tag_modal.hide();
             })
             
-            this.fnAddTag();
+            if (this.sNewTagModalMode == 'add') {
+                this.fnAddTag();
+            }
+            if (this.sNewTagModalMode == 'rename') {
+                this.fnRenameTag();
+            }
+        },
+        fnShowNewTagModal: function()
+        {
+            this.sNewTagModalMode = 'add';
+            console.log(this.$refs.add_new_tag_modal);
+            this.$refs.add_new_tag_modal.show();
+
+            var oThis = this;
+            
+            setTimeout(function() {
+                oThis.$refs.add_new_tag_modal.title = 'Add new tag';
+            }, 300);
+            
+            console.log(this.$refs.add_new_tag_modal);
+            this.fnResetNewTagModal();
+        },
+        fnShowRenameTagModal: function()
+        {
+            this.sNewTagModalMode = 'rename';
+            this.$refs.add_new_tag_modal.show();
+            
+            var oThis = this;
+            
+            setTimeout(function() {
+                oThis.$refs.add_new_tag_modal.title = 'Rename tag';
+            }, 300);
+            
+            this.fnResetNewTagModal();
+            this.sNewTag = this.sActiveTag;
         },
         fnResetNewTagModal: function ()
         {
@@ -548,9 +613,46 @@ export default {
                 oThis.$refs.add_new_tag_modal_tag_input.$el.focus();
             }, 300);
         },
+        fnRenameTag: function()
+        {
+            console.log('fnRenameTag', this.sNewTag);
+            
+            this
+                .$http
+                .post(
+                    '',
+                    {
+                        action: 'rename_tag',
+                        repository: this.oRepository.sName,
+                        articles: this.oRepository.oTags[this.sActiveTag],
+                        from_tag: this.sActiveTag,
+                        to_tag: this.sNewTag
+                    }
+                ).then(function(oResponse)
+                {
+                    if (oResponse.body.status=='error') {
+                        this.$snotify.error(oResponse.body.message, 'Error');
+                        return;
+                    }
+                    
+                    var oTags = {};
+                    
+                    for (var sTag in this.oRepository.oTags) {
+                        if (sTag==this.sActiveTag) {
+                            oTags[this.sNewTag] = this.oRepository.oTags[sTag];
+                        } else {
+                            oTags[sTag] = this.oRepository.oTags[sTag];
+                        }
+                    }
+                    
+                    Vue.set(this.oRepository, 'oTags', oTags);
+                    
+                    //this.fnSelectTag(this.sNewTag);
+                });            
+        },
         fnAddTag: function()
         {
-            console.log('fnAddNewTag', this.sNewTag);
+            console.log('fnAddTag', this.sNewTag);
             
             this
                 .$http
@@ -639,7 +741,12 @@ export default {
                 this.$refs.add_new_article_modal.hide();
             })
             
-            this.fnAddArticle();
+            if (this.sNewArticleModalMode == 'add') {
+                this.fnAddArticle();
+            }
+            if (this.sNewArticleModalMode == 'rename') {
+                this.fnRenameArticle();
+            }            
         },
         fnResetNewArticleModal: function ()
         {
@@ -652,6 +759,74 @@ export default {
             setTimeout(function() {
                 oThis.$refs.add_new_article_modal_article_name_input.$el.focus();
             }, 300);
+        },   
+        fnShowNewArticleModal: function()
+        {
+            this.sNewArticleModalMode = 'add';
+            this.$refs.add_new_article_modal.show();
+
+            var oThis = this;
+            
+            setTimeout(function() {
+                oThis.$refs.add_new_article_modal.title = 'Add new article';
+            }, 300);
+
+            this.fnResetNewArticleModal();
+        },
+        fnShowRenameArticleModal: function()
+        {
+            this.sNewArticleModalMode = 'rename';
+            this.$refs.add_new_article_modal.show();
+
+            var oThis = this;
+            
+            setTimeout(function() {
+                oThis.$refs.add_new_article_modal.title = 'Rename article';
+            }, 300);
+
+            this.fnResetNewArticleModal();
+            this.sNewArticle = this.aArticles[this.iActiveArticle];
+        },
+        fnRenameArticle: function()
+        {
+            console.log('fnRenameArticle', this.sNewTag);
+            
+            var sArticle = this.aArticles[this.iActiveArticle];
+            
+            this
+                .$http
+                .post(
+                    '',
+                    {
+                        action: 'rename_article',
+                        repository: this.oRepository.sName,
+                        tags: this.fnFindTagsWithArticle(this.aArticles[this.iActiveArticle]),
+                        from_article: sArticle,
+                        to_article: this.sNewArticle
+                    }
+                ).then(function(oResponse)
+                {
+                    if (oResponse.body.status=='error') {
+                        this.$snotify.error(oResponse.body.message, 'Error');
+                        return;
+                    }
+                    
+                    for (var sTag in this.oRepository.oTags) {
+                        var iIndex = this.oRepository.oTags[sTag].indexOf(sArticle);
+                        
+                        if (iIndex>-1) {
+                            this.oRepository.oTags[sTag].splice(iIndex, 1, this.sNewArticle);
+                        }
+                    }
+                    
+                    var iIndex = this.oRepository.aArticles.indexOf(sArticle);
+                    
+                    if (iIndex>-1) {
+                        this.oRepository.aArticles.splice(iIndex, 1, this.sNewArticle);
+                    }
+                    
+                    this.fnPushRepository(true);
+                });            
         },        
         fnAddArticle: function()
         {
@@ -783,6 +958,20 @@ export default {
                     this.fnSelectArticle(this.iActiveArticle);
                 });
         },
+        fnFindTagsWithArticle(sArticle)
+        {
+            var aResult = [];
+            
+            for (var sTag in this.oRepository.oTags) {
+                var iIndex = this.oRepository.oTags[sTag].indexOf(sArticle);
+                
+                if (iIndex>-1) {
+                    aResult.push(sTag);
+                }
+            }
+            
+            return aResult;
+        },
         fnFindArticleInTags(sArticle)
         {
             var aResult = [];
@@ -804,12 +993,26 @@ export default {
             this.sActiveTag = sTagName;
             localStorage.setItem(this.iIndex+'sActiveTag', sTagName);
         },
+        fnArticleExists: function(iIndex)
+        {
+            console.log('fnArticleExists', iIndex);
+            
+            if (typeof iIndex == 'undefined') {
+                iIndex = this.iActiveArticle;
+            }
+            
+            return typeof this.aArticles[iIndex] !== 'undefined';
+        },
         fnSelectArticleWithName: function(sName)
         {
             this.fnSelectArticle(this.aArticles.indexOf(sName));
         },
         fnSelectArticle: function(iIndex)
         {
+            if (typeof this.aArticles[iIndex] == 'undefined') {
+                return;
+            }
+            
             this
                 .$http
                 .post(
