@@ -516,7 +516,8 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             }
             
             $sUser = fnGetRepositoryUserName($_POST['repository']);
-            $sArticle = str_replace(' ', '%20', $_POST['article']);
+            //$sArticle = str_replace(' ', '%20', $_POST['article']);
+            $sArticle = rawurlencode($_POST['article']);
             
             if (function_exists("curl_init")) {
                 $resCURL = curl_init();
