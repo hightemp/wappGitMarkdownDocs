@@ -246,7 +246,7 @@
                 </div>
                 <div 
                     v-if="!bShowArticleViewContentsSpinner && fnArticleExists()"
-                    class="article-view-contents"
+                    class="article-view-contents markdown-body"
                     v-html="sArticleViewContents"
                 >
                 </div>
