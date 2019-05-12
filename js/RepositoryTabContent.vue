@@ -133,7 +133,7 @@
                             <div class="col-xl-2">
                                 <b-button 
                                     variant="success" 
-                                    @click="fnPushRepository"
+                                    @click="fnPushRepository(false)"
                                     block
                                 >
                                     <b-spinner 
@@ -509,7 +509,7 @@ export default {
             if (!bPushOnly) {
                 this.bShowSaveButtonSpinner = true;
                 oData['article'] = this.aArticles[this.iActiveArticle];
-                oData['tags'] = this.fnFindArticleInTags(this.aArticles[this.iActiveArticle]);
+                oData['tags'] = this.fnFindTagsWithArticle(this.aArticles[this.iActiveArticle]);
                 oData['data'] = this.oSimpleMDE.value();
             }
             
@@ -647,7 +647,11 @@ export default {
                     
                     Vue.set(this.oRepository, 'oTags', oTags);
                     
-                    //this.fnSelectTag(this.sNewTag);
+                    //this.fnPushRepository(true);
+                    
+                    var iActiveArticle = this.iActiveArticle;
+                    this.fnSelectTag(this.sNewTag);
+                    this.fnSelectArticle(iActiveArticle);
                 });            
         },
         fnAddTag: function()
@@ -825,7 +829,7 @@ export default {
                         this.oRepository.aArticles.splice(iIndex, 1, this.sNewArticle);
                     }
                     
-                    this.fnPushRepository(true);
+                    //this.fnPushRepository(true);
                 });            
         },        
         fnAddArticle: function()
