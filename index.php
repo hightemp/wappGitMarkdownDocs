@@ -39,13 +39,13 @@ function fnFileErrorCodeToMessage($iCode)
     } 
 } 
 
-function fnCommitAndPushRepository()
+function fnCommitAndPushRepository($sRepositoryDir)
 {
     chdir($sRepositoryDir);
     
-    echo shell_exec('git add .');
-    echo shell_exec('git commit -am "'.date("d.m.Y H:i:s").'"');
-    echo shell_exec('git push origin master');
+    shell_exec('git add .');
+    shell_exec('git commit -am "'.date("d.m.Y H:i:s").'"');
+    shell_exec('git push origin master');
 }
 
 function fnRemoveDirectory($sDir) 
@@ -215,7 +215,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 }
             }
             
-            fnCommitAndPushRepository();
+            fnCommitAndPushRepository($sRepositoryDir);
         }
         
         if ($_POST['action']=='load_article') {
@@ -244,7 +244,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 throw new Exception("Can't write to file '$sArticleFile'");
             }
             
-            fnCommitAndPushRepository();
+            fnCommitAndPushRepository($sRepositoryDir);
         }
         
         if ($_POST['action']=='rename_article') {
@@ -276,7 +276,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 }
             }
             
-            fnCommitAndPushRepository();
+            fnCommitAndPushRepository($sRepositoryDir);
         }
         
         if ($_POST['action']=='create_article') {
@@ -314,7 +314,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 }
             }
             
-            fnCommitAndPushRepository();
+            fnCommitAndPushRepository($sRepositoryDir);
         }
         
         if ($_POST['action']=='remove_article') {
@@ -344,7 +344,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 }
             }
             
-            fnCommitAndPushRepository();
+            fnCommitAndPushRepository($sRepositoryDir);
         }
 
         if ($_POST['action']=='create_tag') {
@@ -360,7 +360,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 throw new Exception("Can't write to file '$sTagFile'");
             }
             
-            fnCommitAndPushRepository();
+            fnCommitAndPushRepository($sRepositoryDir);
         }
         
         if ($_POST['action']=='rename_tag') {
@@ -392,7 +392,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 }
             }
             
-            fnCommitAndPushRepository();
+            fnCommitAndPushRepository($sRepositoryDir);
         }
         
         if ($_POST['action']=='remove_tag') {
@@ -424,7 +424,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 }
             }
             
-            fnCommitAndPushRepository();
+            fnCommitAndPushRepository($sRepositoryDir);
         }
         
         if ($_POST['action']=='add_tag_to_article') {
@@ -455,7 +455,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 throw new Exception("Can't write to file '$sTagFile'");
             }
             
-            fnCommitAndPushRepository();
+            fnCommitAndPushRepository($sRepositoryDir);
         }
         
         if ($_POST['action']=='remove_tag_from_article') {
@@ -492,7 +492,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 }
             }
             
-            fnCommitAndPushRepository();
+            fnCommitAndPushRepository($sRepositoryDir);
         }
         
         if ($_POST['action']=='search_article') {
@@ -602,7 +602,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 $aResponse['data'][] = str_replace($sRepositoryDir, '', $sImagesFile);
             }
             
-            fnCommitAndPushRepository();
+            fnCommitAndPushRepository($sRepositoryDir);
         }
         
         if ($_POST['action']=='upload_files') {
@@ -643,7 +643,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 $aResponse['data'][] = str_replace($sRepositoryDir, '', $sFile);
             }
             
-            fnCommitAndPushRepository();
+            fnCommitAndPushRepository($sRepositoryDir);
         }
         
         if ($_POST['action']=='get_images') {
@@ -675,7 +675,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 }
             }
             
-            fnCommitAndPushRepository();
+            fnCommitAndPushRepository($sRepositoryDir);
         }
         
         if ($_POST['action']=='get_files') {
@@ -706,7 +706,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 }
             }
             
-            fnCommitAndPushRepository();
+            fnCommitAndPushRepository($sRepositoryDir);
         }
     } catch (Exception $oException) {
         $aResponse['status'] = 'error';
