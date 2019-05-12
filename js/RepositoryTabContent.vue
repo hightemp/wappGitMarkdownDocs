@@ -234,7 +234,7 @@
                 </div>
             </div>
         </div>
-        
+
         <b-modal
             id="add-new-tag-modal"
             ref="add_new_tag_modal"
@@ -508,7 +508,7 @@ export default {
             
             if (this.oRepository.oTags[this.sNewTag]) {
                 this.sNewTagInvalidFeedback = "Tag already exists";
-                console.log(this.sNewTagInvalidFeedback);
+                this.sNewTagFieldState = 'invalid';
                 return false;
             }
             
@@ -615,6 +615,7 @@ export default {
             
             if (this.oRepository.aArticles.indexOf(this.sNewArticle)!=-1) {
                 this.sNewArticleInvalidFeedback = "Article already exists";
+                this.sNewArticleFieldState = 'invalid';
                 return false;
             }
 

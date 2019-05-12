@@ -1,31 +1,8 @@
  
 <template>
     <div class="application-container container-fluid">
-        <div class="row1 row">
-            <div class="col-xl-12">
-                <div class="container-fluid">
-                    <div class="row flex-xl-nowrap2">
-                        <div class="col-xl-11">
-                            <b-form-input 
-                                placeholder="git@github.com:hightemp/wappGitMarkdownDocs.git"
-                                ref="repository_url"
-                                v-model="sRepositoryURL"
-                            >
-                            </b-form-input>
-                        </div>
-                        <div class="col-xl-1">
-                            <b-button 
-                                variant="success"
-                                @click="fnAddRepository"
-                                block
-                            >Add</b-button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
         <b-tabs 
-            class="row2"
+            class="tabs-block"
             @input="fnSelectTab"
         >
             <b-tab 
@@ -45,7 +22,55 @@
                 >
                 </repository-tab-content>
             </b-tab>
+            
+            <template slot="tabs">
+                <b-nav-item  
+                    v-if="!bShowAddRepositoryButtonSpinner"
+                    v-b-modal.add-new-repository-modal
+                    href="#"
+                >
+                    <b>+</b>
+                </b-nav-item>
+                <b-nav-item  
+                    href="#"
+                >
+                    <b-spinner 
+                        v-if="bShowAddRepositoryButtonSpinner"
+                        small 
+                        type="grow"
+                    ></b-spinner>
+                </b-nav-item>
+            </template>
         </b-tabs>
+        
+        <b-modal
+            id="add-new-repository-modal"
+            ref="add_new_repository_modal"
+            title="Add new repository"
+            @show="fnResetNewRepositoryModal"
+            @ok="fnNewRepositoryFormSubmit"
+        >
+            <form 
+                ref="add_new_repository_modal_form" 
+                @submit.stop.prevent="fnNewRepositoryFormSubmit"
+            >
+                <b-form-group
+                    :state="sNewRepositoryFieldState"
+                    label="Repository URL"
+                    label-for="repository-input"
+                    :invalid-feedback="sNewRepositoryInvalidFeedback"
+                >
+                    <b-form-input 
+                        placeholder="git@github.com:hightemp/wappGitMarkdownDocs.git"
+                        id="repository-input"
+                        ref="repository_url"
+                        v-model="sRepositoryURL"
+                    >
+                    </b-form-input>
+                </b-form-group>
+            </form>
+        </b-modal>
+        
         <vue-snotify/>
     </div>
 </template>
@@ -70,13 +95,20 @@ export default Vue.extend({
     data: function()
     {
         return {
+            sNewRepositoryFieldState: '',
+            sNewRepositoryInvalidFeedback: '',
             sRepositoryURL: '',
+            
+            bShowAddRepositoryButtonSpinner: false,
+            
             iActiveTab: -1,
             aRepositories: [
             /*
                 {
                     sName: "test",
                     sURL: "git@github.com:hightemp/wappGitMarkdownDocs.git",
+                    sUser: '',
+                    sPath: '',
                     oTags: {
                         "tag1": [
                             "article1"
@@ -88,22 +120,6 @@ export default Vue.extend({
                     aArticles: [
                         "article1",
                         "articles2"
-                    ]
-                },
-                {
-                    sName: "test2",
-                    sURL: "git@github.com:hightemp/wappGitMarkdownDocs.git",
-                    oTags: {
-                        "tag1": [
-                            "article21"
-                        ],
-                        "tag2": [
-                            "articles22"
-                        ]
-                    },
-                    aArticles: [
-                        "article21",
-                        "articles22"
                     ]
                 }
             */
@@ -120,7 +136,7 @@ export default Vue.extend({
                     '',
                     {
                         action: 'remove_repository',
-                        name: this.aRepositories[iIndex].sName
+                        repository: this.aRepositories[iIndex].sName
                     }
                 ).then(function(oResponse)
                 {
@@ -153,6 +169,8 @@ export default Vue.extend({
         },
         fnAddRepository: function()
         {
+            this.bShowAddRepositoryButtonSpinner = true;
+            
             this
                 .$http
                 .post(
@@ -166,12 +184,60 @@ export default Vue.extend({
                     if (oResponse.body.status=='error') {
                         this.$snotify.error(oResponse.body.message, 'Error');
                         return;
-                    }//git@github.com:hightemp/docLinux.git
+                    }
+                    //git@github.com:hightemp/docLinux.git
                     
+                    this.bShowAddRepositoryButtonSpinner = false;
+
                     this.aRepositories.push(oResponse.body.data);
                     
-                    this.sRepositoryURL = '';
+                    this.sRepositoryURL = '';                    
                 });
+        },
+        fnResetNewRepositoryModal: function()
+        {
+            this.sNewRepositoryFieldState = '';
+            this.sNewRepositoryInvalidFeedback = '';
+            this.sRepositoryURL = '';
+            
+            var oThis = this;
+            
+            setTimeout(function() {
+                oThis.$refs.repository_url.$el.focus();
+            }, 300);
+        },
+        fnCheckNewRepositoryForm: function()
+        {
+            console.log('fnCheckNewRepositoryForm');
+            var bValid = this.$refs.add_new_repository_modal_form.checkValidity()
+            
+            for (var iIndex in this.aRepositories) {
+                if (this.aRepositories[iIndex].sURL==this.sRepositoryURL) {
+                    this.sNewRepositoryInvalidFeedback = "Repository already exists";
+                    this.sNewRepositoryFieldState = 'invalid';
+                    return false;
+                }
+            }
+
+            this.sNewRepositoryInvalidFeedback = "Repository URL is required";
+            
+            this.sNewRepositoryFieldState = bValid ? 'valid' : 'invalid'
+            
+            return bValid
+        },
+        fnNewRepositoryFormSubmit: function(oEvent)
+        {
+            oEvent.preventDefault();
+            
+            if (!this.fnCheckNewRepositoryForm()) {
+                return;
+            }
+
+            this.$nextTick(function() {
+                this.$refs.add_new_repository_modal.hide();
+            })
+            
+            this.fnAddRepository();
         },
         fnSelectTab: function(iIndex)
         {
