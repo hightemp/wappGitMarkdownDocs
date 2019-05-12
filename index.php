@@ -43,9 +43,9 @@ function fnCommitAndPushRepository()
 {
     chdir($sRepositoryDir);
     
-    shell_exec('git add .');
-    shell_exec('git commit -am "'.date("d.m.Y H:i:s").'"');
-    shell_exec('git push origin master');
+    echo shell_exec('git add .');
+    echo shell_exec('git commit -am "'.date("d.m.Y H:i:s").'"');
+    echo shell_exec('git push origin master');
 }
 
 function fnRemoveDirectory($sDir) 
