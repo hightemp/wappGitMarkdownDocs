@@ -486,6 +486,7 @@ export default {
                         action: 'push_repository',
                         repository: this.oRepository.sName,
                         article: this.aArticles[this.iActiveArticle],
+                        tags: this.fnFindArticleInTags(this.aArticles[this.iActiveArticle]),
                         data: this.oSimpleMDE.value()
                     }
                 ).then(function(oResponse)
@@ -781,6 +782,16 @@ export default {
                     
                     this.fnSelectArticle(this.iActiveArticle);
                 });
+        },
+        fnFindArticleInTags(sArticle)
+        {
+            var aResult = [];
+            
+            for (var sTag in this.oRepository.oTags) {
+                aResult.push(this.oRepository.oTags[sTag].indexOf(sArticle));
+            }
+            
+            return aResult;
         },
         fnFindArticleInTag(sArticle, sTag)
         {

@@ -193,6 +193,14 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 $sArticlesDir = fnPath($sRepositoryDir, 'articles');
                 $sArticleFile = fnPath($sArticlesDir, $_POST['article'].'.md');
                 
+                if (isset($_POST['tags'])) {
+                    $_POST['data'] .= "\n***\n";
+                    
+                    foreach ($_POST['tags'] as $sTag) {
+                        $_POST['data'] .= "[$sTag](/tags/$sTag.md)\n";
+                    }
+                }
+                
                 if (file_put_contents($sArticleFile, @$_POST['data'])===false) {
                     throw new Exception("Can't write to file '$sArticleFile'");
                 }
@@ -214,7 +222,8 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             $sArticlesDir = fnPath($sRepositoryDir, 'articles');
             $sArticleFile = fnPath($sArticlesDir, $_POST['article'].'.md');
             
-            $aResponse['data'] = file_get_contents($sArticleFile);
+            $aResponse['data'] = file_get_contents($sArticleFile);            
+            $aResponse['data'] = preg_replace("/\n\*\*\*.*$/s", '', $aResponse['data']);
         }
 
         if ($_POST['action']=='save_article') {
