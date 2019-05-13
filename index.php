@@ -86,28 +86,6 @@ function safe_file_get_contents($sPath)
         $sPath = @iconv("UTF-8", "windows-1251", $sPath);
         
         return shell_exec("cat '$sPath'");
-    /*
-        //$sPath = str_replace(" ", "+", $sPath);
-        
-        $sPath = str_replace(__DIR__, '', $sPath);
-        $aPath = explode("\\", $sPath);
-        foreach ($aPath as $iKey => &$rsElement) {
-            if ($iKey===0 && strpos($rsElement, ":")!==false) {
-                array_splice($aPath, $iKey, 1);
-                continue;
-            }
-            $rsElement = rawurlencode($rsElement);
-        }
-        $sPath = implode("/", $aPath);
-        //$sPath = str_replace("\\", "/", $sPath);
-        
-        if (strpos($sPath, "file:///")!==0) {
-            $sPath = "http://127.0.0.1:8090".$sPath;
-            //$sPath = "file:///".$sPath;
-        }
-        
-        echo $sPath;        
-    */
     }
     
     return file_get_contents($sPath);
@@ -175,7 +153,7 @@ function fnGetRepositoryUserName($sRepositoryName)
     $sRepositoryDir = fnPath($sRepositoriesDir, $sRepositoryName);
     $sGitConfigFile = fnPath($sRepositoryDir, ".git", "config");
 
-    $sGitConfigContents = file_get_contents($sGitConfigFile);
+    $sGitConfigContents = safe_file_get_contents($sGitConfigFile);
     
     if (preg_match("/url = (.*)$/m", $sGitConfigContents, $aMatches)) {
         $sURL = $aMatches[1];
@@ -215,7 +193,7 @@ function fnGetRepositoryInfo($sRepositoryName)
         mkdir($sArticlesDir);
     }
     
-    $sGitConfigContents = file_get_contents($sGitConfigFile);
+    $sGitConfigContents = safe_file_get_contents($sGitConfigFile);
     
     if (preg_match("/url = (.*)$/m", $sGitConfigContents, $aMatches)) {
         $aResult['sURL'] = $aMatches[1];
@@ -234,7 +212,7 @@ function fnGetRepositoryInfo($sRepositoryName)
     $aTagsFiles = safe_glob(fnPath($sTagsDir, "*.md"));
     
     foreach ($aTagsFiles as $sTagFile) {
-        $sTagFileContents = file_get_contents($sTagFile);
+        $sTagFileContents = safe_file_get_contents($sTagFile);
         $sTag = str_replace(".md", '', basename($sTagFile));
         
         if (preg_match_all("/\[([^\]]+)\]/", $sTagFileContents, $aMatches)) {
@@ -382,7 +360,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             
             foreach ($_POST['tags'] as $sTag) {
                 $sTagFile = fnPath($sTagsDir, $sTag.".md");
-                $sTagFileContents = file_get_contents($sTagFile);
+                $sTagFileContents = safe_file_get_contents($sTagFile);
                 
                 $sTagFileContents = str_replace($sFromArticleLink, $sToArticleLink, $sTagFileContents);
                 
@@ -411,8 +389,8 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 $sTagsDir = fnPath($sRepositoryDir, 'tags');
                 $sTagFile = fnPath($sTagsDir, $_POST['tag'].'.md');
                 
-                $sArticleFileContents = file_get_contents($sArticleFile);
-                $sTagFileContents = file_get_contents($sTagFile);
+                $sArticleFileContents = safe_file_get_contents($sArticleFile);
+                $sTagFileContents = safe_file_get_contents($sTagFile);
                 
                 if (($iLinePos = strpos($sArticleContents, "**********"))===false) {
                     $sArticleFileContents .= "\n**********\n";
@@ -448,7 +426,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             $sArticleLink = "[".$_POST['article']."](/articles/".rawurlencode($_POST['article']).".md)";
             
             foreach ($aTagFiles as $sTagFile) {
-                $sTagFileContents = file_get_contents($sTagFile);
+                $sTagFileContents = safe_file_get_contents($sTagFile);
                 
                 if (($iLinkPos = strpos($sTagFileContents, $sArticleLink))!==false) {
                     $sTagFileContents = substr_replace($sTagFileContents, '', $iLinkPos, strlen($sArticleLink)+1);
@@ -498,7 +476,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             
             foreach ($_POST['articles'] as $sArticle) {
                 $sArticleFile = fnPath($sArticlesDir, $sArticle.".md");
-                $sArticleFileContents = file_get_contents($sArticleFile);
+                $sArticleFileContents = safe_file_get_contents($sArticleFile);
                 
                 $sArticleFileContents = str_replace($sFromTagLink, $sToTagLink, $sArticleFileContents);
                 
@@ -526,7 +504,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             $sTagLink = "[".$_POST['tag']."](/tags/".rawurlencode($_POST['tag']).".md)";
             
             foreach ($aArticlesFiles as $sArticleFile) {
-                $sArticleFileContents = file_get_contents($sArticleFile);
+                $sArticleFileContents = safe_file_get_contents($sArticleFile);
             
                 if (($iLinePos = strpos($sArticleFileContents, "**********"))!==false) {
                     if (($iLinkPos = strpos($sArticleFileContents, $sTagLink, $iLinePos))!==false) {
@@ -553,8 +531,8 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             $sTagsDir = fnPath($sRepositoryDir, 'tags');
             $sTagFile = fnPath($sTagsDir, $_POST['tag'].'.md');
             
-            $sArticleFileContents = file_get_contents($sArticleFile);
-            $sTagFileContents = file_get_contents($sTagFile);
+            $sArticleFileContents = safe_file_get_contents($sArticleFile);
+            $sTagFileContents = safe_file_get_contents($sTagFile);
             
             if (($iLinePos = strpos($sArticleFileContents, "**********"))===false) {
                 $sArticleFileContents .= "\n**********\n";
@@ -584,8 +562,8 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             $sTagsDir = fnPath($sRepositoryDir, 'tags');
             $sTagFile = fnPath($sTagsDir, $_POST['tag'].'.md');
             
-            $sArticleFileContents = file_get_contents($sArticleFile);
-            $sTagFileContents = file_get_contents($sTagFile);
+            $sArticleFileContents = safe_file_get_contents($sArticleFile);
+            $sTagFileContents = safe_file_get_contents($sTagFile);
             
             $sTagLink = "[".$_POST['tag']."](/tags/".rawurlencode($_POST['tag']).".md)";
             $sArticleLink = "[".$_POST['article']."](/articles/".rawurlencode($_POST['article']).".md)";
@@ -627,7 +605,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                     foreach ($aInfo['aArticles'] as $sArticle) {
                         $sArticleFile = fnPath($sArticlesDir, $sArticle.'.md');
                         
-                        $sConents = file_get_contents($sArticleFile);
+                        $sConents = safe_file_get_contents($sArticleFile);
                         
                         if (@strpos($sConents, $_POST['search_text'])!==false) {
                             $aResponse['data'] = $sArticle;
@@ -637,7 +615,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                     foreach ($aInfo['oTags']->{$_POST['tag']} as $sArticle) {
                         $sArticleFile = fnPath($sArticlesDir, $sArticle.'.md');
                     
-                        $sConents = file_get_contents($sArticleFile);
+                        $sConents = safe_file_get_contents($sArticleFile);
                         
                         if (@strpos($sConents, $_POST['search_text'])!==false) {
                             $aResponse['data'] = $sArticle;
