@@ -441,7 +441,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             $sArticleFileContents = file_get_contents($sArticleFile);
             $sTagFileContents = file_get_contents($sTagFile);
             
-            if (($iLinePos = strpos($sArticleContents, "**********"))===false) {
+            if (($iLinePos = strpos($sArticleFileContents, "**********"))===false) {
                 $sArticleFileContents .= "\n**********\n";
             }
             
