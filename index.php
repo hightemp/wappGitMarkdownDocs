@@ -271,8 +271,8 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             $sFromArticleFile = fnPath($sArticlesDir, $_POST['from_article'].'.md');
             $sToArticleFile = fnPath($sArticlesDir, $_POST['to_article'].'.md');
             
-            $sFromArticleLink = "[".$_POST['from_article']."](/articles/".$_POST['from_article'].".md)";
-            $sToArticleLink = "[".$_POST['to_article']."](/articles/".$_POST['to_article'].".md)";
+            $sFromArticleLink = "[".$_POST['from_article']."](/articles/".rawurlencode($_POST['from_article']).".md)";
+            $sToArticleLink = "[".$_POST['to_article']."](/articles/".rawurlencode($_POST['to_article']).".md)";
             
             if (!rename($sFromArticleFile, $sToArticleFile)) {
                 throw new Exception("Can't rename file");
@@ -343,7 +343,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             unlink($sArticleFile);
             
             $aTagFiles = safe_glob(fnPath($sTagsDir, "*.md"));
-            $sArticleLink = "[".$_POST['article']."](/articles/".$_POST['article'].".md)";
+            $sArticleLink = "[".$_POST['article']."](/articles/".rawurlencode($_POST['article']).".md)";
             
             foreach ($aTagFiles as $sTagFile) {
                 $sTagFileContents = file_get_contents($sTagFile);
@@ -387,8 +387,8 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             $sFromTagFile = fnPath($sTagsDir, $_POST['from_tag'].'.md');
             $sToTagFile = fnPath($sTagsDir, $_POST['to_tag'].'.md');
             
-            $sFromTagLink = "[".$_POST['from_tag']."](/tags/".$_POST['from_tag'].".md)";
-            $sToTagLink = "[".$_POST['to_tag']."](/tags/".$_POST['to_tag'].".md)";
+            $sFromTagLink = "[".$_POST['from_tag']."](/tags/".rawurlencode($_POST['from_tag']).".md)";
+            $sToTagLink = "[".$_POST['to_tag']."](/tags/".rawurlencode($_POST['to_tag']).".md)";
             
             if (!rename($sFromTagFile, $sToTagFile)) {
                 throw new Exception("Can't rename file");
@@ -421,7 +421,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             unlink($sTagFile);
             
             $aArticlesFiles = safe_glob(fnPath($sArticlesDir, "*.md"));
-            $sTagLink = "[".$_POST['tag']."](/tags/".$_POST['tag'].".md)";
+            $sTagLink = "[".$_POST['tag']."](/tags/".rawurlencode($_POST['tag']).".md)";
             
             foreach ($aArticlesFiles as $sArticleFile) {
                 $sArticleFileContents = file_get_contents($sArticleFile);
@@ -485,8 +485,8 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             $sArticleFileContents = file_get_contents($sArticleFile);
             $sTagFileContents = file_get_contents($sTagFile);
             
-            $sTagLink = "[".$_POST['tag']."](/tags/".$_POST['tag'].".md)";
-            $sArticleLink = "[".$_POST['article']."](/articles/".$_POST['article'].".md)";
+            $sTagLink = "[".$_POST['tag']."](/tags/".rawurlencode($_POST['tag']).".md)";
+            $sArticleLink = "[".$_POST['article']."](/articles/".rawurlencode($_POST['article']).".md)";
             
             if (($iLinePos = strpos($sArticleFileContents, "**********"))!==false) {
                 if (($iLinkPos = strpos($sArticleFileContents, $sTagLink, $iLinePos))!==false) {
