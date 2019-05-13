@@ -725,7 +725,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
         $aResponse['status'] = 'error';
         $aResponse['message'] = $oException->getMessage();
         $aResponse['line'] = $oException->getLine();
-    }die(var_dump($aResponse));
+    }
     
     die(json_encode($aResponse));
 }
