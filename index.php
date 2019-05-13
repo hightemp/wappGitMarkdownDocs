@@ -223,7 +223,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                     $_POST['data'] .= "\n**********\n";
                     
                     foreach ($_POST['tags'] as $sTag) {
-                        $_POST['data'] .= "[$sTag](/tags/$sTag.md)\n";
+                        $_POST['data'] .= "[$sTag](/tags/".rawurlencode($sTag).".md)\n";
                     }
                 }
                 
@@ -320,8 +320,8 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                     $sArticleFileContents .= "\n**********\n";
                 }
                 
-                $sArticleFileContents .= "[".$_POST['tag']."](/tags/".$_POST['tag'].".md)\n";
-                $sTagFileContents .= "[".$_POST['article']."](/articles/".$_POST['article'].".md)\n";
+                $sArticleFileContents .= "[".$_POST['tag']."](/tags/".rawurlencode($_POST['tag']).".md)\n";
+                $sTagFileContents .= "[".$_POST['article']."](/articles/".rawurlencode($_POST['article']).".md)\n";
                 
                 if (file_put_contents($sArticleFile, $sArticleFileContents)===false) {
                     throw new Exception("Can't write to file '$aArticleFile'");
@@ -462,8 +462,8 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 $sArticleFileContents .= "\n**********\n";
             }
             
-            $sArticleFileContents .= "[".$_POST['tag']."](/tags/".$_POST['tag'].".md)\n";
-            $sTagFileContents .= "[".$_POST['article']."](/articles/".$_POST['article'].".md)\n";
+            $sArticleFileContents .= "[".$_POST['tag']."](/tags/".rawurlencode($_POST['tag']).".md)\n";
+            $sTagFileContents .= "[".$_POST['article']."](/articles/".rawurlencode($_POST['article']).".md)\n";
             
             if (file_put_contents($sArticleFile, $sArticleFileContents)===false) {
                 throw new Exception("Can't write to file '$aArticleFile'");
