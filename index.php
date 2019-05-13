@@ -97,6 +97,10 @@ function fnGetRepositoryInfo($sRepositoryName)
     $sArticlesDir = fnPath($sRepositoryDir, "articles");
     $sGitConfigFile = fnPath($sRepositoryDir, ".git", "config");
     
+    chdir($sRepositoryDir);
+    
+    shell_exec("git pull");
+    
     $aResult = [
         'sName' => $sRepositoryName,
         'sURL' => '',
