@@ -83,20 +83,16 @@ function safe_file_get_contents($sPath)
     $aContext = [];
     
     if (!empty(getenv('HTTP_PROXY'))) {    
-        $aContext = [
-            'http' => [
-                'proxy' => str_replace("http", "tcp", getenv('HTTP_PROXY')),
-                'request_fulluri' => true,
-            ]
+        $aContext['http'] = [
+            'proxy' => str_replace("http", "tcp", getenv('HTTP_PROXY')),
+            'request_fulluri' => true,
         ];
     }
 
     if (!empty(getenv('HTTPS_PROXY'))) {    
-        $aContext = [
-            'https' => [
-                'proxy' => str_replace("https", "tcp", getenv('HTTPS_PROXY')),
-                'request_fulluri' => true,
-            ]
+        $aContext['https'] = [
+            'proxy' => str_replace("https", "tcp", getenv('HTTPS_PROXY')),
+            'request_fulluri' => true,
         ];
     }
     
