@@ -167,7 +167,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
         }
         
         if ($_POST['action']=='add_repository') {
-            if (!preg_match("/git@github\.com:\w+\/(\w+)\.git/i", $_POST['url'], $aMatches)) {
+            if (!preg_match("/(git@github\.com:|https:\/\/github\.com\/)\w+\/(\w+)\.git/i", $_POST['url'], $aMatches)) {
                 throw new Exception("Wrong repository url");
             }
             

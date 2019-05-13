@@ -1,3 +1,4 @@
 /repositories
 /node_modules
 .directory
+/nbproject
