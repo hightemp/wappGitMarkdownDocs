@@ -39,6 +39,19 @@ function fnFileErrorCodeToMessage($iCode)
     } 
 } 
 
+function safe_glob($sPath)
+{
+    $aResult = glob($sPath);
+    
+    if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+        foreach ($aResult as &$rsItem) {
+            $rsItem = iconv("windows-1251", "UTF-8", $rsItem);
+        }
+    }
+    
+    return $aResult;
+}
+
 function fnCommitAndPushRepository($sRepositoryDir)
 {
     chdir($sRepositoryDir);
@@ -110,13 +123,13 @@ function fnGetRepositoryInfo($sRepositoryName)
         }
     }
     
-    $aArticlesFiles = glob(fnPath($sArticlesDir, "*.md"));
+    $aArticlesFiles = safe_glob(fnPath($sArticlesDir, "*.md"));
     
     foreach ($aArticlesFiles as $sArticleFile) {
         $aResult['aArticles'][] = str_replace(".md", '', basename($sArticleFile));
     }
     
-    $aTagsFiles = glob(fnPath($sTagsDir, "*.md"));
+    $aTagsFiles = safe_glob(fnPath($sTagsDir, "*.md"));
     
     foreach ($aTagsFiles as $sTagFile) {
         $sTagFileContents = file_get_contents($sTagFile);
@@ -156,7 +169,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 throw new Exception("Can't create dir");
             }
             
-            $aGitDirectories = glob(fnPath($sRepositoriesDir, "*", ".git"));
+            $aGitDirectories = safe_glob(fnPath($sRepositoriesDir, "*", ".git"));
             $aRepositories = [];
             
             foreach ($aGitDirectories as $sDir) {
@@ -329,7 +342,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             
             unlink($sArticleFile);
             
-            $aTagFiles = glob(fnPath($sTagsDir, "*.md"));
+            $aTagFiles = safe_glob(fnPath($sTagsDir, "*.md"));
             $sArticleLink = "[".$_POST['article']."](/articles/".$_POST['article'].".md)";
             
             foreach ($aTagFiles as $sTagFile) {
@@ -407,7 +420,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             
             unlink($sTagFile);
             
-            $aArticlesFiles = glob(fnPath($sArticlesDir, "*.md"));
+            $aArticlesFiles = safe_glob(fnPath($sArticlesDir, "*.md"));
             $sTagLink = "[".$_POST['tag']."](/tags/".$_POST['tag'].".md)";
             
             foreach ($aArticlesFiles as $sArticleFile) {
@@ -654,7 +667,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             $sRepositoryDir = fnPath($sRepositoriesDir, $_POST['repository']);
             $sImagesDir = fnPath($sRepositoryDir, 'images');
             
-            $aResponse['data'] = glob(fnPath($sImagesDir, "*"));
+            $aResponse['data'] = safe_glob(fnPath($sImagesDir, "*"));
             
             foreach ($aResponse['data'] as &$sImage) {
                 //$sImage = str_replace($sRepositoryDir, '', $sImage);
@@ -686,7 +699,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             $sRepositoryDir = fnPath($sRepositoriesDir, $_POST['repository']);
             $sFilesDir = fnPath($sRepositoryDir, 'files');
             
-            $aResponse['data'] = glob(fnPath($sFilesDir, "*"));
+            $aResponse['data'] = safe_glob(fnPath($sFilesDir, "*"));
             
             foreach ($aResponse['data'] as &$sFile) {
                 $sFile = basename($sFile);
@@ -712,7 +725,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
         $aResponse['status'] = 'error';
         $aResponse['message'] = $oException->getMessage();
         $aResponse['line'] = $oException->getLine();
-    }
+    }die(var_dump($aResponse));
     
     die(json_encode($aResponse));
 }
