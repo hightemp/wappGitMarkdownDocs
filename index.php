@@ -203,7 +203,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 $sArticleFile = fnPath($sArticlesDir, $_POST['article'].'.md');
                 
                 if (isset($_POST['tags'])) {
-                    $_POST['data'] .= "\n***\n";
+                    $_POST['data'] .= "\n**********\n";
                     
                     foreach ($_POST['tags'] as $sTag) {
                         $_POST['data'] .= "[$sTag](/tags/$sTag.md)\n";
@@ -228,7 +228,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             $sArticleFile = fnPath($sArticlesDir, $_POST['article'].'.md');
             
             $aResponse['data'] = file_get_contents($sArticleFile);            
-            $aResponse['data'] = preg_replace("/\n\*\*\*.*$/s", '', $aResponse['data']);
+            $aResponse['data'] = preg_replace("/\n\*\*\*\*\*\*\*\*\*\*.*$/s", '', $aResponse['data']);
         }
 
         if ($_POST['action']=='save_article') {
@@ -258,8 +258,8 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             $sFromArticleFile = fnPath($sArticlesDir, $_POST['from_article'].'.md');
             $sToArticleFile = fnPath($sArticlesDir, $_POST['to_article'].'.md');
             
-            $sFromArticleLink = "[".$_POST['from_article']."](/articles/".$_POST['from_article'].".md)\n";
-            $sToArticleLink = "[".$_POST['to_article']."](/articles/".$_POST['to_article'].".md)\n";
+            $sFromArticleLink = "[".$_POST['from_article']."](/articles/".$_POST['from_article'].".md)";
+            $sToArticleLink = "[".$_POST['to_article']."](/articles/".$_POST['to_article'].".md)";
             
             if (!rename($sFromArticleFile, $sToArticleFile)) {
                 throw new Exception("Can't rename file");
@@ -299,8 +299,8 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 $sArticleFileContents = file_get_contents($sArticleFile);
                 $sTagFileContents = file_get_contents($sTagFile);
                 
-                if (($iLinePos = strpos($sArticleContents, "***\n"))===false) {
-                    $sArticleFileContents .= "\n***\n";
+                if (($iLinePos = strpos($sArticleContents, "**********"))===false) {
+                    $sArticleFileContents .= "\n**********\n";
                 }
                 
                 $sArticleFileContents .= "[".$_POST['tag']."](/tags/".$_POST['tag'].".md)\n";
@@ -330,13 +330,13 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             unlink($sArticleFile);
             
             $aTagFiles = glob(fnPath($sTagsDir, "*.md"));
-            $sArticleLink = "[".$_POST['article']."](/articles/".$_POST['article'].".md)\n";
+            $sArticleLink = "[".$_POST['article']."](/articles/".$_POST['article'].".md)";
             
             foreach ($aTagFiles as $sTagFile) {
                 $sTagFileContents = file_get_contents($sTagFile);
                 
                 if (($iLinkPos = strpos($sTagFileContents, $sArticleLink))!==false) {
-                    $sTagFileContents = substr_replace($sTagFileContents, '', $iLinkPos, strlen($sArticleLink));
+                    $sTagFileContents = substr_replace($sTagFileContents, '', $iLinkPos, strlen($sArticleLink)+1);
                 
                     if (file_put_contents($sTagFile, $sTagFileContents)===false) {
                         throw new Exception("Can't write to file '$sTagFile'");
@@ -374,8 +374,8 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             $sFromTagFile = fnPath($sTagsDir, $_POST['from_tag'].'.md');
             $sToTagFile = fnPath($sTagsDir, $_POST['to_tag'].'.md');
             
-            $sFromTagLink = "[".$_POST['from_tag']."](/tags/".$_POST['from_tag'].".md)\n";
-            $sToTagLink = "[".$_POST['to_tag']."](/tags/".$_POST['to_tag'].".md)\n";
+            $sFromTagLink = "[".$_POST['from_tag']."](/tags/".$_POST['from_tag'].".md)";
+            $sToTagLink = "[".$_POST['to_tag']."](/tags/".$_POST['to_tag'].".md)";
             
             if (!rename($sFromTagFile, $sToTagFile)) {
                 throw new Exception("Can't rename file");
@@ -408,14 +408,14 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             unlink($sTagFile);
             
             $aArticlesFiles = glob(fnPath($sArticlesDir, "*.md"));
-            $sTagLink = "[".$_POST['tag']."](/tags/".$_POST['tag'].".md)\n";
+            $sTagLink = "[".$_POST['tag']."](/tags/".$_POST['tag'].".md)";
             
             foreach ($aArticlesFiles as $sArticleFile) {
                 $sArticleFileContents = file_get_contents($sArticleFile);
             
-                if (($iLinePos = strpos($sArticleFileContents, "***\n"))!==false) {
+                if (($iLinePos = strpos($sArticleFileContents, "**********"))!==false) {
                     if (($iLinkPos = strpos($sArticleFileContents, $sTagLink, $iLinePos))!==false) {
-                        $sArticleFileContents = substr_replace($sArticleFileContents, '', $iLinkPos, strlen($sTagLink));
+                        $sArticleFileContents = substr_replace($sArticleFileContents, '', $iLinkPos, strlen($sTagLink)+1);
                     
                         if (file_put_contents($sArticleFile, $sArticleFileContents)===false) {
                             throw new Exception("Can't write to file '$sArticleFile'");
@@ -441,8 +441,8 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             $sArticleFileContents = file_get_contents($sArticleFile);
             $sTagFileContents = file_get_contents($sTagFile);
             
-            if (($iLinePos = strpos($sArticleContents, "***\n"))===false) {
-                $sArticleFileContents .= "\n***\n";
+            if (($iLinePos = strpos($sArticleContents, "**********"))===false) {
+                $sArticleFileContents .= "\n**********\n";
             }
             
             $sArticleFileContents .= "[".$_POST['tag']."](/tags/".$_POST['tag'].".md)\n";
@@ -472,12 +472,12 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             $sArticleFileContents = file_get_contents($sArticleFile);
             $sTagFileContents = file_get_contents($sTagFile);
             
-            $sTagLink = "[".$_POST['tag']."](/tags/".$_POST['tag'].".md)\n";
-            $sArticleLink = "[".$_POST['article']."](/articles/".$_POST['article'].".md)\n";
+            $sTagLink = "[".$_POST['tag']."](/tags/".$_POST['tag'].".md)";
+            $sArticleLink = "[".$_POST['article']."](/articles/".$_POST['article'].".md)";
             
-            if (($iLinePos = strpos($sArticleFileContents, "***\n"))!==false) {
+            if (($iLinePos = strpos($sArticleFileContents, "**********"))!==false) {
                 if (($iLinkPos = strpos($sArticleFileContents, $sTagLink, $iLinePos))!==false) {
-                    $sArticleFileContents = substr_replace($sArticleFileContents, '', $iLinkPos, strlen($sTagLink));
+                    $sArticleFileContents = substr_replace($sArticleFileContents, '', $iLinkPos, strlen($sTagLink)+1);
                 
                     if (file_put_contents($sArticleFile, $sArticleFileContents)===false) {
                         throw new Exception("Can't write to file '$aArticleFile'");
@@ -485,7 +485,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 }
             }
             if (($iLinkPos = strpos($sTagFileContents, $sArticleLink))!==false) {
-                $sTagFileContents = substr_replace($sTagFileContents, '', $iLinkPos, strlen($sArticleLink));
+                $sTagFileContents = substr_replace($sTagFileContents, '', $iLinkPos, strlen($sArticleLink)+1);
             
                 if (file_put_contents($sTagFile, $sTagFileContents)===false) {
                     throw new Exception("Can't write to file '$sTagFile'");
