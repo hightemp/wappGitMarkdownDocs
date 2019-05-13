@@ -39,13 +39,90 @@ function fnFileErrorCodeToMessage($iCode)
     } 
 } 
 
+function fnHTTPRequest($sURL)
+{
+    $sResult = '';
+    
+    if (function_exists("curl_init")) {
+        $resCURL = curl_init();
+
+        curl_setopt($resCURL, CURLOPT_HEADER, 0);
+        curl_setopt($resCURL, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($resCURL, CURLOPT_URL, $sURL);
+
+        curl_setopt($resCURL, CURLOPT_SSL_VERIFYPEER, FALSE);
+        
+        if (!empty(getenv('HTTPS_PROXY'))) {
+            curl_setopt($resCURL, CURLOPT_PROXY, preg_replace("#https?://#i", "", getenv('HTTPS_PROXY')));
+            curl_setopt($resCURL, CURLOPT_PROXYTYPE, CURLPROXY_HTTP); 
+        } else if (!empty(getenv('HTTP_PROXY'))) {
+            curl_setopt($resCURL, CURLOPT_PROXY, preg_replace("#http://#i", "", getenv('HTTP_PROXY')));
+            curl_setopt($resCURL, CURLOPT_PROXYTYPE, CURLPROXY_HTTP);
+        }
+        
+        $sResult = curl_exec($resCURL);
+        
+        $iCURLError = curl_errno($resCURL);
+        
+        curl_close($resCURL);
+
+        if ($iCURLError>0) {
+            throw new Exception(curl_strerror($iCURLError));
+        }        
+    } else if (ini_get('allow_url_fopen')==1) {
+        $sResult = safe_file_get_contents($sURL);
+    } else {
+        throw new Exception("Can't get page due to disabled functions");
+    }
+    
+    return $sResult;
+}
+
+function safe_file_get_contents($sPath)
+{
+    $aContext = [];
+    
+    if (!empty(getenv('HTTP_PROXY'))) {    
+        $aContext = [
+            'http' => [
+                'proxy' => str_replace("http", "tcp", getenv('HTTP_PROXY')),
+                'request_fulluri' => true,
+            ]
+        ];
+    }
+
+    if (!empty(getenv('HTTPS_PROXY'))) {    
+        $aContext = [
+            'https' => [
+                'proxy' => str_replace("https", "tcp", getenv('HTTPS_PROXY')),
+                'request_fulluri' => true,
+            ]
+        ];
+    }
+    
+    $resContext = stream_context_create($aContext);
+    
+    /*
+    if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+        $sPath = str_replace(" ", "%20", $sPath);
+        $sPath = str_replace("\\", "/", $sPath);
+        
+        if (strpos($sPath, "file:///")!==0) {
+            $sPath = "file:///".$sPath;
+        }
+    }
+    */
+    return file_get_contents($sPath, false, $resContext);
+}
+
 function safe_glob($sPath)
 {
     $aResult = glob($sPath);
     
-    if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+    if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN' 
+        && substr(phpversion(), 0, 1)<7) {
         foreach ($aResult as &$rsItem) {
-            $rsItem = iconv("windows-1251", "UTF-8", $rsItem);
+            $rsItem = @iconv("windows-1251", "UTF-8", $rsItem);
         }
     }
     
@@ -244,7 +321,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             $sArticlesDir = fnPath($sRepositoryDir, 'articles');
             $sArticleFile = fnPath($sArticlesDir, $_POST['article'].'.md');
             
-            $aResponse['data'] = file_get_contents($sArticleFile);            
+            $aResponse['data'] = safe_file_get_contents($sArticleFile);            
             $aResponse['data'] = preg_replace("/\n\*\*\*\*\*\*\*\*\*\*.*$/s", '', $aResponse['data']);
         }
 
@@ -558,20 +635,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             //$sArticle = str_replace(' ', '%20', $_POST['article']);
             $sArticle = rawurlencode($_POST['article']);
             
-            if (function_exists("curl_init")) {
-                $resCURL = curl_init();
-
-                curl_setopt($resCURL, CURLOPT_HEADER, 0);
-                curl_setopt($resCURL, CURLOPT_RETURNTRANSFER, 1);
-                curl_setopt($resCURL, CURLOPT_URL, "https://github.com/$sUser/{$_POST['repository']}/blob/master/articles/{$sArticle}.md");
-
-                $sPageContents = curl_exec($resCURL);
-                curl_close($resCURL);
-            } else if (ini_get('allow_url_fopen')==1) {
-                $sPageContents = file_get_contents("https://github.com/$sUser/{$_POST['repository']}/blob/master/articles/{$sArticle}.md");
-            } else {
-                throw new Exception("Can't get page due to disabled functions");
-            }
+            $sPageContents = fnHTTPRequest("https://github.com/$sUser/{$_POST['repository']}/blob/master/articles/{$sArticle}.md");
             
             $aResponse['data'] = '';
             
