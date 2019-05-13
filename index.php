@@ -70,7 +70,7 @@ function fnHTTPRequest($sURL)
             throw new Exception(curl_strerror($iCURLError));
         }        
     } else if (ini_get('allow_url_fopen')==1) {
-        $sResult = safe_file_get_contents($sURL);
+        $sResult = http_file_get_contents($sURL);
     } else {
         throw new Exception("Can't get page due to disabled functions");
     }
@@ -79,6 +79,41 @@ function fnHTTPRequest($sURL)
 }
 
 function safe_file_get_contents($sPath)
+{
+    if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN'
+        && substr(phpversion(), 0, 1)<7) {        
+        
+        $sPath = @iconv("UTF-8", "windows-1251", $sPath);
+        
+        return shell_exec("cat '$sPath'");
+    /*
+        //$sPath = str_replace(" ", "+", $sPath);
+        
+        $sPath = str_replace(__DIR__, '', $sPath);
+        $aPath = explode("\\", $sPath);
+        foreach ($aPath as $iKey => &$rsElement) {
+            if ($iKey===0 && strpos($rsElement, ":")!==false) {
+                array_splice($aPath, $iKey, 1);
+                continue;
+            }
+            $rsElement = rawurlencode($rsElement);
+        }
+        $sPath = implode("/", $aPath);
+        //$sPath = str_replace("\\", "/", $sPath);
+        
+        if (strpos($sPath, "file:///")!==0) {
+            $sPath = "http://127.0.0.1:8090".$sPath;
+            //$sPath = "file:///".$sPath;
+        }
+        
+        echo $sPath;        
+    */
+    }
+    
+    return file_get_contents($sPath);
+}
+
+function http_file_get_contents($sPath)
 {
     $aContext = [];
     
@@ -98,16 +133,6 @@ function safe_file_get_contents($sPath)
     
     $resContext = stream_context_create($aContext);
     
-    /*
-    if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-        $sPath = str_replace(" ", "%20", $sPath);
-        $sPath = str_replace("\\", "/", $sPath);
-        
-        if (strpos($sPath, "file:///")!==0) {
-            $sPath = "file:///".$sPath;
-        }
-    }
-    */
     return file_get_contents($sPath, false, $resContext);
 }
 
