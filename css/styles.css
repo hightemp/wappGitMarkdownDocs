@@ -1,7 +1,10 @@
  
 body, html {
     height: 100%;
+    font-size: 12px;
 }
+
+
 
 #application {
     height: 100%;
@@ -74,7 +77,14 @@ body, html {
 }
 
 .CodeMirror {
-    height: calc(100% - 165px - 200px);
+    height: calc(100% - 360px);
+}
+
+.CodeMirror-scroll {
+    min-height: auto !important;
+    right: 0px;
+    top: 0px;
+    position: absolute;
 }
 
 .current-article-tags-block {
