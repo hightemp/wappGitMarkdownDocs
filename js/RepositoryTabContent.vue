@@ -1038,7 +1038,7 @@ export default {
         {
             this.iActiveArticle = -1;
             this.sActiveTag = sTagName;
-            localStorage.setItem(this.iIndex+'sActiveTag', sTagName);
+            localStorage.setItem(this.oRepository.sName+'_sActiveTag', sTagName);
         },
         fnArticleExists: function(iIndex)
         {
@@ -1077,7 +1077,7 @@ export default {
                     }
                     
                     this.iActiveArticle = iIndex;
-                    localStorage.setItem(this.iIndex+'iActiveArticle', iIndex);
+                    localStorage.setItem(this.oRepository.sName+'_iActiveArticle', iIndex);
             
                     var oThis = this;
                     
@@ -1571,8 +1571,8 @@ export default {
             ]
         });
         
-        oThis.fnSelectTag(localStorage.getItem(oThis.iIndex+'sActiveTag'));
-        oThis.fnSelectArticle(localStorage.getItem(oThis.iIndex+'iActiveArticle'));
+        oThis.fnSelectTag(localStorage.getItem(this.oRepository.sName+'_sActiveTag'));
+        oThis.fnSelectArticle(localStorage.getItem(this.oRepository.sName+'_iActiveArticle'));
     },
     
     created: function()
