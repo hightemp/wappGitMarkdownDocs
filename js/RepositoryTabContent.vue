@@ -1226,7 +1226,7 @@ export default {
                     
                     if (this.sUploadImagesMode=='update-modal') {
                         for (var iIndex=0; iIndex<oResponse.body.data.length; iIndex++) {
-                            var sImage = oResponse.body.data[iIndex].replace(/^\/images\//, '');
+                            var sImage = oResponse.body.data[iIndex];
                             var iIndex = this.aImagesModalFiles.indexOf(sImage);
                             
                             if (iIndex>-1) {
@@ -1237,7 +1237,7 @@ export default {
                         }
                     } else if (this.sUploadImagesMode=='insert') {
                         for (var iIndex=0; iIndex<oResponse.body.data.length; iIndex++) {
-                            this.fnInsertImage(oResponse.body.data[iIndex]);
+                            this.fnInsertImage('/images/'+oResponse.body.data[iIndex]);
                         }
                     }
                 });
@@ -1373,7 +1373,7 @@ export default {
                     
                     if (this.sUploadFilesMode=='update-modal') {
                         for (var iIndex=0; iIndex<oResponse.body.data.length; iIndex++) {
-                            var sFile = oResponse.body.data[iIndex].replace(/^\/files\//, '');
+                            var sFile = oResponse.body.data[iIndex];
                             var iIndex = this.aFilesModalFiles.indexOf(sFile);
                             
                             if (iIndex>-1) {
@@ -1384,7 +1384,7 @@ export default {
                         }
                     } else if (this.sUploadFilesMode=='insert') {
                         for (var iIndex=0; iIndex<oResponse.body.data.length; iIndex++) {
-                            this.fnInsertFile(oResponse.body.data[iIndex]);
+                            this.fnInsertFile('/files/'+oResponse.body.data[iIndex]);
                         }
                     }
                 });

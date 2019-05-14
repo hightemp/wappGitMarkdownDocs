@@ -679,7 +679,8 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                     }
                 //}
                 
-                $aResponse['data'][] = str_replace($sRepositoryDir, '', $sImagesFile);
+                //$aResponse['data'][] = str_replace($sRepositoryDir, '', $sImagesFile);
+                $aResponse['data'][] = basename($sImagesFile);
             }
             
             fnCommitAndPushRepository($sRepositoryDir);
@@ -720,7 +721,8 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                     }
                 //}
                 
-                $aResponse['data'][] = str_replace($sRepositoryDir, '', $sFile);
+                //$aResponse['data'][] = str_replace($sRepositoryDir, '', $sFile);
+                $aResponse['data'][] = basename($sFile);
             }
             
             fnCommitAndPushRepository($sRepositoryDir);
