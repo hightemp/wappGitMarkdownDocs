@@ -254,6 +254,38 @@
         </div>
 
         <b-modal
+            id="add-youtube-video-modal"
+            ref="add_youtube_video_modal"
+            title="Add youtube video"
+            @ok="fnAddYoutubeVideo"
+        >
+            <form 
+                ref="add_youtube_video_modal_form" 
+                @submit.stop.prevent="fnAddYoutubeVideo"
+            >
+                <b-form-group
+                    label="URL or hash"
+                    label-for="youtube-video-url-input"
+                >
+                    <b-form-input
+                        id="youtube-video-url-input"
+                        v-model="sYoutubeVideoURL"
+                        ref="add_youtube_video_modal_url_input"
+                    ></b-form-input>
+                </b-form-group>
+                <hr 
+                    v-if="sYoutubeVideoURL!=''"
+                >
+                <b-img
+                    v-if="sYoutubeVideoURL!=''"
+                    :src="'http://img.youtube.com/vi/' 
+                    + (/http:/.test(sYoutubeVideoURL) ? fnGetYoutubeHash(sYoutubeVideoURL) : sYoutubeVideoURL) 
+                    + '/0.jpg'"
+                ></b-img>
+            </form>
+        </b-modal>
+
+        <b-modal
             id="add-new-tag-modal"
             ref="add_new_tag_modal"
             title=""
@@ -448,6 +480,8 @@ export default {
             oEditor: null,
             oSimpleMDE: null,
             oUploadedFile: null,
+            
+            sYoutubeVideoURL: '',
             
             aImagesModalFiles: [],
             aImagesModalSelectedFiles: [],
@@ -1146,14 +1180,14 @@ export default {
                 });
         },
         
-        fnInsertImage: function(sURL)
+        fnInsertImage: function(sURL, bCursorToEnd)
         {
             var cm = this.oEditor.codemirror;
             var stat = this.fnGetState(cm);
             var options = this.oEditor.options;
             var url = sURL;
             
-            this.fnReplaceSelection(cm, stat.image, options.insertTexts.image, url);
+            this.fnReplaceSelection(cm, stat.image, options.insertTexts.image, url, bCursorToEnd);
         },
         fnUploadImages: function()
         {
@@ -1248,7 +1282,7 @@ export default {
         fnInsertImageFromModal: function()
         {
             for (var iIndex=0; iIndex<this.aImagesModalSelectedFiles.length; iIndex++) {
-                this.fnInsertImage('/images/'+this.aImagesModalSelectedFiles[iIndex]);
+                this.fnInsertImage('/images/'+this.aImagesModalSelectedFiles[iIndex], true);
             }
             this.$refs.images_modal.hide();
         },
@@ -1285,14 +1319,14 @@ export default {
                 });
         },
         
-        fnInsertFile: function(sURL)
+        fnInsertFile: function(sURL, bCursorToEnd)
         {
             var cm = this.oEditor.codemirror;
             var stat = this.fnGetState(cm);
             var options = this.oEditor.options;
             var url = sURL;
             
-            this.fnReplaceSelection(cm, stat.link, options.insertTexts.link, url);
+            this.fnReplaceSelection(cm, stat.link, options.insertTexts.link, url, bCursorToEnd);
         },
         fnUploadFiles: function()
         {
@@ -1387,7 +1421,7 @@ export default {
         fnInsertFileFromModal: function()
         {
             for (var iIndex=0; iIndex<this.aFilesModalSelectedFiles.length; iIndex++) {
-                this.fnInsertFile('/files/'+this.aFilesModalSelectedFiles[iIndex]);
+                this.fnInsertFile('/files/'+this.aFilesModalSelectedFiles[iIndex], true);
             }
             this.$refs.files_modal.hide();
         },
@@ -1422,6 +1456,20 @@ export default {
                     
                     this.aFilesModalSelectedFiles = [];
                 });
+        },
+        
+        fnAddYoutubeVideo: function()
+        {
+            var sHash = /http:/.test(this.sYoutubeVideoURL) ? this.fnGetYoutubeHash(this.sYoutubeVideoURL) : this.sYoutubeVideoURL;
+            
+            this.fnInsertFile("http://www.youtube.com/watch?v="+sHash);
+            this.fnInsertImage("http://img.youtube.com/vi/"+sHash+"/0.jpg");
+        },
+        fnGetYoutubeHash: function(sURL)
+        {
+            var aResult = sURL.match(/http:\/\/www\.youtube\.com\/watch\?v=(\w+)/);
+            
+            return aResult[1];
         },
         
         fnGetState: function (cm, pos) 
@@ -1465,7 +1513,7 @@ export default {
             }
             return ret;
         },
-        fnReplaceSelection: function (cm, active, startEnd, url) 
+        fnReplaceSelection: function (cm, active, startEnd, url, bCursorToEnd) 
         {
             if(/editor-preview-active/.test(cm.getWrapperElement().lastChild.className))
                 return;
@@ -1496,10 +1544,13 @@ export default {
                 }
             }
             cm.setSelection(startPoint, endPoint);
-            var oCursorPosition = cm.getCursor(); 
-            oCursorPosition.ch += url.length+end.length;
-            cm.setCursor(oCursorPosition);
-            cm.focus();
+            
+            if (bCursorToEnd) {
+                var oCursorPosition = cm.getCursor(); 
+                oCursorPosition.ch += url.length+end.length;
+                cm.setCursor(oCursorPosition);
+                cm.focus();
+            }
         }
     },
     
@@ -1546,7 +1597,7 @@ export default {
                 },
                 {
                     name: "insert-picture-from-collection",
-                    action: function customFunction(oEditor)
+                    action: function(oEditor)
                     {
                         oThis.oEditor = oEditor;
                         oThis.sUploadImagesMode = 'update-modal';
@@ -1558,7 +1609,7 @@ export default {
                 },
                 {
                     name: "insert-files-from-collection",
-                    action: function customFunction(oEditor)
+                    action: function(oEditor)
                     {
                         oThis.oEditor = oEditor;
                         oThis.sUploadFilesMode = 'update-modal';
@@ -1567,7 +1618,20 @@ export default {
                     },
                     className: "fa fa-file-o",
                     title: "Insert file from collection",
-                },                
+                },
+                {
+                    name: "insert-youtube-video",
+                    action: function(oEditor)
+                    {
+                        oThis.oEditor = oEditor;
+                        
+                        oThis.sYoutubeVideoURL = '';
+                        oThis.$refs.add_youtube_video_modal.hideFooter = false;
+                        oThis.$refs.add_youtube_video_modal.show();
+                    },
+                    className: "fa fa-youtube-play",
+                    title: "Insert youtube video",
+                },
             ]
         });
         
