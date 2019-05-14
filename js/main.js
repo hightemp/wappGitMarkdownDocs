@@ -10,6 +10,7 @@ import 'bootstrap-vue/dist/bootstrap-vue.css'
 Vue.use(BootstrapVue)
 
 import '../css/styles.css'
+import '../css/font-awesome.min.css'
 
 import Snotify, { SnotifyPosition } from 'vue-snotify'
 

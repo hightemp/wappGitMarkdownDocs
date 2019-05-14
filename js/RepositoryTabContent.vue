@@ -1581,6 +1581,7 @@ export default {
         var oThis = this;
         
         this.oSimpleMDE = new SimpleMDE({ 
+            autoDownloadFontAwesome: false,
             element: this.$el.querySelector('.page-content-textarea'),
             toolbar: [
                 "bold",
