@@ -5,13 +5,13 @@
             <div class="tags-sidebar col-xl-2">
                 <div class="container-fluid">
                     <div class="filter-row row flex-xl-nowrap2">
-                        <div class="col-xl-6">
+                        <div class="filter-input-col">
                             <b-form-input 
                                 placeholder="Filter"
                                 v-model="sTagFilterString"
                             ></b-form-input>
                         </div>
-                        <div class="col-xl-2">
+                        <div class="filter-buttons-col">
                             <b-button
                                 @click="fnShowRenameTagModal"
                                 :disabled="sActiveTag=='__all__'"
@@ -20,7 +20,7 @@
                                 <i class="fa fa-pencil"></i>
                             </b-button>
                         </div>
-                        <div class="col-xl-2">
+                        <div class="filter-buttons-col">
                             <b-button 
                                 variant="success"
                                 @click="fnShowNewTagModal"
@@ -29,7 +29,7 @@
                                 <i class="fa fa-plus"></i>
                             </b-button>
                         </div>
-                        <div class="col-xl-2">
+                        <div class="filter-buttons-col">
                             <b-button 
                                 variant="danger" 
                                 @click="fnRemoveTag"
@@ -65,14 +65,14 @@
             <div class="articles-sidebar col-xl-2">
                 <div class="container-fluid">
                     <div class="filter-row row flex-xl-nowrap2">
-                        <div class="col-xl-6">
+                        <div class="filter-input-col">
                             <b-form-input 
                                 placeholder="Filter"
                                 v-model="sArticleFilterString"
                                 @input="fnSearchArticle"
                             ></b-form-input>
                         </div>
-                        <div class="col-xl-2">
+                        <div class="filter-buttons-col">
                             <b-button
                                 @click="fnShowRenameArticleModal"
                                 :disabled="!fnArticleExists()"
@@ -81,7 +81,7 @@
                                 <i class="fa fa-pencil"></i>
                             </b-button>
                         </div>
-                        <div class="col-xl-2">
+                        <div class="filter-buttons-col">
                             <b-button 
                                 variant="success"
                                 v-b-modal.add-new-article-modal 
@@ -90,7 +90,7 @@
                                 <i class="fa fa-plus"></i>
                             </b-button>
                         </div>
-                        <div class="col-xl-2">
+                        <div class="filter-buttons-col">
                             <b-button 
                                 variant="danger" 
                                 @click="fnRemoveArticle"
@@ -356,6 +356,7 @@
                         :src="'/repositories/'+oRepository.sName+'/images/'+sImage" 
                         :alt="sImage"
                         class="align-self-center"
+                        :hint="sImage"
                     ></b-img>
                 </div>
             </div>

@@ -14,7 +14,7 @@
                     <b-link 
                         class="close-tab-button"
                         @click="fnCloseTab(iIndex)"
-                    >&#10005;</b-link>
+                        ><b>&#10005;</b></b-link>
                 </template>
                 <repository-tab-content
                     :oRepository="oItem"
@@ -29,7 +29,7 @@
                     v-b-modal.add-new-repository-modal
                     href="#"
                 >
-                    <b>+</b>
+                    <i class="fa fa-plus"></i>
                 </b-nav-item>
                 <b-nav-item  
                     href="#"

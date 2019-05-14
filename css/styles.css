@@ -64,8 +64,18 @@ body, html {
 }
 
 .filter-row .btn {
-    padding-left: 8px;
-    padding-right: 8px;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+.filter-input-col {
+    flex: 0 0 calc(100% - 90px);
+    max-width: calc(100% - 90px);
+}
+
+.filter-buttons-col {
+    flex: 0 0 30px;
+    max-width: 30px;    
 }
 
 .tab-pane:focus {
@@ -78,10 +88,11 @@ body, html {
 
 .CodeMirror {
     height: calc(100% - 360px);
+    min-height: 0px !important;
 }
 
 .CodeMirror-scroll {
-    min-height: auto !important;
+    min-height: 0px !important;
     right: 0px;
     top: 0px;
     position: absolute;

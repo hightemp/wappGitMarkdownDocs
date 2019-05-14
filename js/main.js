@@ -19,7 +19,7 @@ const oOptions = {
     toast: {
         position: SnotifyPosition.rightTop,
         closeOnClick: true,
-        timeout: 0
+        //timeout: 0
     }
 }
 
