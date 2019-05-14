@@ -666,6 +666,8 @@ export default {
                     }
                 ).then(function(oResponse)
                 {
+                    window.oApplication.bShowLoadingScreen = false;
+                    
                     if (oResponse.body.status=='error') {
                         this.$snotify.error(oResponse.body.message, 'Error');
                         return;
@@ -690,8 +692,6 @@ export default {
                     this.fnSelectArticle(iActiveArticle);
                     
                     if (fnCallback) fnCallback.call(this);
-                    
-                    window.oApplication.bShowLoadingScreen = false;
                 });            
         },
         fnAddTag: function(fnCallback)
@@ -711,6 +711,8 @@ export default {
                     }
                 ).then(function(oResponse)
                 {
+                    window.oApplication.bShowLoadingScreen = false;
+                    
                     if (oResponse.body.status=='error') {
                         this.$snotify.error(oResponse.body.message, 'Error');
                         return;
@@ -721,8 +723,6 @@ export default {
                     //this.fnSelectTag(this.sNewTag);
                     
                     if (fnCallback) fnCallback.call(this);
-                    
-                    window.oApplication.bShowLoadingScreen = false;
                 });
         },
         fnRemoveTag: function(fnCallback)
@@ -748,6 +748,8 @@ export default {
                     }
                 ).then(function(oResponse)
                 {
+                    window.oApplication.bShowLoadingScreen = false;
+                    
                     if (oResponse.body.status=='error') {
                         this.$snotify.error(oResponse.body.message, 'Error');
                         return;
@@ -762,8 +764,6 @@ export default {
                     delete this.oRepository.oTags[sActiveTag];
                     
                     if (fnCallback) fnCallback.call(this);
-                    
-                    window.oApplication.bShowLoadingScreen = false;
                 });
         },
         
@@ -864,6 +864,8 @@ export default {
                     }
                 ).then(function(oResponse)
                 {
+                    window.oApplication.bShowLoadingScreen = false;
+                    
                     if (oResponse.body.status=='error') {
                         this.$snotify.error(oResponse.body.message, 'Error');
                         return;
@@ -885,7 +887,6 @@ export default {
                     
                     if (fnCallback) fnCallback.call(this);
                     
-                    window.oApplication.bShowLoadingScreen = false;
                     //this.fnPushRepository(true);
                 });            
         },        
@@ -907,6 +908,8 @@ export default {
                     }
                 ).then(function(oResponse)
                 {
+                    window.oApplication.bShowLoadingScreen = false;
+                    
                     if (oResponse.body.status=='error') {
                         this.$snotify.error(oResponse.body.message, 'Error');
                         return;
@@ -922,8 +925,6 @@ export default {
                     }
                     
                     if (fnCallback) fnCallback.call(this);
-                    
-                    window.oApplication.bShowLoadingScreen = false;
                 });
         },
         fnRemoveArticle: function(fnCallback)
@@ -945,6 +946,8 @@ export default {
                     }
                 ).then(function(oResponse)
                 {
+                    window.oApplication.bShowLoadingScreen = false;
+                    
                     if (oResponse.body.status=='error') {
                         this.$snotify.error(oResponse.body.message, 'Error');
                         return;
@@ -972,8 +975,6 @@ export default {
                     }
                     
                     if (fnCallback) fnCallback.call(this);
-                    
-                    window.oApplication.bShowLoadingScreen = false;
                 });
         },
         fnAddArticleTag(sArticle, sTag)
@@ -991,7 +992,9 @@ export default {
                         tag: sTag
                     }
                 ).then(function(oResponse)
-                {
+                {                    
+                    window.oApplication.bShowLoadingScreen = false;
+                    
                     if (oResponse.body.status=='error') {
                         this.$snotify.error(oResponse.body.message, 'Error');
                         return;
@@ -1000,8 +1003,6 @@ export default {
                     this.oRepository.oTags[sTag].push(sArticle);
                     
                     this.fnSelectArticle(this.iActiveArticle);
-                    
-                    window.oApplication.bShowLoadingScreen = false;
                 });
         },
         fnRemoveArticleTag(sArticle, sTag)
@@ -1020,6 +1021,8 @@ export default {
                     }
                 ).then(function(oResponse)
                 {
+                    window.oApplication.bShowLoadingScreen = false;
+                    
                     if (oResponse.body.status=='error') {
                         this.$snotify.error(oResponse.body.message, 'Error');
                         return;
@@ -1034,9 +1037,7 @@ export default {
                     }
                     this.oRepository.oTags[sTag].splice(iIndex, 1);
                     
-                    this.fnSelectArticle(this.iActiveArticle);
-                    
-                    window.oApplication.bShowLoadingScreen = false;
+                    this.fnSelectArticle(this.iActiveArticle);                    
                 });
         },
         fnFindTagsWithArticle(sArticle)
@@ -1197,6 +1198,8 @@ export default {
                 return;
             }
 
+            window.oApplication.bShowLoadingScreen = true;
+            
             var oFormData = new FormData();
 
             oFormData.append('action', 'upload_images');
@@ -1212,7 +1215,9 @@ export default {
                     '',
                     oFormData
                 ).then(function(oResponse)
-                {
+                {                    
+                    window.oApplication.bShowLoadingScreen = false;
+                    
                     if (oResponse.body.status=='error') {
                         this.$snotify.error(oResponse.body.message, 'Error');
                         this.fnUpdateImagesList();
@@ -1292,6 +1297,8 @@ export default {
         },
         fnRemoveImage: function()
         {
+            window.oApplication.bShowLoadingScreen = true;
+            
             this
                 .$http
                 .post(
@@ -1303,6 +1310,8 @@ export default {
                     }
                 ).then(function(oResponse)
                 {
+                    window.oApplication.bShowLoadingScreen = false;
+                    
                     if (oResponse.body.status=='error') {
                         this.$snotify.error(oResponse.body.message, 'Error');
                         return;
@@ -1335,6 +1344,8 @@ export default {
             if (!oFiles.length) {
                 return;
             }
+            
+            window.oApplication.bShowLoadingScreen = true;
 
             var oFormData = new FormData();
 
@@ -1352,6 +1363,8 @@ export default {
                     oFormData
                 ).then(function(oResponse)
                 {
+                    window.oApplication.bShowLoadingScreen = false;
+                    
                     if (oResponse.body.status=='error') {
                         this.$snotify.error(oResponse.body.message, 'Error');
                         this.fnUpdateFilesList();
@@ -1431,6 +1444,8 @@ export default {
         },
         fnRemoveFile: function()
         {
+            window.oApplication.bShowLoadingScreen = true;
+            
             this
                 .$http
                 .post(
@@ -1442,6 +1457,8 @@ export default {
                     }
                 ).then(function(oResponse)
                 {
+                    window.oApplication.bShowLoadingScreen = false;
+                    
                     if (oResponse.body.status=='error') {
                         this.$snotify.error(oResponse.body.message, 'Error');
                         return;
