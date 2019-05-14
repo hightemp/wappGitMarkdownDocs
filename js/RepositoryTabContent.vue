@@ -84,7 +84,7 @@
                         <div class="filter-buttons-col">
                             <b-button 
                                 variant="success"
-                                v-b-modal.add-new-article-modal 
+                                @click="fnShowNewArticleModal" 
                                 block
                             >
                                 <i class="fa fa-plus"></i>
@@ -790,6 +790,7 @@ export default {
             oEvent.preventDefault();
             
             if (!this.fnCheckNewArticleForm()) {
+                console.log('fnCheckNewArticleForm', this.fnCheckNewArticleForm());
                 return;
             }
 
@@ -818,6 +819,7 @@ export default {
         },   
         fnShowNewArticleModal: function()
         {
+            console.log('fnShowNewArticleModal');
             this.sNewArticleModalMode = 'add';
             this.$refs.add_new_article_modal.show();
 
@@ -831,6 +833,7 @@ export default {
         },
         fnShowRenameArticleModal: function()
         {
+            console.log('fnShowRenameArticleModal');
             this.sNewArticleModalMode = 'rename';
             this.$refs.add_new_article_modal.show();
 
