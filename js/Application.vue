@@ -72,6 +72,17 @@
         </b-modal>
         
         <vue-snotify/>
+        
+        <div 
+            v-show="bShowLoadingScreen"
+        >
+            <div class="loading-screen d-flex justify-content-center align-items-center">
+                <b-spinner 
+                    variant="primary"
+                    style="width: 100px; height: 100px;" 
+                ></b-spinner>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -100,6 +111,8 @@ export default Vue.extend({
             sRepositoryURL: '',
             
             bShowAddRepositoryButtonSpinner: false,
+            
+            bShowLoadingScreen: false,
             
             iActiveTab: -1,
             aRepositories: [
@@ -150,6 +163,8 @@ export default Vue.extend({
         },
         fnGetRepositories: function()
         {
+            this.bShowLoadingScreen = true;
+            
             this
                 .$http
                 .post(
@@ -165,6 +180,8 @@ export default Vue.extend({
                     }
                     
                     this.aRepositories = oResponse.body.data;
+                    
+                    this.bShowLoadingScreen = false;
                 });
         },
         fnAddRepository: function()
@@ -191,7 +208,7 @@ export default Vue.extend({
 
                     this.aRepositories.push(oResponse.body.data);
                     
-                    this.sRepositoryURL = '';                    
+                    this.sRepositoryURL = '';                     
                 });
         },
         fnResetNewRepositoryModal: function()
@@ -244,6 +261,11 @@ export default Vue.extend({
             this.iActiveTab = iIndex;
             localStorage.setItem('iActiveTab', iIndex);
         }
+    },
+    
+    created: function()
+    {
+        window.oApplication = this;
     },
     
     mounted: function()

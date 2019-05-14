@@ -32,7 +32,7 @@
                         <div class="filter-buttons-col">
                             <b-button 
                                 variant="danger" 
-                                @click="fnRemoveTag"
+                                @click="fnRemoveTag()"
                                 :disabled="sActiveTag=='__all__'"
                                 block
                             >
@@ -93,7 +93,7 @@
                         <div class="filter-buttons-col">
                             <b-button 
                                 variant="danger" 
-                                @click="fnRemoveArticle"
+                                @click="fnRemoveArticle()"
                                 :disabled="!aArticles.length"
                                 block
                             >
@@ -167,7 +167,7 @@
                     
                     <div class="container-fluid">
                         <div class="filter-row row flex-xl-nowrap2">
-                            <div class="col-xl-11">
+                            <div class="tag-filter-input-col">
                                 <b-form-input 
                                     placeholder="Filter"
                                     v-model="sCurrentArticleTagFilterString"
@@ -176,7 +176,7 @@
                             <b-form-checkbox 
                                 v-model="bCurrentArticleFilterSelectedTags" 
                                 button
-                                class="col-xl-1"
+                                class="tag-filter-buttons-col"
                                 button-variant="info"
                             >
                                 <i class="fa fa-check-square"></i>
@@ -236,7 +236,7 @@
             
                 <div
                     v-if="bShowArticleViewContentsSpinner"
-                    class="article-view-contents-spinner d-flex justify-content-center"
+                    class="article-view-contents-spinner d-flex justify-content-center align-items-center"
                 >
                     <b-spinner 
                         variant="primary"
@@ -501,7 +501,6 @@ export default {
     methods: {
         fnPushRepository: function(bPushOnly)
         {
-            
             var oData = {
                 action: 'push_repository',
                 repository: this.oRepository.sName,
@@ -618,6 +617,8 @@ export default {
         {
             console.log('fnRenameTag', this.sNewTag);
             
+            window.oApplication.bShowLoadingScreen = true;
+            
             this
                 .$http
                 .post(
@@ -655,11 +656,15 @@ export default {
                     this.fnSelectArticle(iActiveArticle);
                     
                     if (fnCallback) fnCallback.call(this);
+                    
+                    window.oApplication.bShowLoadingScreen = false;
                 });            
         },
         fnAddTag: function(fnCallback)
         {
             console.log('fnAddTag', this.sNewTag);
+            
+            window.oApplication.bShowLoadingScreen = true;
             
             this
                 .$http
@@ -682,6 +687,8 @@ export default {
                     //this.fnSelectTag(this.sNewTag);
                     
                     if (fnCallback) fnCallback.call(this);
+                    
+                    window.oApplication.bShowLoadingScreen = false;
                 });
         },
         fnRemoveTag: function(fnCallback)
@@ -693,6 +700,8 @@ export default {
             if (!confirm("Delete tag '"+this.sActiveTag+"'?")) {
                 return;
             }
+            
+            window.oApplication.bShowLoadingScreen = true;
             
             this
                 .$http
@@ -719,6 +728,8 @@ export default {
                     delete this.oRepository.oTags[sActiveTag];
                     
                     if (fnCallback) fnCallback.call(this);
+                    
+                    window.oApplication.bShowLoadingScreen = false;
                 });
         },
         
@@ -802,6 +813,8 @@ export default {
         {
             console.log('fnRenameArticle', this.sNewTag);
             
+            window.oApplication.bShowLoadingScreen = true;
+            
             var sArticle = this.aArticles[this.iActiveArticle];
             
             this
@@ -838,12 +851,15 @@ export default {
                     
                     if (fnCallback) fnCallback.call(this);
                     
+                    window.oApplication.bShowLoadingScreen = false;
                     //this.fnPushRepository(true);
                 });            
         },        
         fnAddArticle: function(fnCallback)
         {
             console.log('fnAddArticle');
+            
+            window.oApplication.bShowLoadingScreen = true;
             
             this
                 .$http
@@ -872,6 +888,8 @@ export default {
                     }
                     
                     if (fnCallback) fnCallback.call(this);
+                    
+                    window.oApplication.bShowLoadingScreen = false;
                 });
         },
         fnRemoveArticle: function(fnCallback)
@@ -879,7 +897,9 @@ export default {
             if (!confirm("Delete article '"+this.aArticles[this.iActiveArticle]+"'?")) {
                 return;
             }
-                
+            
+            window.oApplication.bShowLoadingScreen = true;
+            
             this
                 .$http
                 .post(
@@ -918,10 +938,14 @@ export default {
                     }
                     
                     if (fnCallback) fnCallback.call(this);
+                    
+                    window.oApplication.bShowLoadingScreen = false;
                 });
         },
         fnAddArticleTag(sArticle, sTag)
         {
+            window.oApplication.bShowLoadingScreen = true;
+            
             this
                 .$http
                 .post(
@@ -942,10 +966,14 @@ export default {
                     this.oRepository.oTags[sTag].push(sArticle);
                     
                     this.fnSelectArticle(this.iActiveArticle);
+                    
+                    window.oApplication.bShowLoadingScreen = false;
                 });
         },
         fnRemoveArticleTag(sArticle, sTag)
         {
+            window.oApplication.bShowLoadingScreen = true;
+            
             this
                 .$http
                 .post(
@@ -973,6 +1001,8 @@ export default {
                     this.oRepository.oTags[sTag].splice(iIndex, 1);
                     
                     this.fnSelectArticle(this.iActiveArticle);
+                    
+                    window.oApplication.bShowLoadingScreen = false;
                 });
         },
         fnFindTagsWithArticle(sArticle)

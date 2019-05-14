@@ -32,7 +32,7 @@ Vue.use(VueResource);
 Vue.http.options.emulateJSON = true;
 
 
-window.oApplication = new Vue({
+window.oVue = new Vue({
   el: '#application',
   render: h => h(App)
 })

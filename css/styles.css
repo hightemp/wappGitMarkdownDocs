@@ -4,7 +4,15 @@ body, html {
     font-size: 12px;
 }
 
-
+.loading-screen {
+    position: absolute;
+    top: 0px;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+    background: rgba(255, 255, 255, 0.5);
+    z-index: 9999;
+}
 
 #application {
     height: 100%;
@@ -76,6 +84,20 @@ body, html {
 .filter-buttons-col {
     flex: 0 0 30px;
     max-width: 30px;    
+}
+
+.tag-filter-input-col {
+    flex: 0 0 calc(100% - 30px);
+    max-width: calc(100% - 30px);    
+}
+
+.tag-filter-buttons-col {
+    flex: 0 0 30px;
+    max-width: 30px;    
+}
+
+.tag-filter-buttons-col .btn {
+    display: block;
 }
 
 .tab-pane:focus {
