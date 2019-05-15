@@ -288,7 +288,6 @@
         <b-modal
             id="add-new-tag-modal"
             ref="add_new_tag_modal"
-            title=""
             @ok="fnNewTagFormSubmit"
         >
             <form 
@@ -315,7 +314,6 @@
         <b-modal
             id="add-new-article-modal"
             ref="add_new_article_modal"
-            title=""
             @ok="fnNewArticleFormSubmit"
         >
             <form 
@@ -447,6 +445,8 @@
 </template>
 
 <script>
+
+import '@babel/polyfill'
 
 import SimpleMDE from 'simplemde';
 
@@ -961,9 +961,9 @@ export default {
                     
                     if (iNewiActiveArticle>0) {
                         iNewiActiveArticle--;
+                    } else {
+                        iNewiActiveArticle = 0;
                     }
-                    
-                    this.fnSelectArticle(iNewiActiveArticle);
                     
                     var sArticle = this.aArticles[iActiveArticle];
                     
@@ -976,6 +976,8 @@ export default {
                             this.oRepository.oTags[sTag].splice(iIndex, 1);
                         }
                     }
+                    
+                    this.fnSelectArticle(iNewiActiveArticle);
                     
                     if (fnCallback) fnCallback.call(this);
                 });
@@ -1090,10 +1092,14 @@ export default {
         },
         fnSelectArticleWithName: function(sName)
         {
+            console.log('fnSelectArticleWithName', sName);
+            
             this.fnSelectArticle(this.aArticles.indexOf(sName));
         },
         fnSelectArticle: function(iIndex)
         {
+            console.log('fnSelectArticle', iIndex);
+            
             if (typeof this.aArticles[iIndex] == 'undefined') {
                 return;
             }
@@ -1115,7 +1121,7 @@ export default {
                     }
                     
                     this.iActiveArticle = iIndex;
-                    localStorage.setItem(this.oRepository.sName+'_iActiveArticle', iIndex);
+                    localStorage.setItem(this.oRepository.sName+'_iActiveArticle', this.aArticles[iIndex]);
             
                     var oThis = this;
                     
@@ -1657,7 +1663,7 @@ export default {
         });
         
         oThis.fnSelectTag(localStorage.getItem(this.oRepository.sName+'_sActiveTag'));
-        oThis.fnSelectArticle(localStorage.getItem(this.oRepository.sName+'_iActiveArticle'));
+        oThis.fnSelectArticleWithName(localStorage.getItem(this.oRepository.sName+'_iActiveArticle'));
     },
     
     created: function()
