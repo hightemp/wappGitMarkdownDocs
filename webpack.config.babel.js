@@ -2,7 +2,7 @@
 const { VueLoaderPlugin } = require('vue-loader')
 
 module.exports = {
-    mode: 'production',
+    mode: 'development', //'production',
     entry: [
         './js/main.js'
     ],
@@ -12,12 +12,15 @@ module.exports = {
                 test: /\.vue$/,
                 loader: 'vue-loader',
                 options: {
-                    extractCSS: true
+                    extractCSS: true,
+                    loaders: {
+                        js: 'babel-loader!eslint-loader'
+                    }
                 }
             },
             {
                 test: /\.js$/,
-                exclude: /node_modules/,
+                //exclude: /node_modules\/(?!vue-resource|vue|vue-snotify|simplemde|bootstrap-vue)/,
                 use: {
                     loader: 'babel-loader',
                 }

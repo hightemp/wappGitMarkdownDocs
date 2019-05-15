@@ -21,12 +21,12 @@ import "vue-snotify/styles/material.css";
 const oOptions = {
     toast: {
         position: SnotifyPosition.rightTop,
-        closeOnClick: true,
+        closeOnClick: true
         //timeout: 0
     }
-}
+};
 
-Vue.use(Snotify, oOptions)
+Vue.use(Snotify, oOptions);
 
 import VueResource from 'vue-resource';
 
@@ -43,4 +43,4 @@ window.addEventListener("unhandledrejection", function (event) {
 window.oVue = new Vue({
   el: '#application',
   render: h => h(App)
-})
+});

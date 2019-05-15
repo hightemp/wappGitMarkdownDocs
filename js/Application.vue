@@ -19,6 +19,7 @@
                 <repository-tab-content
                     :oRepository="oItem"
                     :iIndex="iIndex"
+                    :bActive="iActiveTab == -1 && iIndex == 0 || iActiveTab == iIndex"
                 >
                 </repository-tab-content>
             </b-tab>
@@ -96,7 +97,7 @@ export default Vue.extend({
     name: 'Application',
     
     components: {
-        'repository-tab-content' : RepositoryTabContent,
+        'repository-tab-content' : RepositoryTabContent
     },
     
     props: {
@@ -137,7 +138,7 @@ export default Vue.extend({
                 }
             */
             ]
-        }
+        };
     },
   
     methods: {
@@ -191,6 +192,9 @@ export default Vue.extend({
                 })
                 .catch(function(sError)
                 {
+                    Error.stackTraceLimit = 40;
+                    console.log(sError);
+                    console.trace();
                     this.$snotify.error(sError);
                 });
         },
@@ -241,7 +245,7 @@ export default Vue.extend({
         fnCheckNewRepositoryForm: function()
         {
             console.log('fnCheckNewRepositoryForm');
-            var bValid = this.$refs.add_new_repository_modal_form.checkValidity()
+            var bValid = this.$refs.add_new_repository_modal_form.checkValidity();
             
             for (var iIndex in this.aRepositories) {
                 if (this.aRepositories[iIndex].sURL==this.sRepositoryURL) {
@@ -253,9 +257,9 @@ export default Vue.extend({
 
             this.sNewRepositoryInvalidFeedback = "Repository URL is required";
             
-            this.sNewRepositoryFieldState = bValid ? 'valid' : 'invalid'
+            this.sNewRepositoryFieldState = bValid ? 'valid' : 'invalid';
             
-            return bValid
+            return bValid;
         },
         fnNewRepositoryFormSubmit: function(oEvent)
         {
@@ -267,7 +271,7 @@ export default Vue.extend({
 
             this.$nextTick(function() {
                 this.$refs.add_new_repository_modal.hide();
-            })
+            });
             
             this.fnAddRepository();
         },

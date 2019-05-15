@@ -522,12 +522,12 @@ export default {
                 return this.oRepository.aArticles;
             }
             
-            if (typeof this.oRepository.oTags[this.sActiveTag] == 'undefined') {
+            if (typeof this.oRepository.oTags[this.sActiveTag] === 'undefined') {
                 return [];
             }
             
             return this.oRepository.oTags[this.sActiveTag];
-        },
+        }
     },
     
     methods: {
@@ -535,7 +535,7 @@ export default {
         {
             var oData = {
                 action: 'push_repository',
-                repository: this.oRepository.sName,
+                repository: this.oRepository.sName
             };
             
             if (!bPushOnly) {
@@ -573,7 +573,7 @@ export default {
         fnCheckNewTagForm: function()
         {
             console.log('fnCheckNewTagForm');
-            var bValid = this.$refs.add_new_tag_modal_form.checkValidity()
+            var bValid = this.$refs.add_new_tag_modal_form.checkValidity();
             
             if (this.oRepository.oTags[this.sNewTag]) {
                 this.sNewTagInvalidFeedback = "Tag already exists";
@@ -583,9 +583,9 @@ export default {
             
             this.sNewTagInvalidFeedback = "Tag is required";
             
-            this.sNewTagFieldState = bValid ? 'valid' : 'invalid'
+            this.sNewTagFieldState = bValid ? 'valid' : 'invalid';
             
-            return bValid
+            return bValid;
         },
         fnNewTagFormSubmit: function(oEvent)
         {
@@ -599,7 +599,7 @@ export default {
 
             this.$nextTick(function() {
                 this.$refs.add_new_tag_modal.hide();
-            })
+            });
             
             if (this.sNewTagModalMode == 'add') {
                 this.fnAddTag();
@@ -784,7 +784,7 @@ export default {
         fnCheckNewArticleForm: function()
         {
             console.log('fnCheckNewArticleForm');
-            var bValid = this.$refs.add_new_article_modal_form.checkValidity()
+            var bValid = this.$refs.add_new_article_modal_form.checkValidity();
             
             if (this.oRepository.aArticles.indexOf(this.sNewArticle)!=-1) {
                 this.sNewArticleInvalidFeedback = "Article already exists";
@@ -794,9 +794,9 @@ export default {
 
             this.sNewArticleInvalidFeedback = "Article name is required";
             
-            this.sNewArticleFieldState = bValid ? 'valid' : 'invalid'
+            this.sNewArticleFieldState = bValid ? 'valid' : 'invalid';
             
-            return bValid
+            return bValid;
         },
         fnNewArticleFormSubmit: function(oEvent)
         {
@@ -810,7 +810,7 @@ export default {
 
             this.$nextTick(function() {
                 this.$refs.add_new_article_modal.hide();
-            })
+            });
             
             if (this.sNewArticleModalMode == 'add') {
                 this.fnAddArticle();
@@ -1690,7 +1690,7 @@ export default {
                         oThis.$refs.uploaded_images_input.$el.click();
                     },
                     className: "fa fa-file-image-o",
-                    title: "Insert local picture",
+                    title: "Insert local picture"
                 },
                 {
                     name: "insert-picture-from-collection",
@@ -1702,7 +1702,7 @@ export default {
                         oThis.$refs.images_modal.show();
                     },
                     className: "fa fa-picture-o",
-                    title: "Insert local picture",
+                    title: "Insert local picture"
                 },
                 {
                     name: "insert-files-from-collection",
@@ -1714,7 +1714,7 @@ export default {
                         oThis.$refs.files_modal.show();
                     },
                     className: "fa fa-file-o",
-                    title: "Insert file from collection",
+                    title: "Insert file from collection"
                 },
                 {
                     name: "insert-youtube-video",
@@ -1727,7 +1727,7 @@ export default {
                         oThis.$refs.add_youtube_video_modal.show();
                     },
                     className: "fa fa-youtube-play",
-                    title: "Insert youtube video",
+                    title: "Insert youtube video"
                 },
             ]
         });
