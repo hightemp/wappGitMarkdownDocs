@@ -86,9 +86,19 @@ function safe_file_put_contents($sPath, $sData)
         
         $sPath = @iconv("UTF-8", "windows-1251", $sPath);
         
-        file_put_contents("temp", $sData);
+        $sEscapedPath = str_replace(__DIR__."\\", '', $sPath);
+        $sEscapedPath = str_replace("\\", '/', $sEscapedPath);
+        $sEscapedPath = str_replace(" ", "\\ ", $sEscapedPath);
         
-        shell_exec("cat temp > '$sPath'");
+        $sCurrentDir = str_replace("\n", '', shell_exec("pwd"));
+        
+        if (empty($sData)) {
+            shell_exec("touch '$sEscapedPath'");
+        } else {
+            file_put_contents("temp", $sData);
+            shell_exec("cat temp > $sEscapedPath");
+            unlink('temp');
+        }
         
         return is_file($sPath);
     }
