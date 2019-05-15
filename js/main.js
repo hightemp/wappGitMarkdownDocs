@@ -1,4 +1,6 @@
- 
+
+import '@babel/polyfill'
+
 import Vue from 'vue'
 import App from './Application.vue'
 
@@ -32,6 +34,11 @@ Vue.use(VueResource);
 
 Vue.http.options.emulateJSON = true;
 
+console.log('start');
+
+window.addEventListener("unhandledrejection", function (event) {
+    console.warn("WARNING: Unhandled promise rejection. Reason: " + event.reason, event);
+});
 
 window.oVue = new Vue({
   el: '#application',

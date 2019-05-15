@@ -980,7 +980,7 @@ export default {
                     if (fnCallback) fnCallback.call(this);
                 });
         },
-        fnAddArticleTag(sArticle, sTag)
+        fnAddArticleTag: function(sArticle, sTag)
         {
             window.oApplication.bShowLoadingScreen = true;
             
@@ -1008,7 +1008,7 @@ export default {
                     this.fnSelectArticle(this.iActiveArticle);
                 });
         },
-        fnRemoveArticleTag(sArticle, sTag)
+        fnRemoveArticleTag: function(sArticle, sTag)
         {
             window.oApplication.bShowLoadingScreen = true;
             
@@ -1043,7 +1043,7 @@ export default {
                     this.fnSelectArticle(this.iActiveArticle);                    
                 });
         },
-        fnFindTagsWithArticle(sArticle)
+        fnFindTagsWithArticle: function(sArticle)
         {
             var aResult = [];
             
@@ -1057,7 +1057,7 @@ export default {
             
             return aResult;
         },
-        fnFindArticleInTags(sArticle)
+        fnFindArticleInTags: function(sArticle)
         {
             var aResult = [];
             
@@ -1067,7 +1067,7 @@ export default {
             
             return aResult;
         },
-        fnFindArticleInTag(sArticle, sTag)
+        fnFindArticleInTag: function(sArticle, sTag)
         {
             console.log('fnFindArticleInTag', sArticle, sTag);
             return this.oRepository.oTags[sTag].indexOf(sArticle);

@@ -4,6 +4,11 @@
   "description": "",
   "main": "",
   "dependencies": {
+    "@babel/plugin-syntax-dynamic-import": "^7.2.0",
+    "@babel/plugin-transform-arrow-functions": "^7.2.0",
+    "@babel/polyfill": "^7.4.4",
+    "@babel/preset-es2015": "^7.0.0-beta.53",
+    "@babel/runtime": "^7.4.4",
     "base64-inline-loader": "^1.1.1",
     "bootstrap": "^4.3.1",
     "bootstrap-vue": "^2.0.0-rc.20",
@@ -15,6 +20,10 @@
     "webpack": "^4.30.0"
   },
   "devDependencies": {
+    "@babel/core": "^7.4.4",
+    "@babel/preset-env": "^7.4.4",
+    "@babel/register": "^7.4.4",
+    "babel-loader": "^8.0.6",
     "css-loader": "^2.1.1",
     "mini-css-extract-plugin": "^0.6.0",
     "style-loader": "^0.23.1",
@@ -22,7 +31,7 @@
     "webpack-cli": "^3.3.2"
   },
   "scripts": {
-    "build": "webpack --config webpack.config.js",
+    "build": "webpack --config webpack.config.babel.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

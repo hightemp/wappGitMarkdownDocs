@@ -143,6 +143,7 @@ export default Vue.extend({
     methods: {
         fnCloseTab: function(iIndex)
         {
+            console.log('fnCloseTab');
             this
                 .$http
                 .post(
@@ -163,6 +164,7 @@ export default Vue.extend({
         },
         fnGetRepositories: function()
         {
+            console.log('fnGetRepositories');
             this.bShowLoadingScreen = true;
             
             this
@@ -186,6 +188,7 @@ export default Vue.extend({
         },
         fnAddRepository: function()
         {
+            console.log('fnAddRepository');
             this.bShowAddRepositoryButtonSpinner = true;
             
             this
