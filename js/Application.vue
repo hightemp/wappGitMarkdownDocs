@@ -88,8 +88,6 @@
 
 <script>
 
-import '@babel/polyfill'
-
 import RepositoryTabContent from '../js/RepositoryTabContent.vue'
 
 import Vue, { VueConstructor } from 'vue'

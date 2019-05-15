@@ -446,8 +446,6 @@
 
 <script>
 
-import '@babel/polyfill'
-
 import SimpleMDE from 'simplemde';
 
 import 'simplemde/dist/simplemde.min.css';

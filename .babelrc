@@ -1,18 +1,12 @@
 {
     "presets": [
         [
-            "@babel/preset-env", 
+            //"@babel/preset-env", 
+            "@vue/app",
             {
-                "targets": {
-                    "ie": "11"
-                },
                 "useBuiltIns": "entry",
                 "debug": true
             }
         ]
-    ],
-    plugins: [
-        '@babel/plugin-syntax-dynamic-import',
-        '@babel/plugin-transform-arrow-functions'
     ]
 }
