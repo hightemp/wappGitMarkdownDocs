@@ -79,6 +79,23 @@ function fnHTTPRequest($sURL)
     return $sResult;
 }
 
+function safe_file_put_contents($sPath, $sData)
+{
+    if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN'
+        && substr(phpversion(), 0, 1)<7) {        
+        
+        $sPath = @iconv("UTF-8", "windows-1251", $sPath);
+        
+        file_put_contents("temp", $sData);
+        
+        shell_exec("cat temp > '$sPath'");
+        
+        return is_file($sPath);
+    }
+    
+    return file_put_contents($sPath, $sData);
+}
+
 function safe_file_get_contents($sPath)
 {
     if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN'
@@ -304,7 +321,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                     }
                 }
                 
-                if (file_put_contents($sArticleFile, @$_POST['data'])===false) {
+                if (safe_file_put_contents($sArticleFile, @$_POST['data'])===false) {
                     throw new Exception("Can't write to file '$sArticleFile'");
                 }
             }
@@ -334,7 +351,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             $sArticlesDir = fnPath($sRepositoryDir, 'articles');
             $sArticleFile = fnPath($sArticlesDir, $_POST['article'].'.md');
             
-            if (file_put_contents($sArticleFile, @$_POST['data'])===false) {
+            if (safe_file_put_contents($sArticleFile, @$_POST['data'])===false) {
                 throw new Exception("Can't write to file '$sArticleFile'");
             }
             
@@ -365,7 +382,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 
                 $sTagFileContents = str_replace($sFromArticleLink, $sToArticleLink, $sTagFileContents);
                 
-                if (!file_put_contents($sTagFile, $sTagFileContents)) {
+                if (!safe_file_put_contents($sTagFile, $sTagFileContents)) {
                     throw new Exception("Can't write to file");
                 }
             }
@@ -382,7 +399,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             $sArticlesDir = fnPath($sRepositoryDir, 'articles');
             $sArticleFile = fnPath($sArticlesDir, $_POST['article'].'.md');
             
-            if (file_put_contents($sArticleFile, @$_POST['data'])===false) {
+            if (safe_file_put_contents($sArticleFile, @$_POST['data'])===false) {
                 throw new Exception("Can't write to file '$sArticleFile'");
             }
             
@@ -400,10 +417,10 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 $sArticleFileContents .= "[".$_POST['tag']."](/tags/".rawurlencode($_POST['tag']).".md)\n";
                 $sTagFileContents .= "[".$_POST['article']."](/articles/".rawurlencode($_POST['article']).".md)\n";
                 
-                if (file_put_contents($sArticleFile, $sArticleFileContents)===false) {
+                if (safe_file_put_contents($sArticleFile, $sArticleFileContents)===false) {
                     throw new Exception("Can't write to file '$aArticleFile'");
                 }
-                if (file_put_contents($sTagFile, $sTagFileContents)===false) {
+                if (safe_file_put_contents($sTagFile, $sTagFileContents)===false) {
                     throw new Exception("Can't write to file '$sTagFile'");
                 }
             }
@@ -432,7 +449,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 if (($iLinkPos = strpos($sTagFileContents, $sArticleLink))!==false) {
                     $sTagFileContents = substr_replace($sTagFileContents, '', $iLinkPos, strlen($sArticleLink)+1);
                 
-                    if (file_put_contents($sTagFile, $sTagFileContents)===false) {
+                    if (safe_file_put_contents($sTagFile, $sTagFileContents)===false) {
                         throw new Exception("Can't write to file '$sTagFile'");
                     }
                 }
@@ -450,7 +467,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             $sTagsDir = fnPath($sRepositoryDir, 'tags');
             $sTagFile = fnPath($sTagsDir, $_POST['tag'].'.md');
             
-            if (file_put_contents($sTagFile, '')===false) {
+            if (safe_file_put_contents($sTagFile, '')===false) {
                 throw new Exception("Can't write to file '$sTagFile'");
             }
             
@@ -481,7 +498,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 
                 $sArticleFileContents = str_replace($sFromTagLink, $sToTagLink, $sArticleFileContents);
                 
-                if (!file_put_contents($sArticleFile, $sArticleFileContents)) {
+                if (!safe_file_put_contents($sArticleFile, $sArticleFileContents)) {
                     throw new Exception("Can't write to file");
                 }
             }
@@ -511,7 +528,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                     if (($iLinkPos = strpos($sArticleFileContents, $sTagLink, $iLinePos))!==false) {
                         $sArticleFileContents = substr_replace($sArticleFileContents, '', $iLinkPos, strlen($sTagLink)+1);
                     
-                        if (file_put_contents($sArticleFile, $sArticleFileContents)===false) {
+                        if (safe_file_put_contents($sArticleFile, $sArticleFileContents)===false) {
                             throw new Exception("Can't write to file '$sArticleFile'");
                         }
                     }
@@ -542,10 +559,10 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             $sArticleFileContents .= "[".$_POST['tag']."](/tags/".rawurlencode($_POST['tag']).".md)\n";
             $sTagFileContents .= "[".$_POST['article']."](/articles/".rawurlencode($_POST['article']).".md)\n";
             
-            if (file_put_contents($sArticleFile, $sArticleFileContents)===false) {
+            if (safe_file_put_contents($sArticleFile, $sArticleFileContents)===false) {
                 throw new Exception("Can't write to file '$aArticleFile'");
             }
-            if (file_put_contents($sTagFile, $sTagFileContents)===false) {
+            if (safe_file_put_contents($sTagFile, $sTagFileContents)===false) {
                 throw new Exception("Can't write to file '$sTagFile'");
             }
             
@@ -573,7 +590,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 if (($iLinkPos = strpos($sArticleFileContents, $sTagLink, $iLinePos))!==false) {
                     $sArticleFileContents = substr_replace($sArticleFileContents, '', $iLinkPos, strlen($sTagLink)+1);
                 
-                    if (file_put_contents($sArticleFile, $sArticleFileContents)===false) {
+                    if (safe_file_put_contents($sArticleFile, $sArticleFileContents)===false) {
                         throw new Exception("Can't write to file '$aArticleFile'");
                     }
                 }
@@ -581,7 +598,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             if (($iLinkPos = strpos($sTagFileContents, $sArticleLink))!==false) {
                 $sTagFileContents = substr_replace($sTagFileContents, '', $iLinkPos, strlen($sArticleLink)+1);
             
-                if (file_put_contents($sTagFile, $sTagFileContents)===false) {
+                if (safe_file_put_contents($sTagFile, $sTagFileContents)===false) {
                     throw new Exception("Can't write to file '$sTagFile'");
                 }
             }
