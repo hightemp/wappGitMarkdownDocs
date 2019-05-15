@@ -566,6 +566,10 @@ export default {
                     }
                     
                     this.fnRefreshArticleViewer();
+                })
+                .catch(function(sError)
+                {
+                    this.$snotify.error(sError);
                 });            
         },
         fnCheckNewTagForm: function()
@@ -692,6 +696,10 @@ export default {
                     this.fnSelectArticle(iActiveArticle);
                     
                     if (fnCallback) fnCallback.call(this);
+                })
+                .catch(function(sError)
+                {
+                    this.$snotify.error(sError);
                 });            
         },
         fnAddTag: function(fnCallback)
@@ -723,6 +731,10 @@ export default {
                     //this.fnSelectTag(this.sNewTag);
                     
                     if (fnCallback) fnCallback.call(this);
+                })
+                .catch(function(sError)
+                {
+                    this.$snotify.error(sError);
                 });
         },
         fnRemoveTag: function(fnCallback)
@@ -764,6 +776,10 @@ export default {
                     delete this.oRepository.oTags[sActiveTag];
                     
                     if (fnCallback) fnCallback.call(this);
+                })
+                .catch(function(sError)
+                {
+                    this.$snotify.error(sError);
                 });
         },
         
@@ -891,6 +907,10 @@ export default {
                     if (fnCallback) fnCallback.call(this);
                     
                     //this.fnPushRepository(true);
+                })
+                .catch(function(sError)
+                {
+                    this.$snotify.error(sError);
                 });            
         },        
         fnAddArticle: function(fnCallback)
@@ -928,6 +948,10 @@ export default {
                     }
                     
                     if (fnCallback) fnCallback.call(this);
+                })
+                .catch(function(sError)
+                {
+                    this.$snotify.error(sError);
                 });
         },
         fnRemoveArticle: function(fnCallback)
@@ -980,6 +1004,10 @@ export default {
                     this.fnSelectArticle(iNewiActiveArticle);
                     
                     if (fnCallback) fnCallback.call(this);
+                })
+                .catch(function(sError)
+                {
+                    this.$snotify.error(sError);
                 });
         },
         fnAddArticleTag: function(sArticle, sTag)
@@ -1008,6 +1036,10 @@ export default {
                     this.oRepository.oTags[sTag].push(sArticle);
                     
                     this.fnSelectArticle(this.iActiveArticle);
+                })
+                .catch(function(sError)
+                {
+                    this.$snotify.error(sError);
                 });
         },
         fnRemoveArticleTag: function(sArticle, sTag)
@@ -1043,6 +1075,10 @@ export default {
                     this.oRepository.oTags[sTag].splice(iIndex, 1);
                     
                     this.fnSelectArticle(this.iActiveArticle);                    
+                })
+                .catch(function(sError)
+                {
+                    this.$snotify.error(sError);
                 });
         },
         fnFindTagsWithArticle: function(sArticle)
@@ -1134,6 +1170,10 @@ export default {
                     );
                     
                     this.fnRefreshArticleViewer();
+                })
+                .catch(function(sError)
+                {
+                    this.$snotify.error(sError);
                 });
         },
         fnRefreshArticleViewer: function()
@@ -1159,6 +1199,10 @@ export default {
                     this.bShowArticleViewContentsSpinner = false;
                     
                     this.sArticleViewContents = oResponse.body.data;
+                })
+                .catch(function(sError)
+                {
+                    this.$snotify.error(sError);
                 });
         },
         fnSearchArticle: function()
@@ -1187,6 +1231,10 @@ export default {
                     }
                     
                     this.aArticlesSearchResults = oResponse.body.data;
+                })
+                .catch(function(sError)
+                {
+                    this.$snotify.error(sError);
                 });
         },
         
@@ -1249,6 +1297,10 @@ export default {
                             this.fnInsertImage('/images/'+oResponse.body.data[iIndex]);
                         }
                     }
+                })
+                .catch(function(sError)
+                {
+                    this.$snotify.error(sError);
                 });
         },
         fnShowImagesModal: function()
@@ -1275,6 +1327,10 @@ export default {
                     }
                     
                     this.aImagesModalFiles = oResponse.body.data;
+                })
+                .catch(function(sError)
+                {
+                    this.$snotify.error(sError);
                 });
         },
         fnResetImagesModal: function()
@@ -1334,6 +1390,10 @@ export default {
                     }
                     
                     this.aImagesModalSelectedFiles = [];
+                })
+                .catch(function(sError)
+                {
+                    this.$snotify.error(sError);
                 });
         },
         
@@ -1396,6 +1456,10 @@ export default {
                             this.fnInsertFile('/files/'+oResponse.body.data[iIndex]);
                         }
                     }
+                })
+                .catch(function(sError)
+                {
+                    this.$snotify.error(sError);
                 });
         },
         fnShowFilesModal: function()
@@ -1422,6 +1486,10 @@ export default {
                     }
                     
                     this.aFilesModalFiles = oResponse.body.data;
+                })
+                .catch(function(sError)
+                {
+                    this.$snotify.error(sError);
                 });
         },
         fnResetFilesModal: function()
@@ -1481,6 +1549,10 @@ export default {
                     }
                     
                     this.aFilesModalSelectedFiles = [];
+                })
+                .catch(function(sError)
+                {
+                    this.$snotify.error(sError);
                 });
         },
         

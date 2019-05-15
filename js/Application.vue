@@ -162,6 +162,10 @@ export default Vue.extend({
                     }
                     
                     this.aRepositories.splice(iIndex, 1);
+                })
+                .catch(function(sError)
+                {
+                    this.$snotify.error(sError);
                 });
         },
         fnGetRepositories: function()
@@ -186,6 +190,10 @@ export default Vue.extend({
                     this.aRepositories = oResponse.body.data;
                     
                     this.bShowLoadingScreen = false;
+                })
+                .catch(function(sError)
+                {
+                    this.$snotify.error(sError);
                 });
         },
         fnAddRepository: function()
@@ -214,6 +222,10 @@ export default Vue.extend({
                     this.aRepositories.push(oResponse.body.data);
                     
                     this.sRepositoryURL = '';                     
+                })
+                .catch(function(sError)
+                {
+                    this.$snotify.error(sError);
                 });
         },
         fnResetNewRepositoryModal: function()
