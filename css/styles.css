@@ -218,6 +218,29 @@ body, html {
 }
 
 
+.replacement-block > * {
+    margin-right: 5px;
+    margin-bottom: 5px;
+}
+
+.replacement-text-input,
+.replacable-text-input {
+    flex: 0 0 calc(100% - 250px);
+    max-width: calc(100% - 250px);   
+}
+
+.replacement-block-toggle-buttons-col {
+    flex: 0 0 30px;
+    max-width: 30px;  
+    cursor: pointer;
+}
+
+.replacement-block-buttons-col {
+    flex: 0 0 80px;
+    max-width: 80px;       
+}
+
+
 .markdown-body {
     font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol;
     font-size: 16px;

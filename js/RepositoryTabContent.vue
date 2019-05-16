@@ -159,11 +159,53 @@
                     
                     <textarea class="page-content-textarea"></textarea>
                     
-                    <div class="replacement-block">
+                    <div class="replacement-block d-flex flex-wrap">
                         <b-form-input 
+                            class="replacable-text-input"
                             placeholder=""
-                            v-model="sCurrentArticleTagFilterString"
+                            v-model="sReplacableText"
                         ></b-form-input>
+                        <b-button 
+                            class="replacement-block-buttons-col"
+                        >
+                            Previous
+                        </b-button>
+                        <b-button
+                            class="replacement-block-buttons-col"
+                        >
+                            Next
+                        </b-button>
+                        <b-form-checkbox 
+                            v-model="bUseRegularExpression"
+                            button
+                            class="replacement-block-toggle-buttons-col"
+                            button-variant="info"
+                        >
+                        <i class="fa fa-registered"></i>
+                        </b-form-checkbox>
+                        <b-form-checkbox 
+                            v-model="bUseCaseSensetive"
+                            button
+                            class="replacement-block-toggle-buttons-col"
+                            button-variant="info"
+                        >
+                        <i class="fa fa-font"></i>
+                        </b-form-checkbox>
+                        <b-form-input 
+                            class="replacement-text-input"
+                            placeholder=""
+                            v-model="sReplacementText"
+                        ></b-form-input>
+                        <b-button 
+                            class="replacement-block-buttons-col"
+                        >
+                            Replace
+                        </b-button>
+                        <b-button
+                            class="replacement-block-buttons-col"
+                        >
+                            Replace All
+                        </b-button>
                     </div>
                     
                     <b-form-file 
