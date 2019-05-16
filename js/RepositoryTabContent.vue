@@ -44,14 +44,20 @@
                 <b-list-group>
                     <b-list-group-item
                         href="#"
+                        class="d-flex justify-content-between align-items-center"
                         :active="sActiveTag=='__all__'"
                         @click="fnSelectTag('__all__')"
                     >
                         All
+                        <b-badge 
+                            :variant="sActiveTag=='__all__' ? 'light' : 'primary'" 
+                            pill
+                        >{{ fnGetArticlesCountByTagName('__all__') }}</b-badge>
                     </b-list-group-item>
                     <b-list-group-item 
                         v-for="(aItem, sKey) in oRepository.oTags"
                         href="#"
+                        class="d-flex justify-content-between align-items-center"
                         :active="sActiveTag==sKey"
                         v-if="sTagFilterString=='' 
                             || sTagFilterString!='' 
@@ -59,6 +65,10 @@
                         @click="fnSelectTag(sKey)"
                     >
                         {{ sKey }}
+                        <b-badge 
+                            :variant="sActiveTag==sKey ? 'light' : 'primary'" 
+                            pill
+                        >{{ fnGetArticlesCountByTagName(sKey) }}</b-badge>
                     </b-list-group-item>
                 </b-list-group>
             </div>
@@ -148,6 +158,13 @@
                     </div>
                     
                     <textarea class="page-content-textarea"></textarea>
+                    
+                    <div class="replacement-block">
+                        <b-form-input 
+                            placeholder=""
+                            v-model="sCurrentArticleTagFilterString"
+                        ></b-form-input>
+                    </div>
                     
                     <b-form-file 
                         ref="uploaded_images_input"
@@ -1108,6 +1125,14 @@ export default {
             console.log('fnFindArticleInTag', sArticle, sTag);
             return this.oRepository.oTags[sTag].indexOf(sArticle);
         },
+        fnGetArticlesCountByTagName: function(sTag)
+        {
+            if (sTag=='__all__') {
+                return this.oRepository.aArticles.length;
+            }
+            
+            return this.oRepository.oTags[sTag].length;
+        },
         fnSelectTag: function(sTagName)
         {
             this.iActiveArticle = -1;
@@ -1729,6 +1754,16 @@ export default {
                     className: "fa fa-youtube-play",
                     title: "Insert youtube video"
                 },
+                {
+                    name: "replace-text",
+                    action: function(oEditor)
+                    {
+                        oThis.oEditor = oEditor;
+                        
+                    },
+                    className: "fa fa-refresh",
+                    title: "Replace text"
+                }
             ]
         });
         
