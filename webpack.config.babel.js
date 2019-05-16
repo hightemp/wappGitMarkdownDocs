@@ -3,6 +3,7 @@ const { VueLoaderPlugin } = require('vue-loader')
 
 module.exports = {
     mode: 'development', //'production',
+    devtool: 'eval-source-map',
     entry: [
         './js/main.js'
     ],

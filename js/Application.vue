@@ -192,9 +192,6 @@ export default Vue.extend({
                 })
                 .catch(function(sError)
                 {
-                    Error.stackTraceLimit = 40;
-                    console.log(sError);
-                    console.trace();
                     this.$snotify.error(sError);
                 });
         },
