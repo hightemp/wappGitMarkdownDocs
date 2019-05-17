@@ -134,7 +134,10 @@
                     </b-list-group-item>
                 </b-list-group>            
             </div>
-            <div class="page-content col-xl-4">
+            <div 
+                class="page-content col-xl-4" 
+                :class="{'replacement-open':bShowReplacementFields}"
+            >
                 <div v-show="fnArticleExists()"> 
                     <div class="container-fluid">
                         <div class="buttons-row row flex-xl-nowrap2">
@@ -159,19 +162,25 @@
                     
                     <textarea class="page-content-textarea"></textarea>
                     
-                    <div class="replacement-block d-flex flex-wrap">
+                    <div 
+                        v-if="bShowReplacementFields"
+                        class="replacement-block d-flex flex-wrap"
+                    >
                         <b-form-input 
                             class="replacable-text-input"
                             placeholder=""
-                            v-model="sReplacableText"
+                            v-model="sSearchQuery"
+                            ref="replacable_text_input"
                         ></b-form-input>
                         <b-button 
                             class="replacement-block-buttons-col"
+                            @click="fnFindPrevious"
                         >
                             Previous
                         </b-button>
                         <b-button
                             class="replacement-block-buttons-col"
+                            @click="fnFindNext"
                         >
                             Next
                         </b-button>
@@ -181,7 +190,7 @@
                             class="replacement-block-toggle-buttons-col"
                             button-variant="info"
                         >
-                        <i class="fa fa-registered"></i>
+                            <i class="fa fa-registered"></i>
                         </b-form-checkbox>
                         <b-form-checkbox 
                             v-model="bUseCaseSensetive"
@@ -189,22 +198,31 @@
                             class="replacement-block-toggle-buttons-col"
                             button-variant="info"
                         >
-                        <i class="fa fa-font"></i>
+                            <i class="fa fa-font"></i>
                         </b-form-checkbox>
                         <b-form-input 
                             class="replacement-text-input"
                             placeholder=""
-                            v-model="sReplacementText"
+                            v-model="sSearchQueryText"
                         ></b-form-input>
                         <b-button 
                             class="replacement-block-buttons-col"
+                            @click="fnReplace"
                         >
                             Replace
                         </b-button>
                         <b-button
-                            class="replacement-block-buttons-col"
+                            class="replacement-block-buttons-col replace-all-button"
+                            @click="fnReplaceAll"
                         >
                             Replace All
+                        </b-button>
+                        <b-button 
+                            class="replacement-block-toggle-buttons-col"
+                            button-variant="secondary"
+                            @click="fnShowRegExpHelp"
+                        >
+                            <i class="fa fa-question"></i>
                         </b-button>
                     </div>
                     
@@ -500,14 +518,40 @@
                 </div>
             </div>
         </b-modal>
+        
+        <b-modal
+            id="help-modal"
+            ref="help_modal"
+            title="Help"
+            :hide-footer="true"
+            size="xl"
+        >
+            <b-tabs pills vertical>
+                <b-tab title="Regular expressions" active>
+                    <p>
+                        To match a specific Unicode code point, use \uFFFF where 
+                        FFFF is the hexadecimal number of the code point you want 
+                        to match. You must always specify 4 hexadecimal digits E.g. 
+                        \u00E0 matches à, but only when encoded as a single 
+                        code point U+00E0.
+                    </p>
+                    <h3>Unicode Categories</h3>
+                    <ul> <li><tt class="code"><span class="regexspecial">\p{L}</span></tt> or <tt class="code"><span class="regexspecial">\p{Letter}</span></tt>: any kind of letter from any language. <ul> <li><tt class="code"><span class="regexspecial">\p{Ll}</span></tt> or <tt class="code"><span class="regexspecial">\p{Lowercase_Letter}</span></tt>: a lowercase letter that has an uppercase variant. </li><li><tt class="code"><span class="regexspecial">\p{Lu}</span></tt> or <tt class="code"><span class="regexspecial">\p{Uppercase_Letter}</span></tt>: an uppercase letter that has a lowercase variant. </li><li><tt class="code"><span class="regexspecial">\p{Lt}</span></tt> or <tt class="code"><span class="regexspecial">\p{Titlecase_Letter}</span></tt>: a letter that appears at the start of a word when only the first letter of the word is capitalized. </li><li><tt class="code"><span class="regexspecial">\p{L&amp;}</span></tt> or <tt class="code"><span class="regexspecial">\p{Cased_Letter}</span></tt>: a letter that exists in lowercase and uppercase variants (combination of Ll, Lu and Lt). </li><li><tt class="code"><span class="regexspecial">\p{Lm}</span></tt> or <tt class="code"><span class="regexspecial">\p{Modifier_Letter}</span></tt>: a special character that is used like a letter. </li><li><tt class="code"><span class="regexspecial">\p{Lo}</span></tt> or <tt class="code"><span class="regexspecial">\p{Other_Letter}</span></tt>: a letter or ideograph that does not have lowercase and uppercase variants. </li></ul> </li><li><tt class="code"><span class="regexspecial">\p{M}</span></tt> or <tt class="code"><span class="regexspecial">\p{Mark}</span></tt>: a character intended to be combined with another character (e.g. accents, umlauts, enclosing boxes, etc.). <ul> <li><tt class="code"><span class="regexspecial">\p{Mn}</span></tt> or <tt class="code"><span class="regexspecial">\p{Non_Spacing_Mark}</span></tt>: a character intended to be combined with another character without taking up extra space (e.g. accents, umlauts, etc.). </li><li><tt class="code"><span class="regexspecial">\p{Mc}</span></tt> or <tt class="code"><span class="regexspecial">\p{Spacing_Combining_Mark}</span></tt>: a character intended to be combined with another character that takes up extra space (vowel signs in many Eastern languages). </li><li><tt class="code"><span class="regexspecial">\p{Me}</span></tt> or <tt class="code"><span class="regexspecial">\p{Enclosing_Mark}</span></tt>: a character that encloses the character is is combined with (circle, square, keycap, etc.). </li></ul> </li><li><tt class="code"><span class="regexspecial">\p{Z}</span></tt> or <tt class="code"><span class="regexspecial">\p{Separator}</span></tt>: any kind of whitespace or invisible separator. <ul> <li><tt class="code"><span class="regexspecial">\p{Zs}</span></tt> or <tt class="code"><span class="regexspecial">\p{Space_Separator}</span></tt>: a whitespace character that is invisible, but does take up space. </li><li><tt class="code"><span class="regexspecial">\p{Zl}</span></tt> or <tt class="code"><span class="regexspecial">\p{Line_Separator}</span></tt>: line separator character U+2028. </li><li><tt class="code"><span class="regexspecial">\p{Zp}</span></tt> or <tt class="code"><span class="regexspecial">\p{Paragraph_Separator}</span></tt>: paragraph separator character U+2029. </li></ul> </li><li><tt class="code"><span class="regexspecial">\p{S}</span></tt> or <tt class="code"><span class="regexspecial">\p{Symbol}</span></tt>: math symbols, currency signs, dingbats, box-drawing characters, etc. <ul> <li><tt class="code"><span class="regexspecial">\p{Sm}</span></tt> or <tt class="code"><span class="regexspecial">\p{Math_Symbol}</span></tt>: any mathematical symbol. </li><li><tt class="code"><span class="regexspecial">\p{Sc}</span></tt> or <tt class="code"><span class="regexspecial">\p{Currency_Symbol}</span></tt>: any currency sign. </li><li><tt class="code"><span class="regexspecial">\p{Sk}</span></tt> or <tt class="code"><span class="regexspecial">\p{Modifier_Symbol}</span></tt>: a combining character (mark) as a full character on its own. </li><li><tt class="code"><span class="regexspecial">\p{So}</span></tt> or <tt class="code"><span class="regexspecial">\p{Other_Symbol}</span></tt>: various symbols that are not math symbols, currency signs, or combining characters. </li></ul> </li><li><tt class="code"><span class="regexspecial">\p{N}</span></tt> or <tt class="code"><span class="regexspecial">\p{Number}</span></tt>: any kind of numeric character in any script. <ul> <li><tt class="code"><span class="regexspecial">\p{Nd}</span></tt> or <tt class="code"><span class="regexspecial">\p{Decimal_Digit_Number}</span></tt>: a digit zero through nine in any script except ideographic scripts. </li><li><tt class="code"><span class="regexspecial">\p{Nl}</span></tt> or <tt class="code"><span class="regexspecial">\p{Letter_Number}</span></tt>: a number that looks like a letter, such as a Roman numeral. </li><li><tt class="code"><span class="regexspecial">\p{No}</span></tt> or <tt class="code"><span class="regexspecial">\p{Other_Number}</span></tt>: a superscript or subscript digit, or a number that is not a digit 0–9 (excluding numbers from ideographic scripts). </li></ul> </li><li><tt class="code"><span class="regexspecial">\p{P}</span></tt> or <tt class="code"><span class="regexspecial">\p{Punctuation}</span></tt>: any kind of punctuation character. <ul> <li><tt class="code"><span class="regexspecial">\p{Pd}</span></tt> or <tt class="code"><span class="regexspecial">\p{Dash_Punctuation}</span></tt>: any kind of hyphen or dash. </li><li><tt class="code"><span class="regexspecial">\p{Ps}</span></tt> or <tt class="code"><span class="regexspecial">\p{Open_Punctuation}</span></tt>: any kind of opening bracket. </li><li><tt class="code"><span class="regexspecial">\p{Pe}</span></tt> or <tt class="code"><span class="regexspecial">\p{Close_Punctuation}</span></tt>: any kind of closing bracket. </li><li><tt class="code"><span class="regexspecial">\p{Pi}</span></tt> or <tt class="code"><span class="regexspecial">\p{Initial_Punctuation}</span></tt>: any kind of opening quote. </li><li><tt class="code"><span class="regexspecial">\p{Pf}</span></tt> or <tt class="code"><span class="regexspecial">\p{Final_Punctuation}</span></tt>: any kind of closing quote. </li><li><tt class="code"><span class="regexspecial">\p{Pc}</span></tt> or <tt class="code"><span class="regexspecial">\p{Connector_Punctuation}</span></tt>: a punctuation character such as an underscore that connects words. </li><li><tt class="code"><span class="regexspecial">\p{Po}</span></tt> or <tt class="code"><span class="regexspecial">\p{Other_Punctuation}</span></tt>: any kind of punctuation character that is not a dash, bracket, quote or connector. </li></ul> </li><li><tt class="code"><span class="regexspecial">\p{C}</span></tt> or <tt class="code"><span class="regexspecial">\p{Other}</span></tt>: invisible control characters and unused code points. <ul> <li><tt class="code"><span class="regexspecial">\p{Cc}</span></tt> or <tt class="code"><span class="regexspecial">\p{Control}</span></tt>: an ASCII or Latin-1 control character: 0x00–0x1F and 0x7F–0x9F. </li><li><tt class="code"><span class="regexspecial">\p{Cf}</span></tt> or <tt class="code"><span class="regexspecial">\p{Format}</span></tt>: invisible formatting indicator. </li><li><tt class="code"><span class="regexspecial">\p{Co}</span></tt> or <tt class="code"><span class="regexspecial">\p{Private_Use}</span></tt>: any code point reserved for private use. </li><li><tt class="code"><span class="regexspecial">\p{Cs}</span></tt> or <tt class="code"><span class="regexspecial">\p{Surrogate}</span></tt>: one half of a surrogate pair in UTF-16 encoding. </li><li><tt class="code"><span class="regexspecial">\p{Cn}</span></tt> or <tt class="code"><span class="regexspecial">\p{Unassigned}</span></tt>: any code point to which no character has been assigned. </li></ul> </li></ul>
+                    <h3>Unicode Scripts</h3>
+                    <ol> <li><tt class="code"><span class="regexspecial">\p{Common}</span></tt> </li><li><tt class="code"><span class="regexspecial">\p{Arabic}</span></tt> </li><li><tt class="code"><span class="regexspecial">\p{Armenian}</span></tt> </li><li><tt class="code"><span class="regexspecial">\p{Bengali}</span></tt> </li><li><tt class="code"><span class="regexspecial">\p{Bopomofo}</span></tt> </li><li><tt class="code"><span class="regexspecial">\p{Braille}</span></tt> </li><li><tt class="code"><span class="regexspecial">\p{Buhid}</span></tt> </li><li><tt class="code"><span class="regexspecial">\p{Canadian_Aboriginal}</span></tt> </li><li><tt class="code"><span class="regexspecial">\p{Cherokee}</span></tt> </li><li><tt class="code"><span class="regexspecial">\p{Cyrillic}</span></tt> </li><li><tt class="code"><span class="regexspecial">\p{Devanagari}</span></tt> </li><li><tt class="code"><span class="regexspecial">\p{Ethiopic}</span></tt> </li><li><tt class="code"><span class="regexspecial">\p{Georgian}</span></tt> </li><li><tt class="code"><span class="regexspecial">\p{Greek}</span></tt> </li><li><tt class="code"><span class="regexspecial">\p{Gujarati}</span></tt> </li><li><tt class="code"><span class="regexspecial">\p{Gurmukhi}</span></tt> </li><li><tt class="code"><span class="regexspecial">\p{Han}</span></tt> </li><li><tt class="code"><span class="regexspecial">\p{Hangul}</span></tt> </li><li><tt class="code"><span class="regexspecial">\p{Hanunoo}</span></tt> </li><li><tt class="code"><span class="regexspecial">\p{Hebrew}</span></tt> </li><li><tt class="code"><span class="regexspecial">\p{Hiragana}</span></tt> </li><li><tt class="code"><span class="regexspecial">\p{Inherited}</span></tt> </li><li><tt class="code"><span class="regexspecial">\p{Kannada}</span></tt> </li><li><tt class="code"><span class="regexspecial">\p{Katakana}</span></tt> </li><li><tt class="code"><span class="regexspecial">\p{Khmer}</span></tt> </li><li><tt class="code"><span class="regexspecial">\p{Lao}</span></tt> </li><li><tt class="code"><span class="regexspecial">\p{Latin}</span></tt> </li><li><tt class="code"><span class="regexspecial">\p{Limbu}</span></tt> </li><li><tt class="code"><span class="regexspecial">\p{Malayalam}</span></tt> </li><li><tt class="code"><span class="regexspecial">\p{Mongolian}</span></tt> </li><li><tt class="code"><span class="regexspecial">\p{Myanmar}</span></tt> </li><li><tt class="code"><span class="regexspecial">\p{Ogham}</span></tt> </li><li><tt class="code"><span class="regexspecial">\p{Oriya}</span></tt> </li><li><tt class="code"><span class="regexspecial">\p{Runic}</span></tt> </li><li><tt class="code"><span class="regexspecial">\p{Sinhala}</span></tt> </li><li><tt class="code"><span class="regexspecial">\p{Syriac}</span></tt> </li><li><tt class="code"><span class="regexspecial">\p{Tagalog}</span></tt> </li><li><tt class="code"><span class="regexspecial">\p{Tagbanwa}</span></tt> </li><li><tt class="code"><span class="regexspecial">\p{TaiLe}</span></tt> </li><li><tt class="code"><span class="regexspecial">\p{Tamil}</span></tt> </li><li><tt class="code"><span class="regexspecial">\p{Telugu}</span></tt> </li><li><tt class="code"><span class="regexspecial">\p{Thaana}</span></tt> </li><li><tt class="code"><span class="regexspecial">\p{Thai}</span></tt> </li><li><tt class="code"><span class="regexspecial">\p{Tibetan}</span></tt> </li><li><tt class="code"><span class="regexspecial">\p{Yi}</span></tt> </li></ol>
+                    <h3>Unicode Blocks</h3>
+                    <ol> <li><tt class="code"><span class="regexspecial">\p{InBasic_Latin}</span></tt>: U+0000–U+007F </li><li><tt class="code"><span class="regexspecial">\p{InLatin-1_Supplement}</span></tt>: U+0080–U+00FF </li><li><tt class="code"><span class="regexspecial">\p{InLatin_Extended-A}</span></tt>: U+0100–U+017F </li><li><tt class="code"><span class="regexspecial">\p{InLatin_Extended-B}</span></tt>: U+0180–U+024F </li><li><tt class="code"><span class="regexspecial">\p{InIPA_Extensions}</span></tt>: U+0250–U+02AF </li><li><tt class="code"><span class="regexspecial">\p{InSpacing_Modifier_Letters}</span></tt>: U+02B0–U+02FF </li><li><tt class="code"><span class="regexspecial">\p{InCombining_Diacritical_Marks}</span></tt>: U+0300–U+036F </li><li><tt class="code"><span class="regexspecial">\p{InGreek_and_Coptic}</span></tt>: U+0370–U+03FF </li><li><tt class="code"><span class="regexspecial">\p{InCyrillic}</span></tt>: U+0400–U+04FF </li><li><tt class="code"><span class="regexspecial">\p{InCyrillic_Supplementary}</span></tt>: U+0500–U+052F </li><li><tt class="code"><span class="regexspecial">\p{InArmenian}</span></tt>: U+0530–U+058F </li><li><tt class="code"><span class="regexspecial">\p{InHebrew}</span></tt>: U+0590–U+05FF </li><li><tt class="code"><span class="regexspecial">\p{InArabic}</span></tt>: U+0600–U+06FF </li><li><tt class="code"><span class="regexspecial">\p{InSyriac}</span></tt>: U+0700–U+074F </li><li><tt class="code"><span class="regexspecial">\p{InThaana}</span></tt>: U+0780–U+07BF </li><li><tt class="code"><span class="regexspecial">\p{InDevanagari}</span></tt>: U+0900–U+097F </li><li><tt class="code"><span class="regexspecial">\p{InBengali}</span></tt>: U+0980–U+09FF </li><li><tt class="code"><span class="regexspecial">\p{InGurmukhi}</span></tt>: U+0A00–U+0A7F </li><li><tt class="code"><span class="regexspecial">\p{InGujarati}</span></tt>: U+0A80–U+0AFF </li><li><tt class="code"><span class="regexspecial">\p{InOriya}</span></tt>: U+0B00–U+0B7F </li><li><tt class="code"><span class="regexspecial">\p{InTamil}</span></tt>: U+0B80–U+0BFF </li><li><tt class="code"><span class="regexspecial">\p{InTelugu}</span></tt>: U+0C00–U+0C7F </li><li><tt class="code"><span class="regexspecial">\p{InKannada}</span></tt>: U+0C80–U+0CFF </li><li><tt class="code"><span class="regexspecial">\p{InMalayalam}</span></tt>: U+0D00–U+0D7F </li><li><tt class="code"><span class="regexspecial">\p{InSinhala}</span></tt>: U+0D80–U+0DFF </li><li><tt class="code"><span class="regexspecial">\p{InThai}</span></tt>: U+0E00–U+0E7F </li><li><tt class="code"><span class="regexspecial">\p{InLao}</span></tt>: U+0E80–U+0EFF </li><li><tt class="code"><span class="regexspecial">\p{InTibetan}</span></tt>: U+0F00–U+0FFF </li><li><tt class="code"><span class="regexspecial">\p{InMyanmar}</span></tt>: U+1000–U+109F </li><li><tt class="code"><span class="regexspecial">\p{InGeorgian}</span></tt>: U+10A0–U+10FF </li><li><tt class="code"><span class="regexspecial">\p{InHangul_Jamo}</span></tt>: U+1100–U+11FF </li><li><tt class="code"><span class="regexspecial">\p{InEthiopic}</span></tt>: U+1200–U+137F </li><li><tt class="code"><span class="regexspecial">\p{InCherokee}</span></tt>: U+13A0–U+13FF </li><li><tt class="code"><span class="regexspecial">\p{InUnified_Canadian_Aboriginal_Syllabics}</span></tt>: U+1400–U+167F </li><li><tt class="code"><span class="regexspecial">\p{InOgham}</span></tt>: U+1680–U+169F </li><li><tt class="code"><span class="regexspecial">\p{InRunic}</span></tt>: U+16A0–U+16FF </li><li><tt class="code"><span class="regexspecial">\p{InTagalog}</span></tt>: U+1700–U+171F </li><li><tt class="code"><span class="regexspecial">\p{InHanunoo}</span></tt>: U+1720–U+173F </li><li><tt class="code"><span class="regexspecial">\p{InBuhid}</span></tt>: U+1740–U+175F </li><li><tt class="code"><span class="regexspecial">\p{InTagbanwa}</span></tt>: U+1760–U+177F </li><li><tt class="code"><span class="regexspecial">\p{InKhmer}</span></tt>: U+1780–U+17FF </li><li><tt class="code"><span class="regexspecial">\p{InMongolian}</span></tt>: U+1800–U+18AF </li><li><tt class="code"><span class="regexspecial">\p{InLimbu}</span></tt>: U+1900–U+194F </li><li><tt class="code"><span class="regexspecial">\p{InTai_Le}</span></tt>: U+1950–U+197F </li><li><tt class="code"><span class="regexspecial">\p{InKhmer_Symbols}</span></tt>: U+19E0–U+19FF </li><li><tt class="code"><span class="regexspecial">\p{InPhonetic_Extensions}</span></tt>: U+1D00–U+1D7F </li><li><tt class="code"><span class="regexspecial">\p{InLatin_Extended_Additional}</span></tt>: U+1E00–U+1EFF </li><li><tt class="code"><span class="regexspecial">\p{InGreek_Extended}</span></tt>: U+1F00–U+1FFF </li><li><tt class="code"><span class="regexspecial">\p{InGeneral_Punctuation}</span></tt>: U+2000–U+206F </li><li><tt class="code"><span class="regexspecial">\p{InSuperscripts_and_Subscripts}</span></tt>: U+2070–U+209F </li><li><tt class="code"><span class="regexspecial">\p{InCurrency_Symbols}</span></tt>: U+20A0–U+20CF </li><li><tt class="code"><span class="regexspecial">\p{InCombining_Diacritical_Marks_for_Symbols}</span></tt>: U+20D0–U+20FF </li><li><tt class="code"><span class="regexspecial">\p{InLetterlike_Symbols}</span></tt>: U+2100–U+214F </li><li><tt class="code"><span class="regexspecial">\p{InNumber_Forms}</span></tt>: U+2150–U+218F </li><li><tt class="code"><span class="regexspecial">\p{InArrows}</span></tt>: U+2190–U+21FF </li><li><tt class="code"><span class="regexspecial">\p{InMathematical_Operators}</span></tt>: U+2200–U+22FF </li><li><tt class="code"><span class="regexspecial">\p{InMiscellaneous_Technical}</span></tt>: U+2300–U+23FF </li><li><tt class="code"><span class="regexspecial">\p{InControl_Pictures}</span></tt>: U+2400–U+243F </li><li><tt class="code"><span class="regexspecial">\p{InOptical_Character_Recognition}</span></tt>: U+2440–U+245F </li><li><tt class="code"><span class="regexspecial">\p{InEnclosed_Alphanumerics}</span></tt>: U+2460–U+24FF </li><li><tt class="code"><span class="regexspecial">\p{InBox_Drawing}</span></tt>: U+2500–U+257F </li><li><tt class="code"><span class="regexspecial">\p{InBlock_Elements}</span></tt>: U+2580–U+259F </li><li><tt class="code"><span class="regexspecial">\p{InGeometric_Shapes}</span></tt>: U+25A0–U+25FF </li><li><tt class="code"><span class="regexspecial">\p{InMiscellaneous_Symbols}</span></tt>: U+2600–U+26FF </li><li><tt class="code"><span class="regexspecial">\p{InDingbats}</span></tt>: U+2700–U+27BF </li><li><tt class="code"><span class="regexspecial">\p{InMiscellaneous_Mathematical_Symbols-A}</span></tt>: U+27C0–U+27EF </li><li><tt class="code"><span class="regexspecial">\p{InSupplemental_Arrows-A}</span></tt>: U+27F0–U+27FF </li><li><tt class="code"><span class="regexspecial">\p{InBraille_Patterns}</span></tt>: U+2800–U+28FF </li><li><tt class="code"><span class="regexspecial">\p{InSupplemental_Arrows-B}</span></tt>: U+2900–U+297F </li><li><tt class="code"><span class="regexspecial">\p{InMiscellaneous_Mathematical_Symbols-B}</span></tt>: U+2980–U+29FF </li><li><tt class="code"><span class="regexspecial">\p{InSupplemental_Mathematical_Operators}</span></tt>: U+2A00–U+2AFF </li><li><tt class="code"><span class="regexspecial">\p{InMiscellaneous_Symbols_and_Arrows}</span></tt>: U+2B00–U+2BFF </li><li><tt class="code"><span class="regexspecial">\p{InCJK_Radicals_Supplement}</span></tt>: U+2E80–U+2EFF </li><li><tt class="code"><span class="regexspecial">\p{InKangxi_Radicals}</span></tt>: U+2F00–U+2FDF </li><li><tt class="code"><span class="regexspecial">\p{InIdeographic_Description_Characters}</span></tt>: U+2FF0–U+2FFF </li><li><tt class="code"><span class="regexspecial">\p{InCJK_Symbols_and_Punctuation}</span></tt>: U+3000–U+303F </li><li><tt class="code"><span class="regexspecial">\p{InHiragana}</span></tt>: U+3040–U+309F </li><li><tt class="code"><span class="regexspecial">\p{InKatakana}</span></tt>: U+30A0–U+30FF </li><li><tt class="code"><span class="regexspecial">\p{InBopomofo}</span></tt>: U+3100–U+312F </li><li><tt class="code"><span class="regexspecial">\p{InHangul_Compatibility_Jamo}</span></tt>: U+3130–U+318F </li><li><tt class="code"><span class="regexspecial">\p{InKanbun}</span></tt>: U+3190–U+319F </li><li><tt class="code"><span class="regexspecial">\p{InBopomofo_Extended}</span></tt>: U+31A0–U+31BF </li><li><tt class="code"><span class="regexspecial">\p{InKatakana_Phonetic_Extensions}</span></tt>: U+31F0–U+31FF </li><li><tt class="code"><span class="regexspecial">\p{InEnclosed_CJK_Letters_and_Months}</span></tt>: U+3200–U+32FF </li><li><tt class="code"><span class="regexspecial">\p{InCJK_Compatibility}</span></tt>: U+3300–U+33FF </li><li><tt class="code"><span class="regexspecial">\p{InCJK_Unified_Ideographs_Extension_A}</span></tt>: U+3400–U+4DBF </li><li><tt class="code"><span class="regexspecial">\p{InYijing_Hexagram_Symbols}</span></tt>: U+4DC0–U+4DFF </li><li><tt class="code"><span class="regexspecial">\p{InCJK_Unified_Ideographs}</span></tt>: U+4E00–U+9FFF </li><li><tt class="code"><span class="regexspecial">\p{InYi_Syllables}</span></tt>: U+A000–U+A48F </li><li><tt class="code"><span class="regexspecial">\p{InYi_Radicals}</span></tt>: U+A490–U+A4CF </li><li><tt class="code"><span class="regexspecial">\p{InHangul_Syllables}</span></tt>: U+AC00–U+D7AF </li><li><tt class="code"><span class="regexspecial">\p{InHigh_Surrogates}</span></tt>: U+D800–U+DB7F </li><li><tt class="code"><span class="regexspecial">\p{InHigh_Private_Use_Surrogates}</span></tt>: U+DB80–U+DBFF </li><li><tt class="code"><span class="regexspecial">\p{InLow_Surrogates}</span></tt>: U+DC00–U+DFFF </li><li><tt class="code"><span class="regexspecial">\p{InPrivate_Use_Area}</span></tt>: U+E000–U+F8FF </li><li><tt class="code"><span class="regexspecial">\p{InCJK_Compatibility_Ideographs}</span></tt>: U+F900–U+FAFF </li><li><tt class="code"><span class="regexspecial">\p{InAlphabetic_Presentation_Forms}</span></tt>: U+FB00–U+FB4F </li><li><tt class="code"><span class="regexspecial">\p{InArabic_Presentation_Forms-A}</span></tt>: U+FB50–U+FDFF </li><li><tt class="code"><span class="regexspecial">\p{InVariation_Selectors}</span></tt>: U+FE00–U+FE0F </li><li><tt class="code"><span class="regexspecial">\p{InCombining_Half_Marks}</span></tt>: U+FE20–U+FE2F </li><li><tt class="code"><span class="regexspecial">\p{InCJK_Compatibility_Forms}</span></tt>: U+FE30–U+FE4F </li><li><tt class="code"><span class="regexspecial">\p{InSmall_Form_Variants}</span></tt>: U+FE50–U+FE6F </li><li><tt class="code"><span class="regexspecial">\p{InArabic_Presentation_Forms-B}</span></tt>: U+FE70–U+FEFF </li><li><tt class="code"><span class="regexspecial">\p{InHalfwidth_and_Fullwidth_Forms}</span></tt>: U+FF00–U+FFEF </li><li><tt class="code"><span class="regexspecial">\p{InSpecials}</span></tt>: U+FFF0–U+FFFF </li></ol>
+                </b-tab>
+            </b-tabs>
+        </b-modal>
     </div>
 </template>
 
 <script>
 
-import SimpleMDE from 'simplemde';
+import SimpleMDE from '../lib/simplemde-markdown-editor/src/js/simplemde.js';
 
-import 'simplemde/dist/simplemde.min.css';
+import '../lib/simplemde-markdown-editor/dist/simplemde.min.css';
 
 import Vue, { VueConstructor } from 'vue'
 
@@ -537,6 +581,17 @@ export default {
             oEditor: null,
             oSimpleMDE: null,
             oUploadedFile: null,
+            
+            bUseRegularExpression: false,
+            bUseCaseSensetive: false,
+            bShowReplacementFields: false,
+            iSearchPosFrom: null,
+            iSearchPosTo: null,
+            sSearchLastQuery: null,
+            sSearchQuery: '',
+            sSearchQueryText: '',
+            oSearchOverlay: null,
+            oSearchAnnotate: null,
             
             sYoutubeVideoURL: '',
             
@@ -1635,6 +1690,169 @@ export default {
             return aResult[1];
         },
         
+        fnClearSearch: function()
+        {
+            var oCodeMirror = this.oEditor.codemirror;
+            var oThis = this;
+            
+            oCodeMirror.operation(function() 
+            {
+                oThis.sSearchLastQuery = oThis.sSearchQuery;
+                if (!oThis.sSearchQuery) return;
+                
+                oCodeMirror.removeOverlay(oThis.oSearchOverlay);
+                
+                if (oThis.oSearchAnnotate) { 
+                    oThis.oSearchAnnotate.clear(); 
+                    oThis.oSearchAnnotate = null; 
+                }
+            });
+        },
+        fnQueryCaseInsensitive: function(sQuery) {
+            return typeof sQuery == "string" && sQuery == sQuery.toLowerCase();
+        },
+        fnGetSearchCursor: function(oCodeMirror, sQuery, iPos) {
+            return oCodeMirror.getSearchCursor(sQuery, iPos, {caseFold: this.fnQueryCaseInsensitive(sQuery), multiline: true});
+        },
+        fnFindNext: function()
+        {
+            this.fnEditorDoSearch();
+        },
+        fnFindPrevious: function()
+        {
+            this.fnEditorDoSearch(true);
+        },
+        fnEditorDoSearch: function(bRev, persistent, immediate) 
+        {
+            if (this.sSearchQuery) 
+                return this.fnEditorFindNext(bRev);
+        },
+        fnEditorFindNext: function(bRev, fnCallback)
+        {
+            var oThis = this;
+            
+            var CodeMirror = this.oEditor.CodeMirror;
+            var oCodeMirror = this.oEditor.codemirror;
+            
+            oCodeMirror.operation(function() 
+            {
+                var oCursor = oThis.fnGetSearchCursor(
+                    oCodeMirror, 
+                    oThis.sSearchQuery, 
+                    bRev ? oThis.iSearchPosFrom : oThis.iSearchPosTo
+                );
+                
+                if (!oCursor.find(bRev)) {
+                    oCursor = oThis.fnGetSearchCursor(
+                        oCodeMirror, 
+                        oThis.sSearchQuery, 
+                        bRev ? CodeMirror.Pos(oCodeMirror.lastLine()) : CodeMirror.Pos(oCodeMirror.firstLine(), 0)
+                    );
+                    if (!oCursor.find(bRev)) return;
+                }
+                
+                oCodeMirror.setSelection(oCursor.from(), oCursor.to());
+                oCodeMirror.scrollIntoView({from: oCursor.from(), to: oCursor.to()}, 20);
+                
+                oThis.iSearchPosFrom = oCursor.from(); 
+                oThis.iSearchPosTo = oCursor.to();
+                
+                if (fnCallback) fnCallback(oCursor.from(), oCursor.to())
+            });            
+        },
+        fnPrepareQuery: function(sQuery)
+        {
+            if (!this.bUseRegularExpression) {
+                sQuery = sQuery.replace(/(\.|\[|\]|\(|\)|\*|\?|\\|\+|\{|\})/g, "\\$1");
+            }
+            
+            var oRegExp;
+            
+            try {
+                oRegExp = new RegExp(sQuery, this.bUseCaseSensetive ? "u" : "ui");
+            } catch(oException) {
+                this.$snotify.error('Wrong regular expression');
+                return "";
+            }
+            
+            return oRegExp;
+        },
+        fnReplace: function()
+        {
+            this.fnEditorReplace();            
+        },
+        fnReplaceAll: function()
+        {
+            this.fnEditorReplace(true);
+        },
+        fnEditorReplaceAll: function(mQuery, sText)
+        {
+            var oCodeMirror = this.oEditor.codemirror;
+            var oThis = this;
+            
+            oCodeMirror.operation(function() 
+            {
+                for (var oCursor = oThis.fnGetSearchCursor(oCodeMirror, mQuery); oCursor.findNext();) {
+                    if (typeof mQuery != "string") {
+                        var oMatch = oCodeMirror.getRange(oCursor.from(), oCursor.to()).match(mQuery);
+                        oCursor.replace(sText.replace(/\$(\d)/g, function(_, i) {return oMatch[i];}));
+                    } else 
+                        oCursor.replace(sText);
+                }
+            });
+        },
+        fnEditorReplace: function(bAll)
+        {
+            var oCodeMirror = this.oEditor.codemirror;
+            var oThis = this;
+            
+            if (oCodeMirror.getOption("readOnly")) return;
+            
+            //var query = oCodeMirror.getSelection() || getSearchState(cm).lastQuery;
+            var mQuery = this.fnPrepareQuery(this.sSearchQuery);
+
+            if (bAll) {
+                this.fnEditorReplaceAll(mQuery, this.sSearchQueryText);
+            } else {
+                this.fnClearSearch();
+                
+                var oCursor = this.fnGetSearchCursor(oCodeMirror, mQuery, oCodeMirror.getCursor("from"));
+                
+                var fnAdvance = function() 
+                {
+                    var oStart = oCursor.from(), oMatch;
+                    
+                    if (!(oMatch = oCursor.findNext())) {
+                        oCursor = oThis.fnGetSearchCursor(oCodeMirror, mQuery);
+                        if (!(oMatch = oCursor.findNext()) 
+                            || (oStart 
+                                && oCursor.from().line == oStart.line 
+                                && oCursor.from().ch == oStart.ch
+                               )
+                           ) 
+                            return;
+                    }
+                    
+                    oCodeMirror.setSelection(oCursor.from(), oCursor.to());
+                    oCodeMirror.scrollIntoView({from: oCursor.from(), to: oCursor.to()});
+                    
+                    //this.replaceAll(mQuery, this.sSearchQueryText);
+                    oCursor.replace(
+                        typeof mQuery == "string" ? 
+                        oThis.sSearchQueryText :
+                        oThis.sSearchQueryText.replace(/\$(\d)/g, function(_, i) {return oMatch[i];})
+                    );
+                    //fnAdvance();
+                };
+                fnAdvance();
+            }
+        },
+        fnShowRegExpHelp: function()
+        {
+            this.$refs.help_modal.show();
+        },
+
+        
         fnGetState: function (cm, pos) 
         {
             pos = pos || cm.getCursor("start");
@@ -1802,6 +2020,21 @@ export default {
                     {
                         oThis.oEditor = oEditor;
                         
+                        var oCodeMirror = oThis.oEditor.codemirror;
+                        
+                        if (!oThis.bShowReplacementFields) {
+                            oThis.sSearchQuery = oCodeMirror.getSelection();
+                        }
+                        
+                        oThis.bShowReplacementFields = !oThis.bShowReplacementFields;
+                        
+                        setTimeout(
+                            function()
+                            {
+                                oThis.$refs.replacable_text_input.$el.focus();
+                            }, 
+                            300
+                        );
                     },
                     className: "fa fa-refresh",
                     title: "Replace text"
@@ -1811,6 +2044,291 @@ export default {
         
         oThis.fnSelectTag(localStorage.getItem(this.oRepository.sName+'_sActiveTag'));
         oThis.fnSelectArticleWithName(localStorage.getItem(this.oRepository.sName+'_iActiveArticle'));
+        
+        (function(CodeMirror) 
+        {
+            var Pos = CodeMirror.Pos;
+                
+              function regexpFlags(regexp) {
+                var flags = regexp.flags
+                return flags != null ? flags : (regexp.ignoreCase ? "i" : "")
+                  + (regexp.global ? "g" : "")
+                  + (regexp.multiline ? "m" : "")
+              }
+
+              function ensureFlags(regexp, flags) {
+                var current = regexpFlags(regexp), target = current
+                for (var i = 0; i < flags.length; i++) if (target.indexOf(flags.charAt(i)) == -1)
+                  target += flags.charAt(i)
+                return current == target ? regexp : new RegExp(regexp.source, target)
+              }
+
+              function maybeMultiline(regexp) {
+                return /\\s|\\n|\n|\\W|\\D|\[\^/.test(regexp.source)
+              }
+
+              function searchRegexpForward(doc, regexp, start) {
+                regexp = ensureFlags(regexp, "g")
+                for (var line = start.line, ch = start.ch, last = doc.lastLine(); line <= last; line++, ch = 0) {
+                  regexp.lastIndex = ch
+                  var string = doc.getLine(line), match = regexp.exec(string)
+                  if (match)
+                    return {from: Pos(line, match.index),
+                            to: Pos(line, match.index + match[0].length),
+                            match: match}
+                }
+              }
+
+              function searchRegexpForwardMultiline(doc, regexp, start) {
+                if (!maybeMultiline(regexp)) return searchRegexpForward(doc, regexp, start)
+
+                regexp = ensureFlags(regexp, "gm")
+                var string, chunk = 1
+                for (var line = start.line, last = doc.lastLine(); line <= last;) {
+                  // This grows the search buffer in exponentially-sized chunks
+                  // between matches, so that nearby matches are fast and don't
+                  // require concatenating the whole document (in case we're
+                  // searching for something that has tons of matches), but at the
+                  // same time, the amount of retries is limited.
+                  for (var i = 0; i < chunk; i++) {
+                    if (line > last) break
+                    var curLine = doc.getLine(line++)
+                    string = string == null ? curLine : string + "\n" + curLine
+                  }
+                  chunk = chunk * 2
+                  regexp.lastIndex = start.ch
+                  var match = regexp.exec(string)
+                  if (match) {
+                    var before = string.slice(0, match.index).split("\n"), inside = match[0].split("\n")
+                    var startLine = start.line + before.length - 1, startCh = before[before.length - 1].length
+                    return {from: Pos(startLine, startCh),
+                            to: Pos(startLine + inside.length - 1,
+                                    inside.length == 1 ? startCh + inside[0].length : inside[inside.length - 1].length),
+                            match: match}
+                  }
+                }
+              }
+
+              function lastMatchIn(string, regexp) {
+                var cutOff = 0, match
+                for (;;) {
+                  regexp.lastIndex = cutOff
+                  var newMatch = regexp.exec(string)
+                  if (!newMatch) return match
+                  match = newMatch
+                  cutOff = match.index + (match[0].length || 1)
+                  if (cutOff == string.length) return match
+                }
+              }
+
+              function searchRegexpBackward(doc, regexp, start) {
+                regexp = ensureFlags(regexp, "g")
+                for (var line = start.line, ch = start.ch, first = doc.firstLine(); line >= first; line--, ch = -1) {
+                  var string = doc.getLine(line)
+                  if (ch > -1) string = string.slice(0, ch)
+                  var match = lastMatchIn(string, regexp)
+                  if (match)
+                    return {from: Pos(line, match.index),
+                            to: Pos(line, match.index + match[0].length),
+                            match: match}
+                }
+              }
+
+              function searchRegexpBackwardMultiline(doc, regexp, start) {
+                regexp = ensureFlags(regexp, "gm")
+                var string, chunk = 1
+                for (var line = start.line, first = doc.firstLine(); line >= first;) {
+                  for (var i = 0; i < chunk; i++) {
+                    var curLine = doc.getLine(line--)
+                    string = string == null ? curLine.slice(0, start.ch) : curLine + "\n" + string
+                  }
+                  chunk *= 2
+
+                  var match = lastMatchIn(string, regexp)
+                  if (match) {
+                    var before = string.slice(0, match.index).split("\n"), inside = match[0].split("\n")
+                    var startLine = line + before.length, startCh = before[before.length - 1].length
+                    return {from: Pos(startLine, startCh),
+                            to: Pos(startLine + inside.length - 1,
+                                    inside.length == 1 ? startCh + inside[0].length : inside[inside.length - 1].length),
+                            match: match}
+                  }
+                }
+              }
+
+              var doFold, noFold
+              if (String.prototype.normalize) {
+                doFold = function(str) { return str.normalize("NFD").toLowerCase() }
+                noFold = function(str) { return str.normalize("NFD") }
+              } else {
+                doFold = function(str) { return str.toLowerCase() }
+                noFold = function(str) { return str }
+              }
+
+              // Maps a position in a case-folded line back to a position in the original line
+              // (compensating for codepoints increasing in number during folding)
+              function adjustPos(orig, folded, pos, foldFunc) {
+                if (orig.length == folded.length) return pos
+                for (var min = 0, max = pos + Math.max(0, orig.length - folded.length);;) {
+                  if (min == max) return min
+                  var mid = (min + max) >> 1
+                  var len = foldFunc(orig.slice(0, mid)).length
+                  if (len == pos) return mid
+                  else if (len > pos) max = mid
+                  else min = mid + 1
+                }
+              }
+
+              function searchStringForward(doc, query, start, caseFold) {
+                // Empty string would match anything and never progress, so we
+                // define it to match nothing instead.
+                if (!query.length) return null
+                var fold = caseFold ? doFold : noFold
+                var lines = fold(query).split(/\r|\n\r?/)
+
+                search: for (var line = start.line, ch = start.ch, last = doc.lastLine() + 1 - lines.length; line <= last; line++, ch = 0) {
+                  var orig = doc.getLine(line).slice(ch), string = fold(orig)
+                  if (lines.length == 1) {
+                    var found = string.indexOf(lines[0])
+                    if (found == -1) continue search
+                    var start = adjustPos(orig, string, found, fold) + ch
+                    return {from: Pos(line, adjustPos(orig, string, found, fold) + ch),
+                            to: Pos(line, adjustPos(orig, string, found + lines[0].length, fold) + ch)}
+                  } else {
+                    var cutFrom = string.length - lines[0].length
+                    if (string.slice(cutFrom) != lines[0]) continue search
+                    for (var i = 1; i < lines.length - 1; i++)
+                      if (fold(doc.getLine(line + i)) != lines[i]) continue search
+                    var end = doc.getLine(line + lines.length - 1), endString = fold(end), lastLine = lines[lines.length - 1]
+                    if (endString.slice(0, lastLine.length) != lastLine) continue search
+                    return {from: Pos(line, adjustPos(orig, string, cutFrom, fold) + ch),
+                            to: Pos(line + lines.length - 1, adjustPos(end, endString, lastLine.length, fold))}
+                  }
+                }
+              }
+
+              function searchStringBackward(doc, query, start, caseFold) {
+                if (!query.length) return null
+                var fold = caseFold ? doFold : noFold
+                var lines = fold(query).split(/\r|\n\r?/)
+
+                search: for (var line = start.line, ch = start.ch, first = doc.firstLine() - 1 + lines.length; line >= first; line--, ch = -1) {
+                  var orig = doc.getLine(line)
+                  if (ch > -1) orig = orig.slice(0, ch)
+                  var string = fold(orig)
+                  if (lines.length == 1) {
+                    var found = string.lastIndexOf(lines[0])
+                    if (found == -1) continue search
+                    return {from: Pos(line, adjustPos(orig, string, found, fold)),
+                            to: Pos(line, adjustPos(orig, string, found + lines[0].length, fold))}
+                  } else {
+                    var lastLine = lines[lines.length - 1]
+                    if (string.slice(0, lastLine.length) != lastLine) continue search
+                    for (var i = 1, start = line - lines.length + 1; i < lines.length - 1; i++)
+                      if (fold(doc.getLine(start + i)) != lines[i]) continue search
+                    var top = doc.getLine(line + 1 - lines.length), topString = fold(top)
+                    if (topString.slice(topString.length - lines[0].length) != lines[0]) continue search
+                    return {from: Pos(line + 1 - lines.length, adjustPos(top, topString, top.length - lines[0].length, fold)),
+                            to: Pos(line, adjustPos(orig, string, lastLine.length, fold))}
+                  }
+                }
+              }
+
+              function SearchCursor(doc, query, pos, options) {
+                this.atOccurrence = false
+                this.doc = doc
+                pos = pos ? doc.clipPos(pos) : Pos(0, 0)
+                this.pos = {from: pos, to: pos}
+
+                var caseFold
+                if (typeof options == "object") {
+                  caseFold = options.caseFold
+                } else { // Backwards compat for when caseFold was the 4th argument
+                  caseFold = options
+                  options = null
+                }
+
+                if (typeof query == "string") {
+                  if (caseFold == null) caseFold = false
+                  this.matches = function(reverse, pos) {
+                    return (reverse ? searchStringBackward : searchStringForward)(doc, query, pos, caseFold)
+                  }
+                } else {
+                  query = ensureFlags(query, "gm")
+                  if (!options || options.multiline !== false)
+                    this.matches = function(reverse, pos) {
+                      return (reverse ? searchRegexpBackwardMultiline : searchRegexpForwardMultiline)(doc, query, pos)
+                    }
+                  else
+                    this.matches = function(reverse, pos) {
+                      return (reverse ? searchRegexpBackward : searchRegexpForward)(doc, query, pos)
+                    }
+                }
+              }
+
+              SearchCursor.prototype = {
+                findNext: function() {return this.find(false)},
+                findPrevious: function() {return this.find(true)},
+
+                find: function(reverse) {
+                  var result = this.matches(reverse, this.doc.clipPos(reverse ? this.pos.from : this.pos.to))
+
+                  // Implements weird auto-growing behavior on null-matches for
+                  // backwards-compatiblity with the vim code (unfortunately)
+                  while (result && CodeMirror.cmpPos(result.from, result.to) == 0) {
+                    if (reverse) {
+                      if (result.from.ch) result.from = Pos(result.from.line, result.from.ch - 1)
+                      else if (result.from.line == this.doc.firstLine()) result = null
+                      else result = this.matches(reverse, this.doc.clipPos(Pos(result.from.line - 1)))
+                    } else {
+                      if (result.to.ch < this.doc.getLine(result.to.line).length) result.to = Pos(result.to.line, result.to.ch + 1)
+                      else if (result.to.line == this.doc.lastLine()) result = null
+                      else result = this.matches(reverse, Pos(result.to.line + 1, 0))
+                    }
+                  }
+
+                  if (result) {
+                    this.pos = result
+                    this.atOccurrence = true
+                    return this.pos.match || true
+                  } else {
+                    var end = Pos(reverse ? this.doc.firstLine() : this.doc.lastLine() + 1, 0)
+                    this.pos = {from: end, to: end}
+                    return this.atOccurrence = false
+                  }
+                },
+
+                from: function() {if (this.atOccurrence) return this.pos.from},
+                to: function() {if (this.atOccurrence) return this.pos.to},
+
+                replace: function(newText, origin) {
+                  if (!this.atOccurrence) return
+                  var lines = CodeMirror.splitLines(newText)
+                  this.doc.replaceRange(lines, this.pos.from, this.pos.to, origin)
+                  this.pos.to = Pos(this.pos.from.line + lines.length - 1,
+                                    lines[lines.length - 1].length + (lines.length == 1 ? this.pos.from.ch : 0))
+                }
+              }
+
+              CodeMirror.defineExtension("getSearchCursor", function(query, pos, caseFold) {
+                return new SearchCursor(this.doc, query, pos, caseFold)
+              })
+              CodeMirror.defineDocExtension("getSearchCursor", function(query, pos, caseFold) {
+                return new SearchCursor(this, query, pos, caseFold)
+              })
+
+              CodeMirror.defineExtension("selectMatches", function(query, caseFold) {
+                var ranges = []
+                var cur = this.getSearchCursor(query, this.getCursor("from"), caseFold)
+                while (cur.findNext()) {
+                  if (CodeMirror.cmpPos(cur.to(), this.getCursor("to")) > 0) break
+                  ranges.push({anchor: cur.from(), head: cur.to()})
+                }
+                if (ranges.length)
+                  this.setSelections(ranges, 0)
+              })        
+        
+        })(this.oSimpleMDE.CodeMirror);        
     },
     
     created: function()

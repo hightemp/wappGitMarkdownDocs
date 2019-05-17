@@ -2,6 +2,7 @@
 body, html {
     height: 100%;
     font-size: 12px;
+    font-family: Arial;
 }
 
 .loading-screen {
@@ -111,6 +112,10 @@ body, html {
 .CodeMirror {
     height: calc(100% - 360px);
     min-height: 0px !important;
+}
+
+.replacement-open .CodeMirror {
+    height: calc(100% - 428px);
 }
 
 .CodeMirror-scroll {
@@ -238,6 +243,20 @@ body, html {
 .replacement-block-buttons-col {
     flex: 0 0 80px;
     max-width: 80px;       
+}
+
+.replace-all-button {
+    white-space: nowrap;
+}
+
+
+#help-modal .tab-content {
+    max-height: 400px;
+    overflow-y: scroll;
+}
+
+#help-modal .tabs.row {
+    margin: 0px;
 }
 
 

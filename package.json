@@ -15,7 +15,6 @@
     "base64-inline-loader": "^1.1.1",
     "bootstrap": "^4.3.1",
     "bootstrap-vue": "^2.0.0-rc.20",
-    "simplemde": "^1.11.2",
     "vue": "^2.6.10",
     "vue-loader": "^15.7.0",
     "vue-resource": "^1.5.1",
@@ -29,7 +28,10 @@
     "mini-css-extract-plugin": "^0.6.0",
     "style-loader": "^0.23.1",
     "vue-template-compiler": "^2.6.10",
-    "webpack-cli": "^3.3.2"
+    "webpack-cli": "^3.3.2",
+    "codemirror": "*",
+    "codemirror-spell-checker": "*",
+    "marked": "*"
   },
   "scripts": {
     "build": "webpack -d --config webpack.config.babel.js",
