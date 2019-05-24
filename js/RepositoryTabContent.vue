@@ -157,7 +157,10 @@
                                         small 
                                         type="grow"
                                     ></b-spinner>
-                                    <i class="fa fa-save"></i>
+                                    <i
+                                        v-if="!bShowSaveButtonSpinner"
+                                        class="fa fa-save"
+                                    ></i>
                                 </b-button>
                             </div>
                         </div>

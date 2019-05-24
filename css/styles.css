@@ -150,11 +150,12 @@ body, html {
 }
 
 .article-view-space {
-    flex: 0 0 calc(100% - 101px);
+    flex: 0 0 calc(100% - 105px);
 }
 
 .article-view-button {
     flex: 0 0 30px;
+    max-width: 30px;
     margin-right: 5px;
 }
 
@@ -163,11 +164,12 @@ body, html {
 }
 
 .page-content-space {
-    flex: 0 0 calc(100% - 31px);    
+    flex: 0 0 calc(100% - 35px);    
 }
 
 .page-content-button {
     flex: 0 0 30px;
+    max-width: 30px;
     margin-right: 5px;
 }
 
