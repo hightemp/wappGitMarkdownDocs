@@ -3,6 +3,12 @@
 
 Repository articles manager with markdown editor and browsing ability.
 
+### Run
+
+```bash
+php -S 127.0.0.1:8091
+```
+
 ![](/images/screenshot.png)
 
 ![](/images/screenshot2.png)
