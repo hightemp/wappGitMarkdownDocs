@@ -174,18 +174,21 @@
                             :options="aTranslationProviders"
                             v-model="sTranslationProvider"
                             ref="translation_provider"
+                            @change="fnTranslationProviderChange"
                         ></b-form-select>
                         <b-form-select 
                             class="translation-block-select"
                             :options="aTranslationFromLanguage"
                             v-model="sTranslationFromLanguage"
                             ref="translation_from_language"
+                            @change="fnTranslationFromLanguageChange"
                         ></b-form-select>
                         <b-form-select 
                             class="translation-block-select"
                             :options="aTranslationToLanguage"
                             v-model="sTranslationToLanguage"
                             ref="translation_to_language"
+                            @change="fnTranslationToLanguageChange"
                         ></b-form-select> 
                         <b-button 
                             class="translation-block-button"
@@ -776,7 +779,7 @@ export default {
         fnShowNewTagModal: function()
         {
             this.sNewTagModalMode = 'add';
-            console.log(this.$refs.add_new_tag_modal);
+            
             this.$refs.add_new_tag_modal.show();
 
             var oThis = this;
@@ -785,7 +788,6 @@ export default {
                 oThis.$refs.add_new_tag_modal.title = 'Add new tag';
             }, 300);
             
-            console.log(this.$refs.add_new_tag_modal);
             this.fnResetNewTagModal();
         },
         fnShowRenameTagModal: function()
@@ -969,7 +971,6 @@ export default {
             oEvent.preventDefault();
             
             if (!this.fnCheckNewArticleForm()) {
-                console.log('fnCheckNewArticleForm', this.fnCheckNewArticleForm());
                 return;
             }
 
@@ -1934,6 +1935,21 @@ export default {
                     this.$snotify.error(sError);
                 });
         },
+        fnTranslationProviderChange: function(sValue)
+        {
+            console.log(sValue);
+            localStorage.setItem(this.oRepository.sName+'_sTranslationProvider', sValue);
+        },
+        fnTranslationFromLanguageChange: function(sValue)
+        {
+            console.log(sValue);
+            localStorage.setItem(this.oRepository.sName+'_sTranslationFromLanguage', sValue);
+        },
+        fnTranslationToLanguageChange: function(sValue)
+        {
+            console.log(sValue);
+            localStorage.setItem(this.oRepository.sName+'_sTranslationToLanguage', sValue);
+        },
         
         fnGetState: function (cm, pos) 
         {
@@ -2132,6 +2148,16 @@ export default {
         
         oThis.fnSelectTag(localStorage.getItem(this.oRepository.sName+'_sActiveTag'));
         oThis.fnSelectArticleWithName(localStorage.getItem(this.oRepository.sName+'_iActiveArticle'));
+        
+        var sTranslationProvider = localStorage.getItem(this.oRepository.sName+'_sTranslationProvider');
+        if (sTranslationProvider) 
+            this.sTranslationProvider = sTranslationProvider;
+        var sTranslationFromLanguage = localStorage.getItem(this.oRepository.sName+'_sTranslationFromLanguage');
+        if (sTranslationFromLanguage) 
+            this.sTranslationFromLanguage = sTranslationFromLanguage;
+        var sTranslationToLanguage = localStorage.getItem(this.oRepository.sName+'_sTranslationToLanguage');
+        if (sTranslationToLanguage) 
+            this.sTranslationToLanguage = sTranslationToLanguage;
         
         (function(CodeMirror) 
         {
