@@ -819,6 +819,29 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             
             fnCommitAndPushRepository($sRepositoryDir);
         }
+        if ($_POST['action']=='translate_text') {
+            if ($_POST['provider']=="google") {
+                $aParameters = http_build_query([
+                    "hl" => 'en',
+                    "sl" => $_POST['from_laguage'],
+                    "tl" => $_POST['to_language'],
+                    "q"  => $_POST['text'],
+                ]);
+                
+                $sData = fnHTTPRequest("https://translate.googleapis.com/translate_a/single?client=gtx&dt=t&dt=bd&dt=rm&".$aParameters);
+                $aData = json_decode($sData, true);
+                
+                $aResponse['data'] = '';
+                
+                foreach((array) @$aData[0] as $aBlock) {
+                    if ($aBlock[0]) {
+                        $aResponse['data'] .= $aBlock[0];
+                    }
+                }
+            } else {
+                throw new Exception("Wrong provider");
+            }
+        }
     } catch (Exception $oException) {
         $aResponse['status'] = 'error';
         $aResponse['message'] = $oException->getMessage();

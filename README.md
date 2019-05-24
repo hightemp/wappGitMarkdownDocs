@@ -2,6 +2,7 @@
 # wappGitMarkdownDocs
 
 Repository articles manager with markdown editor and browsing ability.
+PHP version >= 7.0
 
 ### Run
 

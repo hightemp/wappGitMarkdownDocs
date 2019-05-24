@@ -118,6 +118,10 @@ body, html {
     height: calc(100% - 428px);
 }
 
+.translation-open .CodeMirror {
+    height: calc(100% - 428px);
+}
+
 .CodeMirror-scroll {
     min-height: 0px !important;
     right: 0px;
@@ -247,6 +251,19 @@ body, html {
 
 .replace-all-button {
     white-space: nowrap;
+}
+
+
+.translation-block-select {
+    flex: 0 0 calc(25% - 5px);
+    margin-right: 5px;
+    margin-bottom: 5px;
+}
+
+.translation-block-button {
+    flex: 0 0 calc(25% - 5px);    
+    margin-right: 5px;
+    margin-bottom: 5px;
 }
 
 

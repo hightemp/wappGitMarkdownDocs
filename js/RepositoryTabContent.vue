@@ -136,14 +136,17 @@
             </div>
             <div 
                 class="page-content col-xl-4" 
-                :class="{'replacement-open':bShowReplacementFields}"
+                :class="{
+                    'replacement-open': bShowReplacementBlock,
+                    'translation-open': bShowTranslationBlock
+                }"
             >
                 <div v-show="fnArticleExists()"> 
                     <div class="container-fluid">
                         <div class="buttons-row row flex-xl-nowrap2">
-                            <div class="col-xl-10">
+                            <div class="col-xl-11">
                             </div>
-                            <div class="col-xl-2">
+                            <div class="col-xl-1">
                                 <b-button 
                                     variant="success" 
                                     @click="fnPushRepository(false)"
@@ -154,7 +157,7 @@
                                         small 
                                         type="grow"
                                     ></b-spinner>
-                                    Save
+                                    <i class="fa fa-save"></i>
                                 </b-button>
                             </div>
                         </div>
@@ -163,7 +166,37 @@
                     <textarea class="page-content-textarea"></textarea>
                     
                     <div 
-                        v-if="bShowReplacementFields"
+                        v-if="bShowTranslationBlock"
+                        class="translation-block d-flex flex-wrap"
+                    >
+                        <b-form-select 
+                            class="translation-block-select"
+                            :options="aTranslationProviders"
+                            v-model="sTranslationProvider"
+                            ref="translation_provider"
+                        ></b-form-select>
+                        <b-form-select 
+                            class="translation-block-select"
+                            :options="aTranslationFromLanguage"
+                            v-model="sTranslationFromLanguage"
+                            ref="translation_from_language"
+                        ></b-form-select>
+                        <b-form-select 
+                            class="translation-block-select"
+                            :options="aTranslationToLanguage"
+                            v-model="sTranslationToLanguage"
+                            ref="translation_to_language"
+                        ></b-form-select> 
+                        <b-button 
+                            class="translation-block-button"
+                            @click="fnTranslate"
+                        >
+                            Translate
+                        </b-button>
+                    </div>
+                    
+                    <div 
+                        v-if="bShowReplacementBlock"
                         class="replacement-block d-flex flex-wrap"
                     >
                         <b-form-input 
@@ -287,26 +320,26 @@
             <div class="article-view col-xl-4">
                 <div class="container-fluid">
                     <div class="buttons-row row flex-xl-nowrap2">
-                        <div class="col-xl-6">
+                        <div class="col-xl-9">
                         </div>
-                        <div class="col-xl-2">
+                        <div class="col-xl-1">
                             <b-button 
                                 @click="fnShowImagesModal"
                                 block
-                            >Images</b-button>
+                            ><i class="fa fa-picture-o"></i></b-button>
                         </div>
-                        <div class="col-xl-2">
+                        <div class="col-xl-1">
                             <b-button 
                                 @click="fnShowFilesModal"
                                 block
-                            >Files</b-button>
+                            ><i class="fa fa-file-o"></i></b-button>
                         </div>
-                        <div class="col-xl-2">
+                        <div class="col-xl-1">
                             <b-button 
                                 variant="success" 
                                 @click="fnRefreshArticleViewer"
                                 block
-                            >Resfresh</b-button>
+                            ><i class="fa fa-refresh"></i></b-button>
                         </div>
                     </div>
                 </div>
@@ -578,13 +611,14 @@ export default {
             bShowSaveButtonSpinner: false,
             bShowArticleViewContentsSpinner: false,
             
-            oEditor: null,
             oSimpleMDE: null,
             oUploadedFile: null,
             
+            bShowReplacementBlock: false,
+            bShowTranslationBlock: false,
+            
             bUseRegularExpression: false,
             bUseCaseSensetive: false,
-            bShowReplacementFields: false,
             iSearchPosFrom: null,
             iSearchPosTo: null,
             sSearchLastQuery: null,
@@ -592,6 +626,22 @@ export default {
             sSearchQueryText: '',
             oSearchOverlay: null,
             oSearchAnnotate: null,
+            
+            aTranslationProviders: [
+                { value: 'google', text: 'Google' }
+            ],
+            sTranslationProvider: 'google',
+            aTranslationFromLanguage: [
+                { value: 'auto', text: 'Auto' },
+                { value: 'en', text: 'English' },
+                { value: 'ru', text: 'Russian' }
+            ],
+            sTranslationFromLanguage: 'auto',
+            aTranslationToLanguage: [
+                { value: 'en', text: 'English' },
+                { value: 'ru', text: 'Russian' }
+            ],
+            sTranslationToLanguage: 'ru',
             
             sYoutubeVideoURL: '',
             
@@ -1360,9 +1410,9 @@ export default {
         
         fnInsertImage: function(sURL, bCursorToEnd)
         {
-            var cm = this.oEditor.codemirror;
+            var cm = this.oSimpleMDE.codemirror;
             var stat = this.fnGetState(cm);
-            var options = this.oEditor.options;
+            var options = this.oSimpleMDE.options;
             var url = sURL;
             
             this.fnReplaceSelection(cm, stat.image, options.insertTexts.image, url, bCursorToEnd);
@@ -1519,9 +1569,9 @@ export default {
         
         fnInsertFile: function(sURL, bCursorToEnd)
         {
-            var cm = this.oEditor.codemirror;
+            var cm = this.oSimpleMDE.codemirror;
             var stat = this.fnGetState(cm);
-            var options = this.oEditor.options;
+            var options = this.oSimpleMDE.options;
             var url = sURL;
             
             this.fnReplaceSelection(cm, stat.link, options.insertTexts.link, url, bCursorToEnd);
@@ -1692,7 +1742,7 @@ export default {
         
         fnClearSearch: function()
         {
-            var oCodeMirror = this.oEditor.codemirror;
+            var oCodeMirror = this.oSimpleMDE.codemirror;
             var oThis = this;
             
             oCodeMirror.operation(function() 
@@ -1731,8 +1781,8 @@ export default {
         {
             var oThis = this;
             
-            var CodeMirror = this.oEditor.CodeMirror;
-            var oCodeMirror = this.oEditor.codemirror;
+            var CodeMirror = this.oSimpleMDE.CodeMirror;
+            var oCodeMirror = this.oSimpleMDE.codemirror;
             
             oCodeMirror.operation(function() 
             {
@@ -1787,7 +1837,7 @@ export default {
         },
         fnEditorReplaceAll: function(mQuery, sText)
         {
-            var oCodeMirror = this.oEditor.codemirror;
+            var oCodeMirror = this.oSimpleMDE.codemirror;
             var oThis = this;
             
             oCodeMirror.operation(function() 
@@ -1803,7 +1853,7 @@ export default {
         },
         fnEditorReplace: function(bAll)
         {
-            var oCodeMirror = this.oEditor.codemirror;
+            var oCodeMirror = this.oSimpleMDE.codemirror;
             var oThis = this;
             
             if (oCodeMirror.getOption("readOnly")) return;
@@ -1851,7 +1901,38 @@ export default {
         {
             this.$refs.help_modal.show();
         },
-
+        
+        fnTranslate: function()
+        {
+            var oCodeMirror = this.oSimpleMDE.codemirror;
+            var oThis = this;
+            
+            if (oCodeMirror.getOption("readOnly")) return;
+            
+            this
+                .$http
+                .post(
+                    '',
+                    {
+                        action: 'translate_text',
+                        provider: this.sTranslationProvider,
+                        text: oCodeMirror.getSelection(),
+                        from_laguage: this.sTranslationFromLanguage,
+                        to_language: this.sTranslationToLanguage
+                    }
+                ).then(function(oResponse)
+                {
+                    if (oResponse.body.status=='error') {
+                        this.$snotify.error(oResponse.body.message, 'Error');
+                        return;
+                    }
+                    
+                    oCodeMirror.replaceSelection(oResponse.body.data);
+                }).catch(function(sError)
+                {
+                    this.$snotify.error(sError);
+                });
+        },
         
         fnGetState: function (cm, pos) 
         {
@@ -1970,7 +2051,6 @@ export default {
                     name: "insert-picture",
                     action: function customFunction(oEditor)
                     {
-                        oThis.oEditor = oEditor;
                         oThis.sUploadImagesMode = 'insert';
                         oThis.$refs.uploaded_images_input.$el.click();
                     },
@@ -1981,7 +2061,6 @@ export default {
                     name: "insert-picture-from-collection",
                     action: function(oEditor)
                     {
-                        oThis.oEditor = oEditor;
                         oThis.sUploadImagesMode = 'update-modal';
                         oThis.$refs.images_modal.hideFooter = false;
                         oThis.$refs.images_modal.show();
@@ -1993,7 +2072,6 @@ export default {
                     name: "insert-files-from-collection",
                     action: function(oEditor)
                     {
-                        oThis.oEditor = oEditor;
                         oThis.sUploadFilesMode = 'update-modal';
                         oThis.$refs.files_modal.hideFooter = false;
                         oThis.$refs.files_modal.show();
@@ -2005,8 +2083,6 @@ export default {
                     name: "insert-youtube-video",
                     action: function(oEditor)
                     {
-                        oThis.oEditor = oEditor;
-                        
                         oThis.sYoutubeVideoURL = '';
                         oThis.$refs.add_youtube_video_modal.hideFooter = false;
                         oThis.$refs.add_youtube_video_modal.show();
@@ -2018,26 +2094,37 @@ export default {
                     name: "replace-text",
                     action: function(oEditor)
                     {
-                        oThis.oEditor = oEditor;
+                        var oCodeMirror = oThis.oSimpleMDE.codemirror;
                         
-                        var oCodeMirror = oThis.oEditor.codemirror;
-                        
-                        if (!oThis.bShowReplacementFields) {
+                        if (!oThis.bShowReplacementBlock) {
                             oThis.sSearchQuery = oCodeMirror.getSelection();
                         }
                         
-                        oThis.bShowReplacementFields = !oThis.bShowReplacementFields;
+                        oThis.bShowTranslationBlock = false;
+                        oThis.bShowReplacementBlock = !oThis.bShowReplacementBlock;
                         
                         setTimeout(
                             function()
                             {
-                                oThis.$refs.replacable_text_input.$el.focus();
+                                if (oThis.$refs.replacable_text_input.$el) {
+                                    oThis.$refs.replacable_text_input.$el.focus();
+                                }
                             }, 
                             300
                         );
                     },
                     className: "fa fa-refresh",
                     title: "Replace text"
+                },
+                {
+                    name: "translate-text",
+                    action: function(oEditor)
+                    {
+                        oThis.bShowReplacementBlock = false;
+                        oThis.bShowTranslationBlock = !oThis.bShowTranslationBlock;
+                    },
+                    className: "fa fa-language",
+                    title: "Translate text"
                 }
             ]
         });
