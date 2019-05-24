@@ -628,7 +628,8 @@ export default {
             oSearchAnnotate: null,
             
             aTranslationProviders: [
-                { value: 'google', text: 'Google' }
+                { value: 'google', text: 'Google' },
+                { value: 'yandex', text: 'Yandex' }
             ],
             sTranslationProvider: 'google',
             aTranslationFromLanguage: [

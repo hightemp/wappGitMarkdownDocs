@@ -838,6 +838,35 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                         $aResponse['data'] .= $aBlock[0];
                     }
                 }
+            } elseif($_POST['provider']=="yandex") {
+                if ($_POST['from_laguage']=='auto') {
+                    $aLangaugeParameters = http_build_query([
+                        "text"  => $_POST['text'],
+                    ]);
+                    
+                    $sLanguageData = fnHTTPRequest("https://translate.yandex.net/api/v1/tr.json/detect?srv=yawidget&".$aLangaugeParameters);
+                    $aLanguageData = json_decode($sLanguageData, true);
+                
+                    if (!isset($aLanguageData['lang'])) {
+                        throw new Exception("Language can't be detected");
+                    }
+                    
+                    $_POST['from_laguage'] = $aLanguageData['lang'];
+                }
+                
+                $aParameters = http_build_query([
+                    "lang" => $_POST['from_laguage'].'-'.$_POST['to_language'],
+                    "text"  => $_POST['text'],
+                ]);
+                
+                $sData = fnHTTPRequest("https://translate.yandex.net/api/v1/tr.json/translate?srv=yawidget&".$aParameters);
+                $aData = json_decode($sData, true);
+                
+                if (!isset($aData['text'][0])) {
+                    throw new Exception("Can't be translated");
+                }
+                    
+                $aResponse['data'] = $aData['text'][0];
             } else {
                 throw new Exception("Wrong provider");
             }

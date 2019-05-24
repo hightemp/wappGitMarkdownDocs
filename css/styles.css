@@ -266,6 +266,10 @@ body, html {
     margin-bottom: 5px;
 }
 
+.translation-block-button:last-child {
+    margin-right: 0px;
+}
+
 
 #help-modal .tab-content {
     max-height: 400px;
