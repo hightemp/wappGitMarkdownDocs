@@ -144,9 +144,9 @@
                 <div v-show="fnArticleExists()"> 
                     <div class="container-fluid">
                         <div class="buttons-row row flex-xl-nowrap2">
-                            <div class="col-xl-11">
+                            <div class="page-content-space">
                             </div>
-                            <div class="col-xl-1">
+                            <div class="page-content-button">
                                 <b-button 
                                     variant="success" 
                                     @click="fnPushRepository(false)"
@@ -323,21 +323,21 @@
             <div class="article-view col-xl-4">
                 <div class="container-fluid">
                     <div class="buttons-row row flex-xl-nowrap2">
-                        <div class="col-xl-9">
+                        <div class="article-view-space">
                         </div>
-                        <div class="col-xl-1">
+                        <div class="article-view-button">
                             <b-button 
                                 @click="fnShowImagesModal"
                                 block
                             ><i class="fa fa-picture-o"></i></b-button>
                         </div>
-                        <div class="col-xl-1">
+                        <div class="article-view-button">
                             <b-button 
                                 @click="fnShowFilesModal"
                                 block
                             ><i class="fa fa-file-o"></i></b-button>
                         </div>
-                        <div class="col-xl-1">
+                        <div class="article-view-button">
                             <b-button 
                                 variant="success" 
                                 @click="fnRefreshArticleViewer"

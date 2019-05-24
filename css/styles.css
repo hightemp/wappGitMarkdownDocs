@@ -149,6 +149,32 @@ body, html {
     height: 100%;
 }
 
+.article-view-space {
+    flex: 0 0 calc(100% - 101px);
+}
+
+.article-view-button {
+    flex: 0 0 30px;
+    margin-right: 5px;
+}
+
+.article-view-button:last-child {
+    margin-right: 0px;    
+}
+
+.page-content-space {
+    flex: 0 0 calc(100% - 31px);    
+}
+
+.page-content-button {
+    flex: 0 0 30px;
+    margin-right: 5px;
+}
+
+.page-content-button:last-child {
+    margin-right: 0px;    
+}
+
 
 .images-modal-list {
     height: 400px;
