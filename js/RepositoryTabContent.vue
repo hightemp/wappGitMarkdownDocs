@@ -617,6 +617,8 @@ export default {
             bShowSaveButtonSpinner: false,
             bShowArticleViewContentsSpinner: false,
             
+            bEditorDirty: false,
+            
             oSimpleMDE: null,
             oUploadedFile: null,
             
@@ -702,7 +704,7 @@ export default {
     },
     
     methods: {
-        fnPushRepository: function(bPushOnly)
+        fnPushRepository: function(bPushOnly, fnCallback)
         {
             var oData = {
                 action: 'push_repository',
@@ -735,6 +737,8 @@ export default {
                     }
                     
                     this.fnRefreshArticleViewer();
+                    
+                    if (fnCallback) fnCallback();
                 })
                 .catch(function(sError)
                 {
@@ -1181,72 +1185,88 @@ export default {
         {
             window.oApplication.bShowLoadingScreen = true;
             
-            this
-                .$http
-                .post(
-                    '',
-                    {
-                        action: 'add_tag_to_article',
-                        repository: this.oRepository.sName,
-                        article: sArticle,
-                        tag: sTag
-                    }
-                ).then(function(oResponse)
-                {                    
-                    window.oApplication.bShowLoadingScreen = false;
-                    
-                    if (oResponse.body.status=='error') {
-                        this.$snotify.error(oResponse.body.message, 'Error');
-                        return;
-                    }
-                    
-                    this.oRepository.oTags[sTag].push(sArticle);
-                    
-                    this.fnSelectArticle(this.iActiveArticle);
-                })
-                .catch(function(sError)
+            var oThis = this;
+            
+            this.fnPushRepository(
+                false, 
+                function()
                 {
-                    this.$snotify.error(sError);
-                });
+                    oThis
+                        .$http
+                        .post(
+                            '',
+                            {
+                                action: 'add_tag_to_article',
+                                repository: oThis.oRepository.sName,
+                                article: sArticle,
+                                tag: sTag
+                            }
+                        ).then(function(oResponse)
+                        {                    
+                            window.oApplication.bShowLoadingScreen = false;
+                            
+                            if (oResponse.body.status=='error') {
+                                oThis.$snotify.error(oResponse.body.message, 'Error');
+                                return;
+                            }
+                            
+                            oThis.oRepository.oTags[sTag].push(sArticle);
+                            
+                            oThis.fnSelectArticle(oThis.iActiveArticle);
+                        })
+                        .catch(function(sError)
+                        {
+                            oThis.$snotify.error(sError);
+                        });                
+                }
+            );
         },
         fnRemoveArticleTag: function(sArticle, sTag)
         {
             window.oApplication.bShowLoadingScreen = true;
             
-            this
-                .$http
-                .post(
-                    '',
-                    {
-                        action: 'remove_tag_from_article',
-                        repository: this.oRepository.sName,
-                        article: sArticle,
-                        tag: sTag
-                    }
-                ).then(function(oResponse)
+            var oThis = this;
+            
+            this.fnPushRepository(
+                false, 
+                function()
                 {
-                    window.oApplication.bShowLoadingScreen = false;
-                    
-                    if (oResponse.body.status=='error') {
-                        this.$snotify.error(oResponse.body.message, 'Error');
-                        return;
-                    }
-                    
-                    var iIndex = this.fnFindArticleInTag(sArticle, sTag);
-                    if (this.iActiveArticle == iIndex) {
-                        var sArticle = this.oRepository.oTags[sTag][iIndex];
-                        
-                        this.fnSelectTag('__all__');
-                        this.fnSelectArticleWithName(sArticle);
-                    }
-                    this.oRepository.oTags[sTag].splice(iIndex, 1);
-                    
-                    this.fnSelectArticle(this.iActiveArticle);                    
-                })
-                .catch(function(sError)
-                {
-                    this.$snotify.error(sError);
-                });
+                    oThis
+                        .$http
+                        .post(
+                            '',
+                            {
+                                action: 'remove_tag_from_article',
+                                repository: oThis.oRepository.sName,
+                                article: sArticle,
+                                tag: sTag
+                            }
+                        ).then(function(oResponse)
+                        {
+                            window.oApplication.bShowLoadingScreen = false;
+                            
+                            if (oResponse.body.status=='error') {
+                                oThis.$snotify.error(oResponse.body.message, 'Error');
+                                return;
+                            }
+                            
+                            var iIndex = oThis.fnFindArticleInTag(sArticle, sTag);
+                            if (oThis.iActiveArticle == iIndex) {
+                                var sArticle = oThis.oRepository.oTags[sTag][iIndex];
+                                
+                                oThis.fnSelectTag('__all__');
+                                oThis.fnSelectArticleWithName(sArticle);
+                            }
+                            oThis.oRepository.oTags[sTag].splice(iIndex, 1);
+                            
+                            oThis.fnSelectArticle(oThis.iActiveArticle);                    
+                        })
+                        .catch(function(sError)
+                        {
+                            oThis.$snotify.error(sError);
+                        });
+                }
+            );
         },
         fnFindTagsWithArticle: function(sArticle)
         {
@@ -2147,6 +2167,12 @@ export default {
                     title: "Translate text"
                 }
             ]
+        });
+        
+        this.oSimpleMDE.on('change', function(oCodeMirror){
+            console.log('codemirror - onchange');
+            oThis.bEditorDirty = true;
+            //yourTextarea.value = cMirror.getValue();
         });
         
         oThis.fnSelectTag(localStorage.getItem(this.oRepository.sName+'_sActiveTag'));
