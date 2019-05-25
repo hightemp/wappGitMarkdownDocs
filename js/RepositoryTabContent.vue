@@ -369,6 +369,8 @@
                 <div 
                     v-if="!bShowArticleViewContentsSpinner && fnArticleExists()"
                     class="article-view-contents markdown-body"
+                    ref="article_view_contents"
+                    @scroll="fnArticleViewScroll"
                     v-html="sArticleViewContents"
                 >
                 </div>
@@ -503,7 +505,11 @@
                     </div>
                 </div>
             </div>
-            <div class="images-modal-list d-flex flex-wrap">
+            <div 
+                class="images-modal-list d-flex flex-wrap"
+                ref="images_modal_list"
+                @scroll="fnImagesModalScroll"
+            >
                 <div 
                     v-for="(sImage, iIndex) in aImagesModalFiles"
                     class="images-modal-list-item img-thumbnail d-flex"
@@ -532,7 +538,7 @@
         >
             <div class="container-fluid">
                 <div class="files-modal-filter-row row flex-xl-nowrap2">
-                    <div class="col-xl-10">
+                    <div class="col-xl-9">
                         <b-form-input 
                             placeholder="Filter"
                             v-model="sFilesFilterString"
@@ -549,6 +555,15 @@
                     </div>
                     <div class="col-xl-1">
                         <b-button 
+                            variant="success"
+                            @click="fnAddFileFromLink"
+                            block
+                        >
+                            <i class="fa fa-link"></i>
+                        </b-button>
+                    </div>                    
+                    <div class="col-xl-1">
+                        <b-button 
                             variant="danger" 
                             @click="fnRemoveFile"
                             block
@@ -558,7 +573,11 @@
                     </div>
                 </div>
             </div>
-            <div class="files-modal-list">
+            <div 
+                class="files-modal-list"
+                ref="files_modal_list"
+                @scroll="fnFilesModalScroll"
+            >
                 <div 
                     v-for="(sFile, iIndex) in aFilesModalFiles"
                     class="files-modal-list-item"
@@ -673,11 +692,13 @@ export default {
             aImagesModalSelectedFiles: [],
             sImagesFilterString: '',
             sUploadImagesMode: '',
+            iImagesModalScrollPosition: 0,
             
             aFilesModalFiles: [],           
             aFilesModalSelectedFiles: [],
             sFilesFilterString: '',
             sUploadFilesMode: '',
+            iFilesModalScrollPosition: 0,
             
             aArticlesSearchResults: [],
             
@@ -692,6 +713,7 @@ export default {
             sNewArticleModalMode: '',
             
             sArticleViewContents: '',
+            iArticleViewScrollPosition: 0,
             
             sActiveTag: "__all__",
             iActiveArticle: -1,
@@ -1356,6 +1378,8 @@ export default {
                 return;
             }
             
+            this.iArticleViewScrollPosition = 0;
+            
             this
                 .$http
                 .post(
@@ -1392,9 +1416,16 @@ export default {
                     this.$snotify.error(sError);
                 });
         },
+        fnArticleViewScroll: function()
+        {
+            console.log("fnArticleViewScroll", this.$refs.article_view_contents.scrollTop);
+            this.iArticleViewScrollPosition = this.$refs.article_view_contents.scrollTop;
+        },
         fnRefreshArticleViewer: function()
         {
             this.bShowArticleViewContentsSpinner = true;
+            
+            var oThis = this;
             
             this
                 .$http
@@ -1408,13 +1439,21 @@ export default {
                 ).then(function(oResponse)
                 {
                     if (oResponse.body.status=='error') {
-                        this.$snotify.error(oResponse.body.message, 'Error');
+                        oThis.$snotify.error(oResponse.body.message, 'Error');
                         return;
                     }
                     
-                    this.bShowArticleViewContentsSpinner = false;
+                    oThis.bShowArticleViewContentsSpinner = false;
                     
-                    this.sArticleViewContents = oResponse.body.data;
+                    oThis.sArticleViewContents = oResponse.body.data;
+            
+                    setTimeout(
+                        function()
+                        {
+                            oThis.$refs.article_view_contents.scrollTop = oThis.iArticleViewScrollPosition;
+                        }, 
+                        100
+                    );
                 })
                 .catch(function(sError)
                 {
@@ -1503,11 +1542,17 @@ export default {
                             var iIndex = this.aImagesModalFiles.indexOf(sImage);
                             
                             if (iIndex>-1) {
-                                this.aImagesModalFiles.splice(iIndex, 1, sImage);
+                                this.aImagesModalFiles.splice(iIndex, 1);
+                                this.aImagesModalFiles.push(sImage);
                             } else {
                                 this.aImagesModalFiles.push(sImage);
                             }
                         }
+                        
+                        var iScrollTop = this.$refs.images_modal_list.scrollHeight - this.$refs.images_modal_list.clientHeight;
+                        this.$refs.images_modal_list.scrollTop = iScrollTop
+                        this.iImagesModalScrollPosition = this.$refs.images_modal_list.scrollTop;
+
                     } else if (this.sUploadImagesMode=='insert') {
                         for (var iIndex=0; iIndex<oResponse.body.data.length; iIndex++) {
                             this.fnInsertImage('/images/'+oResponse.body.data[iIndex]);
@@ -1537,6 +1582,8 @@ export default {
         },
         fnUpdateImagesList: function()
         {
+            var oThis = this;
+            
             this
                 .$http
                 .post(
@@ -1548,11 +1595,19 @@ export default {
                 ).then(function(oResponse)
                 {
                     if (oResponse.body.status=='error') {
-                        this.$snotify.error(oResponse.body.message, 'Error');
+                        oThis.$snotify.error(oResponse.body.message, 'Error');
                         return;
                     }
                     
-                    this.aImagesModalFiles = oResponse.body.data;
+                    oThis.aImagesModalFiles = oResponse.body.data;
+                    
+                    setTimeout(
+                        function()
+                        {
+                            oThis.$refs.images_modal_list.scrollTop = oThis.iImagesModalScrollPosition;
+                        },
+                        100
+                    );
                 })
                 .catch(function(sError)
                 {
@@ -1615,10 +1670,15 @@ export default {
                         var iIndex = this.aImagesModalFiles.indexOf(sImage);
                         
                         if (iIndex>-1) {
-                            this.aImagesModalFiles.splice(iIndex, 1, sImage);
+                            this.aImagesModalFiles.splice(iIndex, 1);
+                            this.aImagesModalFiles.push(sImage);
                         } else {
                             this.aImagesModalFiles.push(sImage);
                         }
+                        
+                        var iScrollTop = this.$refs.images_modal_list.scrollHeight - this.$refs.images_modal_list.clientHeight;
+                        this.$refs.images_modal_list.scrollTop = iScrollTop
+                        this.iImagesModalScrollPosition = this.$refs.images_modal_list.scrollTop;
                     })
                     .catch(function(sError)
                     {
@@ -1661,6 +1721,10 @@ export default {
                 {
                     this.$snotify.error(sError);
                 });
+        },
+        fnImagesModalScroll: function()
+        {
+            this.iImagesModalScrollPosition = this.$refs.images_modal_list.scrollTop;
         },
         
         fnInsertFile: function(sURL, bCursorToEnd)
@@ -1712,11 +1776,17 @@ export default {
                             var iIndex = this.aFilesModalFiles.indexOf(sFile);
                             
                             if (iIndex>-1) {
-                                
+                                this.aFilesModalFiles.splice(iIndex, 1);
+                                this.aFilesModalFiles.push(sFile);
                             } else {
                                 this.aFilesModalFiles.push(sFile);
-                            }
+                            }                            
                         }
+                        
+                        var iScrollTop = this.$refs.files_modal_list.scrollHeight - this.$refs.files_modal_list.clientHeight;
+                        this.$refs.files_modal_list.scrollTop = iScrollTop
+                        this.iFilesModalScrollPosition = this.$refs.files_modal_list.scrollTop;
+                        
                     } else if (this.sUploadFilesMode=='insert') {
                         for (var iIndex=0; iIndex<oResponse.body.data.length; iIndex++) {
                             this.fnInsertFile('/files/'+oResponse.body.data[iIndex]);
@@ -1752,6 +1822,14 @@ export default {
                     }
                     
                     this.aFilesModalFiles = oResponse.body.data;
+
+                    setTimeout(
+                        function()
+                        {
+                            oThis.$refs.files_modal_list.scrollTop = oThis.iFilesModalScrollPosition;
+                        },
+                        100
+                    );
                 })
                 .catch(function(sError)
                 {
@@ -1784,6 +1862,51 @@ export default {
         fnAddFile: function()
         {
             this.$refs.uploaded_files_input.$el.click();
+        },
+        fnAddFileFromLink: function()
+        {
+            var sURL = null;
+            
+            if ((sURL = prompt("Enter URL")) !== null) {
+                window.oApplication.bShowLoadingScreen = true;
+                
+                this
+                    .$http
+                    .post(
+                        '',
+                        {
+                            action: 'add_file_from_url',
+                            repository: this.oRepository.sName,
+                            url: sURL
+                        }
+                    ).then(function(oResponse)
+                    {
+                        window.oApplication.bShowLoadingScreen = false;
+                        
+                        if (oResponse.body.status=='error') {
+                            this.$snotify.error(oResponse.body.message, 'Error');
+                            return;
+                        }
+
+                        var sFile = oResponse.body.data;
+                        var iIndex = this.aFilesModalFiles.indexOf(sFile);
+                        
+                        if (iIndex>-1) {
+                            this.aFilesModalFiles.splice(iIndex, 1);
+                            this.aFilesModalFiles.push(sFile);
+                        } else {
+                            this.aFilesModalFiles.push(sFile);
+                        }
+                        
+                        var iScrollTop = this.$refs.files_modal_list.scrollHeight - this.$refs.files_modal_list.clientHeight;
+                        this.$refs.files_modal_list.scrollTop = iScrollTop
+                        this.iFilesModalScrollPosition = this.$refs.files_modal_list.scrollTop;
+                    })
+                    .catch(function(sError)
+                    {
+                        this.$snotify.error(sError);
+                    });
+            }            
         },
         fnRemoveFile: function()
         {
@@ -1820,6 +1943,10 @@ export default {
                 {
                     this.$snotify.error(sError);
                 });
+        },
+        fnFilesModalScroll: function()
+        {
+            this.iFilesModalScrollPosition = this.$refs.files_modal_list.scrollTop;
         },
         
         fnAddYoutubeVideo: function()
