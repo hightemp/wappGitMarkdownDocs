@@ -330,6 +330,12 @@
                         </div>
                         <div class="article-view-button">
                             <b-button 
+                                @click="fnShowArticleGithubPage"
+                                block
+                            ><i class="fa fa-link"></i></b-button>
+                        </div>
+                        <div class="article-view-button">
+                            <b-button 
                                 @click="fnShowImagesModal"
                                 block
                             ><i class="fa fa-picture-o"></i></b-button>
@@ -462,7 +468,7 @@
         >
             <div class="container-fluid">
                 <div class="images-modal-filter-row row flex-xl-nowrap2">
-                    <div class="col-xl-10">
+                    <div class="col-xl-9">
                         <b-form-input 
                             placeholder="Filter"
                             v-model="sImagesFilterString"
@@ -475,6 +481,15 @@
                             block
                         >
                             <i class="fa fa-plus"></i>
+                        </b-button>
+                    </div>
+                    <div class="col-xl-1">
+                        <b-button 
+                            variant="success"
+                            @click="fnAddImageFromLink"
+                            block
+                        >
+                            <i class="fa fa-link"></i>
                         </b-button>
                     </div>
                     <div class="col-xl-1">
@@ -700,6 +715,10 @@ export default {
             }
             
             return this.oRepository.oTags[this.sActiveTag];
+        },
+        sActiveArticle: function()
+        {
+            return this.aArticles[this.iActiveArticle];
         }
     },
     
@@ -1500,6 +1519,16 @@ export default {
                     this.$snotify.error(sError);
                 });
         },
+        fnShowArticleGithubPage: function()
+        {
+            var sUser = this.oRepository.sUser;
+            var sRepository = this.oRepository.sName;
+            var sArticle = this.sActiveArticle;
+            var sURL = "https://github.com/"+sUser+"/"+sRepository+"/blob/master/articles/"+sArticle+".md";
+            
+            var oWindow = window.open(sURL, '_blank');
+            oWindow.focus();
+        },
         fnShowImagesModal: function()
         {
             this.sUploadImagesMode = 'update-modal';
@@ -1556,6 +1585,46 @@ export default {
         fnAddImage: function()
         {
             this.$refs.uploaded_images_input.$el.click();
+        },
+        fnAddImageFromLink: function()
+        {
+            var sURL = null;
+            
+            if ((sURL = prompt("Enter URL")) !== null) {
+                window.oApplication.bShowLoadingScreen = true;
+                
+                this
+                    .$http
+                    .post(
+                        '',
+                        {
+                            action: 'add_image_from_url',
+                            repository: this.oRepository.sName,
+                            url: sURL
+                        }
+                    ).then(function(oResponse)
+                    {
+                        window.oApplication.bShowLoadingScreen = false;
+                        
+                        if (oResponse.body.status=='error') {
+                            this.$snotify.error(oResponse.body.message, 'Error');
+                            return;
+                        }
+
+                        var sImage = oResponse.body.data;
+                        var iIndex = this.aImagesModalFiles.indexOf(sImage);
+                        
+                        if (iIndex>-1) {
+                            this.aImagesModalFiles.splice(iIndex, 1, sImage);
+                        } else {
+                            this.aImagesModalFiles.push(sImage);
+                        }
+                    })
+                    .catch(function(sError)
+                    {
+                        this.$snotify.error(sError);
+                    });
+            }
         },
         fnRemoveImage: function()
         {

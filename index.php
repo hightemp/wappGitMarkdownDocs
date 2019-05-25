@@ -716,6 +716,39 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             
             fnCommitAndPushRepository($sRepositoryDir);
         }
+        if ($_POST['action']=='add_image_from_url') {
+            if (empty($_POST['repository'])) {
+                throw new Exception("Empty repository name");
+            }
+            
+            $sRepositoryDir = fnPath($sRepositoriesDir, $_POST['repository']);
+            $sImagesDir = fnPath($sRepositoryDir, 'images');
+            
+            if (!is_dir($sImagesDir)) {
+                mkdir($sImagesDir);
+            }
+            if (!is_dir($sImagesDir)) {
+                throw new Exception("Can't create dir");
+            }
+            
+            $sFileName = basename($_POST['url']);
+            $aFileInfo = pathinfo($_POST['url']);
+            
+            if (empty($sFileName)) {
+                throw new Exception("File name is empty");
+            }
+            
+            $sData = fnHTTPRequest($_POST['url']);
+            $sImagesFile = fnPath($sImagesDir, $sFileName);
+
+            if (!safe_file_put_contents($sImagesFile, $sData)) {
+                throw new Exception("Can't write to file '$sImagesFile'");
+            }
+            
+            $aResponse['data'] = $sFileName;
+                        
+            fnCommitAndPushRepository($sRepositoryDir);        
+        }
         
         if ($_POST['action']=='upload_files') {
             if (empty($_POST['repository'])) {
