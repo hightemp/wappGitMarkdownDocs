@@ -2168,13 +2168,7 @@ export default {
                 }
             ]
         });
-        
-        this.oSimpleMDE.on('change', function(oCodeMirror){
-            console.log('codemirror - onchange');
-            oThis.bEditorDirty = true;
-            //yourTextarea.value = cMirror.getValue();
-        });
-        
+                
         oThis.fnSelectTag(localStorage.getItem(this.oRepository.sName+'_sActiveTag'));
         oThis.fnSelectArticleWithName(localStorage.getItem(this.oRepository.sName+'_iActiveArticle'));
         
