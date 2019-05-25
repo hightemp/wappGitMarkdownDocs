@@ -725,6 +725,8 @@ export default {
                     oData
                 ).then(function(oResponse)
                 {
+                    this.bEditorDirty = false;
+                    
                     if (oResponse.body.status=='error') {
                         this.$snotify.error(oResponse.body.message, 'Error');
                         return;
@@ -2168,7 +2170,13 @@ export default {
                 }
             ]
         });
-                
+        
+        this.oSimpleMDE.codemirror.on('change', function(oCodeMirror){
+            console.log('codemirror - onchange');
+            oThis.bEditorDirty = true;
+            //yourTextarea.value = cMirror.getValue();
+        });
+        
         oThis.fnSelectTag(localStorage.getItem(this.oRepository.sName+'_sActiveTag'));
         oThis.fnSelectArticleWithName(localStorage.getItem(this.oRepository.sName+'_iActiveArticle'));
         
