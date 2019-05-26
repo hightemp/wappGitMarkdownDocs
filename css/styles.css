@@ -54,6 +54,7 @@ body, html {
 
 .page-content {
     border-right: 1px solid rgba(0,0,0,.1);
+    min-height: 500px;
 }
 
 .page-content > div {
