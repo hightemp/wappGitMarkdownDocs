@@ -343,6 +343,25 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 }
             }
             
+            // README.md            
+            $sReadmeFile = fnPath($sRepositoryDir, "README.md");
+            
+            $aRepositoryInfo = fnGetRepositoryInfo($_POST['repository']);
+            
+            $sReadmeOutput = "# ".$aRepositoryInfo['sName']."\n";
+            
+            foreach ($aRepositoryInfo['aArticles'] as $sArticle) {
+                $sReadmeOutput .= "* [$sArticle](/articles/".rawurlencode($sArticle).".md)\n";
+            }
+            
+            $sReadmeOutput .= "---\n";
+            
+            foreach ($aRepositoryInfo['oTags'] as $sTag => $aArticles) {
+                $sReadmeOutput .= "[$sTag](/tags/".rawurlencode($sTag).".md)\n";
+            }
+            
+            safe_file_put_contents($sReadmeFile, $sReadmeOutput);
+            
             fnCommitAndPushRepository($sRepositoryDir);
         }
         
