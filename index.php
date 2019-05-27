@@ -41,8 +41,8 @@ function fnFileErrorCodeToMessage($iCode)
     } 
 } 
 
-$aEntities =     ['%2A', '%27', '%3A', '%2F', '%3F', '%60', '%7C', '%3C', '%3E', '%30', '%26'];
-$aReplacements = ['*',   "'",   ":",   "/",   "?",   "`",   "|",   "<",   ">",   "\\",  "\""];
+$aEntities =     ['%2A', '%27', '%2F', '%3F', '%60', '%7C', '%3C', '%3E', '%30', '%26'];
+$aReplacements = ['*',   "'",   "/",   "?",   "`",   "|",   "<",   ">",   "\\",  "\""];
 
 function fnFileNameEncode($sString) 
 {
@@ -330,7 +330,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 throw new Exception("Wrong repository url");
             }
             
-            $sRepositoryName = $aMatches[1];
+            $sRepositoryName = $aMatches[2];
 
             if (is_dir(fnPath($sRepositoriesDir, $sRepositoryName))) {
                 throw new Exception("Dir $sRepositoryName exists");

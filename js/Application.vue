@@ -14,7 +14,7 @@
                     <b-link 
                         class="close-tab-button"
                         @click="fnCloseTab(iIndex)"
-                        ><b>&#10005;</b></b-link>
+                    ><b>&#10005;</b></b-link>
                 </template>
                 <repository-tab-content
                     :oRepository="oItem"
@@ -32,11 +32,11 @@
                 >
                     <i class="fa fa-plus"></i>
                 </b-nav-item>
-                <b-nav-item  
+                <b-nav-item 
+                    v-if="bShowAddRepositoryButtonSpinner"
                     href="#"
                 >
                     <b-spinner 
-                        v-if="bShowAddRepositoryButtonSpinner"
                         small 
                         type="grow"
                     ></b-spinner>
@@ -183,10 +183,14 @@ export default Vue.extend({
                 {
                     if (oResponse.body.status=='error') {
                         this.$snotify.error(oResponse.body.message, 'Error');
+                        this.bShowLoadingScreen = false;
                         return;
                     }
                     
                     this.aRepositories = oResponse.body.data;
+                    this.aRepositories.push({sName:'c'});
+                    console.log(this.aRepositories);
+                    this.$forceUpdate();
                     
                     this.bShowLoadingScreen = false;
                 })
@@ -212,6 +216,7 @@ export default Vue.extend({
                 {
                     if (oResponse.body.status=='error') {
                         this.$snotify.error(oResponse.body.message, 'Error');
+                        this.bShowAddRepositoryButtonSpinner = false;
                         return;
                     }
                     //git@github.com:hightemp/docLinux.git
