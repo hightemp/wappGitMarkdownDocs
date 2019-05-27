@@ -2263,6 +2263,9 @@ export default {
         this.oSimpleMDE = new SimpleMDE({ 
             autoDownloadFontAwesome: false,
             element: this.$el.querySelector('.page-content-textarea'),
+            extraKeys: {
+                "Ctrl-S": function() { oThis.fnPushRepository(); },
+            },
             toolbar: [
                 "bold",
                 "italic",
@@ -2363,6 +2366,15 @@ export default {
                     },
                     className: "fa fa-language",
                     title: "Translate text"
+                },
+                {
+                    name: "save",
+                    action: function(oEditor)
+                    {
+                        oThis.fnPushRepository();
+                    },
+                    className: "fa fa-save",
+                    title: "Save"
                 }
             ]
         });
