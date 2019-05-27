@@ -628,6 +628,10 @@ import '../lib/simplemde-markdown-editor/dist/simplemde.min.css';
 
 import Vue, { VueConstructor } from 'vue'
 
+import TurndownService from 'turndown'
+
+window.oTurndownService = new TurndownService();
+
 export default {
     name: 'RepositoryTabContent',
     
@@ -1653,9 +1657,9 @@ export default {
                     .post(
                         '',
                         {
-                            action: 'add_image_from_url',
+                            action: 'add_images_from_urls',
                             repository: this.oRepository.sName,
-                            url: sURL
+                            urls: [sURL]
                         }
                     ).then(function(oResponse)
                     {
@@ -1666,7 +1670,7 @@ export default {
                             return;
                         }
 
-                        var sImage = oResponse.body.data;
+                        var sImage = oResponse.body.data[0];
                         var iIndex = this.aImagesModalFiles.indexOf(sImage);
                         
                         if (iIndex>-1) {
@@ -1875,9 +1879,9 @@ export default {
                     .post(
                         '',
                         {
-                            action: 'add_file_from_url',
+                            action: 'add_files_from_urls',
                             repository: this.oRepository.sName,
-                            url: sURL
+                            urls: [sURL]
                         }
                     ).then(function(oResponse)
                     {
@@ -1888,7 +1892,7 @@ export default {
                             return;
                         }
 
-                        var sFile = oResponse.body.data;
+                        var sFile = oResponse.body.data[0];
                         var iIndex = this.aFilesModalFiles.indexOf(sFile);
                         
                         if (iIndex>-1) {
@@ -2367,10 +2371,69 @@ export default {
             ]
         });
         
-        this.oSimpleMDE.codemirror.on('change', function(oCodeMirror){
+        this.oSimpleMDE.codemirror.on('change', function(oCodeMirror) {
             console.log('codemirror - onchange');
             oThis.bEditorDirty = true;
-            //yourTextarea.value = cMirror.getValue();
+        });
+        
+        this.oSimpleMDE.codemirror.on('paste', function(oCodeMirror, oEvent) {
+            console.log('codemirror - paste');
+            
+            var oClipboardData = (oEvent.clipboardData || window.clipboardData);
+            var sText = oTurndownService.turndown(oClipboardData.getData('text/html'));
+            
+            var oLinksMatch;
+            var oURLMatch;
+            
+            if ((oLinksMatch = sText.match(/!\[[^\]]*\]\([^)]*\)/gu)) !== null) {
+                var aURLs = [];
+                
+                for (var iIndex=0; iIndex<oLinksMatch.length; iIndex++) {
+                    if ((oURLMatch = oLinksMatch[iIndex].match(/\((https?:.*?)\)/u)) !== null) {
+                        aURLs.push(oURLMatch[1]);
+                    }
+                }
+                
+                window.oApplication.bShowLoadingScreen = true;
+                
+                oThis
+                    .$http
+                    .post(
+                        '',
+                        {
+                            action: 'add_images_from_urls',
+                            repository: oThis.oRepository.sName,
+                            urls: aURLs
+                        }
+                    ).then(function(oResponse)
+                    {
+                        window.oApplication.bShowLoadingScreen = false;
+                        
+                        if (oResponse.body.status=='error') {
+                            oThis.$snotify.error(oResponse.body.message, 'Error');
+                            return;
+                        }
+
+                        for (var iDataIndex=0; iDataIndex<oResponse.body.data.length; iDataIndex++) {
+                            for (var iIndex=0; iIndex<oLinksMatch.length; iIndex++) {
+                                if (oLinksMatch[iIndex].indexOf(oResponse.body.data[iDataIndex]) !== -1) {
+                                    var sNewLink = oLinksMatch[iIndex].replace(/\(https?:.*?\)/u, "(/images/"+oResponse.body.data[iDataIndex]+")");
+                                    sText = sText.replace(oLinksMatch[iIndex], sNewLink);
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        oCodeMirror.replaceSelection(sText);
+                    })
+                    .catch(function(sError)
+                    {
+                        oThis.$snotify.error(sError);
+                    });
+            }
+            
+            oThis.bEditorDirty = true;
+            oEvent.preventDefault();
         });
         
         oThis.fnSelectTag(localStorage.getItem(this.oRepository.sName+'_sActiveTag'));

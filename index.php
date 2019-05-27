@@ -739,7 +739,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             
             fnCommitAndPushRepository($sRepositoryDir);
         }
-        if ($_POST['action']=='add_image_from_url') {
+        if ($_POST['action']=='add_images_from_urls') {
             if (empty($_POST['repository'])) {
                 throw new Exception("Empty repository name");
             }
@@ -754,21 +754,27 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 throw new Exception("Can't create dir");
             }
             
-            $sFileName = basename($_POST['url']);
-            $aFileInfo = pathinfo($_POST['url']);
+            $sFileNames = [];
             
-            if (empty($sFileName)) {
-                throw new Exception("File name is empty");
-            }
-            
-            $sData = fnHTTPRequest($_POST['url']);
-            $sImagesFile = fnPath($sImagesDir, $sFileName);
+            foreach ((array)$_POST['urls'] as $sURL) {
+                $sFileName = basename($sURL);
+                $aFileInfo = pathinfo($sURL);
 
-            if (!safe_file_put_contents($sImagesFile, $sData)) {
-                throw new Exception("Can't write to file '$sImagesFile'");
+                if (empty($sFileName)) {
+                    throw new Exception("File name is empty");
+                }
+
+                $sData = fnHTTPRequest($sURL);
+                $sImagesFile = fnPath($sImagesDir, $sFileName);
+
+                if (!safe_file_put_contents($sImagesFile, $sData)) {
+                    throw new Exception("Can't write to file '$sImagesFile'");
+                }
+                
+                $sFileNames[] = $sFileName;
             }
             
-            $aResponse['data'] = $sFileName;
+            $aResponse['data'] = $sFileNames;
                         
             fnCommitAndPushRepository($sRepositoryDir);        
         }
@@ -814,7 +820,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             
             fnCommitAndPushRepository($sRepositoryDir);
         }
-        if ($_POST['action']=='add_file_from_url') {
+        if ($_POST['action']=='add_files_from_urls') {
             if (empty($_POST['repository'])) {
                 throw new Exception("Empty repository name");
             }
@@ -829,21 +835,27 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 throw new Exception("Can't create dir");
             }
             
-            $sFileName = basename($_POST['url']);
-            $aFileInfo = pathinfo($_POST['url']);
+            $sFileNames = [];
             
-            if (empty($sFileName)) {
-                throw new Exception("File name is empty");
-            }
-            
-            $sData = fnHTTPRequest($_POST['url']);
-            $sFilePath = fnPath($sFilesDir, $sFileName);
+            foreach ((array)$_POST['urls'] as $sURL) {
+                $sFileName = basename($sURL);
+                $aFileInfo = pathinfo($sURL);
 
-            if (!safe_file_put_contents($sFilePath, $sData)) {
-                throw new Exception("Can't write to file '$sFilePath'");
+                if (empty($sFileName)) {
+                    throw new Exception("File name is empty");
+                }
+
+                $sData = fnHTTPRequest($sURL);
+                $sFilePath = fnPath($sFilesDir, $sFileName);
+
+                if (!safe_file_put_contents($sFilePath, $sData)) {
+                    throw new Exception("Can't write to file '$sFilePath'");
+                }
+                
+                $sFileNames[] = $sFileName;
             }
             
-            $aResponse['data'] = $sFileName;
+            $aResponse['data'] = $sFileNames;
                         
             fnCommitAndPushRepository($sRepositoryDir);        
         }
