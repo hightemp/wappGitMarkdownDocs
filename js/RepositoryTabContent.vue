@@ -1124,6 +1124,9 @@ export default {
                         this.oRepository.aArticles.splice(iIndex, 1, this.sNewArticle);
                     }
                     
+                    console.log(this.oRepository.sName+'_iActiveArticle', this.sNewArticle);
+                    localStorage.setItem(this.oRepository.sName+'_iActiveArticle', this.sNewArticle);
+                    
                     if (fnCallback) fnCallback.call(this);
                     
                     //this.fnPushRepository(true);
@@ -1378,7 +1381,7 @@ export default {
         },
         fnSelectArticle: function(iIndex)
         {
-            console.log('fnSelectArticle', iIndex);
+            console.log('fnSelectArticle', iIndex, this.aArticles[iIndex]);
             
             if (typeof this.aArticles[iIndex] == 'undefined') {
                 return;
@@ -1403,6 +1406,7 @@ export default {
                     }
                     
                     this.iActiveArticle = iIndex;
+                    console.log(this.oRepository.sName+'_iActiveArticle', this.aArticles[iIndex]);
                     localStorage.setItem(this.oRepository.sName+'_iActiveArticle', this.aArticles[iIndex]);
             
                     var oThis = this;
@@ -2445,6 +2449,7 @@ export default {
         });
         
         oThis.fnSelectTag(localStorage.getItem(this.oRepository.sName+'_sActiveTag'));
+        console.log(this.oRepository.sName+'_iActiveArticle', localStorage.getItem(this.oRepository.sName+'_iActiveArticle'));
         oThis.fnSelectArticleWithName(localStorage.getItem(this.oRepository.sName+'_iActiveArticle'));
         
         var sTranslationProvider = localStorage.getItem(this.oRepository.sName+'_sTranslationProvider');

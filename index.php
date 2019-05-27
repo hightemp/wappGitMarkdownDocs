@@ -41,10 +41,33 @@ function fnFileErrorCodeToMessage($iCode)
     } 
 } 
 
+$aEntities =     ['%2A', '%27', '%3A', '%2F', '%3F', '%60', '%7C', '%3C', '%3E', '%30', '%26'];
+$aReplacements = ['*',   "'",   ":",   "/",   "?",   "`",   "|",   "<",   ">",   "\\",  "\""];
+
+function fnFileNameEncode($sString) 
+{
+    global $aEntities;
+    global $aReplacements;
+    return str_replace($aReplacements, $aEntities, $sString);
+}
+
+function fnFileNameDecode($sString) 
+{
+    global $aEntities;
+    global $aReplacements;
+    return str_replace($aEntities, $aReplacements, $sString);
+}
+
 function fnEscapeFileName($sFileName)
 {
     $sFileName = str_replace("/", "_", $sFileName);
     $sFileName = str_replace("\\", "_", $sFileName);
+    $sFileName = str_replace("*", "_", $sFileName);
+    $sFileName = str_replace(":", "_", $sFileName);
+    $sFileName = str_replace("|", "_", $sFileName);
+    $sFileName = str_replace("\"", "_", $sFileName);
+    $sFileName = str_replace("<", "_", $sFileName);
+    $sFileName = str_replace(">", "_", $sFileName);
     
     return $sFileName;
 }
@@ -249,14 +272,14 @@ function fnGetRepositoryInfo($sRepositoryName)
     $aArticlesFiles = safe_glob(fnPath($sArticlesDir, "*.md"));
     
     foreach ($aArticlesFiles as $sArticleFile) {
-        $aResult['aArticles'][] = str_replace(".md", '', basename($sArticleFile));
+        $aResult['aArticles'][] = fnFileNameDecode(str_replace(".md", '', basename($sArticleFile)));
     }
     
     $aTagsFiles = safe_glob(fnPath($sTagsDir, "*.md"));
     
     foreach ($aTagsFiles as $sTagFile) {
         $sTagFileContents = safe_file_get_contents($sTagFile);
-        $sTag = str_replace(".md", '', basename($sTagFile));
+        $sTag = fnFileNameDecode(str_replace(".md", '', basename($sTagFile)));
         
         if (preg_match_all("/\[([^\]]+)\]/", $sTagFileContents, $aMatches)) {
             $aResult['oTags']->$sTag = $aMatches[1];
@@ -336,13 +359,13 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             
             if (isset($_POST['article'])) {
                 $sArticlesDir = fnPath($sRepositoryDir, 'articles');
-                $sArticleFile = fnPath($sArticlesDir, $_POST['article'].'.md');
+                $sArticleFile = fnPath($sArticlesDir, fnFileNameEncode($_POST['article']).'.md');
                 
                 if (isset($_POST['tags'])) {
                     $_POST['data'] .= "\n**********\n";
                     
                     foreach ($_POST['tags'] as $sTag) {
-                        $_POST['data'] .= "[$sTag](/tags/".rawurlencode($sTag).".md)\n";
+                        $_POST['data'] .= "[$sTag](/tags/".rawurlencode(fnFileNameEncode($sTag)).".md)\n";
                     }
                 }
                 
@@ -380,7 +403,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             
             $sRepositoryDir = fnPath($sRepositoriesDir, $_POST['repository']);
             $sArticlesDir = fnPath($sRepositoryDir, 'articles');
-            $sArticleFile = fnPath($sArticlesDir, $_POST['article'].'.md');
+            $sArticleFile = fnPath($sArticlesDir, fnFileNameEncode($_POST['article']).'.md');
             
             $aResponse['data'] = safe_file_get_contents($sArticleFile);            
             $aResponse['data'] = preg_replace("/\n\*\*\*\*\*\*\*\*\*\*.*$/s", '', $aResponse['data']);
@@ -393,7 +416,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             
             $sRepositoryDir = fnPath($sRepositoriesDir, $_POST['repository']);
             $sArticlesDir = fnPath($sRepositoryDir, 'articles');
-            $sArticleFile = fnPath($sArticlesDir, $_POST['article'].'.md');
+            $sArticleFile = fnPath($sArticlesDir, fnFileNameEncode($_POST['article']).'.md');
             
             if (safe_file_put_contents($sArticleFile, @$_POST['data'])===false) {
                 throw new Exception("Can't write to file '$sArticleFile'");
@@ -407,24 +430,21 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 throw new Exception("Empty repository name");
             }
             
-            $_POST['from_article'] = fnEscapeFileName($_POST['from_article']);
-            $_POST['to_article'] = fnEscapeFileName($_POST['to_article']);
-            
             $sRepositoryDir = fnPath($sRepositoriesDir, $_POST['repository']);
             $sArticlesDir = fnPath($sRepositoryDir, 'articles');
             $sTagsDir = fnPath($sRepositoryDir, 'tags');
-            $sFromArticleFile = fnPath($sArticlesDir, $_POST['from_article'].'.md');
-            $sToArticleFile = fnPath($sArticlesDir, $_POST['to_article'].'.md');
+            $sFromArticleFile = fnPath($sArticlesDir, fnFileNameEncode($_POST['from_article']).'.md');
+            $sToArticleFile = fnPath($sArticlesDir, fnFileNameEncode($_POST['to_article']).'.md');
             
-            $sFromArticleLink = "[".$_POST['from_article']."](/articles/".rawurlencode($_POST['from_article']).".md)";
-            $sToArticleLink = "[".$_POST['to_article']."](/articles/".rawurlencode($_POST['to_article']).".md)";
+            $sFromArticleLink = "[".$_POST['from_article']."](/articles/".rawurlencode(fnFileNameEncode($_POST['from_article'])).".md)";
+            $sToArticleLink = "[".$_POST['to_article']."](/articles/".rawurlencode(fnFileNameEncode($_POST['to_article'])).".md)";
             
             if (!rename($sFromArticleFile, $sToArticleFile)) {
                 throw new Exception("Can't rename file");
             }
             
             foreach ($_POST['tags'] as $sTag) {
-                $sTagFile = fnPath($sTagsDir, $sTag.".md");
+                $sTagFile = fnPath($sTagsDir, fnFileNameEncode($sTag).".md");
                 $sTagFileContents = safe_file_get_contents($sTagFile);
                 
                 $sTagFileContents = str_replace($sFromArticleLink, $sToArticleLink, $sTagFileContents);
@@ -442,11 +462,9 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 throw new Exception("Empty repository name");
             }
             
-            $_POST['article'] = fnEscapeFileName($_POST['article']);
-
             $sRepositoryDir = fnPath($sRepositoriesDir, $_POST['repository']);
             $sArticlesDir = fnPath($sRepositoryDir, 'articles');
-            $sArticleFile = fnPath($sArticlesDir, $_POST['article'].'.md');
+            $sArticleFile = fnPath($sArticlesDir, fnFileNameEncode($_POST['article']).'.md');
             
             if (safe_file_put_contents($sArticleFile, @$_POST['data'])===false) {
                 throw new Exception("Can't write to file '$sArticleFile'");
@@ -454,7 +472,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             
             if ($_POST['tag']!='__all__') {
                 $sTagsDir = fnPath($sRepositoryDir, 'tags');
-                $sTagFile = fnPath($sTagsDir, $_POST['tag'].'.md');
+                $sTagFile = fnPath($sTagsDir, fnFileNameEncode($_POST['tag']).'.md');
                 
                 $sArticleFileContents = safe_file_get_contents($sArticleFile);
                 $sTagFileContents = safe_file_get_contents($sTagFile);
@@ -463,8 +481,8 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                     $sArticleFileContents .= "\n**********\n";
                 }
                 
-                $sArticleFileContents .= "[".$_POST['tag']."](/tags/".rawurlencode($_POST['tag']).".md)\n";
-                $sTagFileContents .= "[".$_POST['article']."](/articles/".rawurlencode($_POST['article']).".md)\n";
+                $sArticleFileContents .= "[".$_POST['tag']."](/tags/".rawurlencode(fnFileNameEncode($_POST['tag'])).".md)\n";
+                $sTagFileContents .= "[".$_POST['article']."](/articles/".rawurlencode(fnFileNameEncode($_POST['article'])).".md)\n";
                 
                 if (safe_file_put_contents($sArticleFile, $sArticleFileContents)===false) {
                     throw new Exception("Can't write to file '$aArticleFile'");
@@ -484,13 +502,13 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             
             $sRepositoryDir = fnPath($sRepositoriesDir, $_POST['repository']);
             $sArticlesDir = fnPath($sRepositoryDir, 'articles');
-            $sArticleFile = fnPath($sArticlesDir, $_POST['article'].'.md');
+            $sArticleFile = fnPath($sArticlesDir, fnFileNameEncode($_POST['article']).'.md');
             $sTagsDir = fnPath($sRepositoryDir, 'tags');
             
             unlink($sArticleFile);
             
             $aTagFiles = safe_glob(fnPath($sTagsDir, "*.md"));
-            $sArticleLink = "[".$_POST['article']."](/articles/".rawurlencode($_POST['article']).".md)";
+            $sArticleLink = "[".$_POST['article']."](/articles/".rawurlencode(fnFileNameEncode($_POST['article'])).".md)";
             
             foreach ($aTagFiles as $sTagFile) {
                 $sTagFileContents = safe_file_get_contents($sTagFile);
@@ -512,11 +530,9 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 throw new Exception("Empty repository name");
             }
             
-            $_POST['tag'] = fnEscapeFileName($_POST['tag']);
-            
             $sRepositoryDir = fnPath($sRepositoriesDir, $_POST['repository']);
             $sTagsDir = fnPath($sRepositoryDir, 'tags');
-            $sTagFile = fnPath($sTagsDir, $_POST['tag'].'.md');
+            $sTagFile = fnPath($sTagsDir, fnFileNameEncode($_POST['tag']).'.md');
             
             if (safe_file_put_contents($sTagFile, '')===false) {
                 throw new Exception("Can't write to file '$sTagFile'");
@@ -530,24 +546,21 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 throw new Exception("Empty repository name");
             }
             
-            $_POST['from_tag'] = fnEscapeFileName($_POST['from_tag']);
-            $_POST['to_tag'] = fnEscapeFileName($_POST['to_tag']);
-            
             $sRepositoryDir = fnPath($sRepositoriesDir, $_POST['repository']);
             $sArticlesDir = fnPath($sRepositoryDir, 'articles');
             $sTagsDir = fnPath($sRepositoryDir, 'tags');
-            $sFromTagFile = fnPath($sTagsDir, $_POST['from_tag'].'.md');
-            $sToTagFile = fnPath($sTagsDir, $_POST['to_tag'].'.md');
+            $sFromTagFile = fnPath($sTagsDir, fnFileNameEncode($_POST['from_tag']).'.md');
+            $sToTagFile = fnPath($sTagsDir, fnFileNameEncode($_POST['to_tag']).'.md');
             
-            $sFromTagLink = "[".$_POST['from_tag']."](/tags/".rawurlencode($_POST['from_tag']).".md)";
-            $sToTagLink = "[".$_POST['to_tag']."](/tags/".rawurlencode($_POST['to_tag']).".md)";
+            $sFromTagLink = "[".$_POST['from_tag']."](/tags/".rawurlencode(fnFileNameEncode($_POST['from_tag'])).".md)";
+            $sToTagLink = "[".$_POST['to_tag']."](/tags/".rawurlencode(fnFileNameEncode($_POST['to_tag'])).".md)";
             
             if (!rename($sFromTagFile, $sToTagFile)) {
                 throw new Exception("Can't rename file");
             }
             
             foreach ($_POST['articles'] as $sArticle) {
-                $sArticleFile = fnPath($sArticlesDir, $sArticle.".md");
+                $sArticleFile = fnPath($sArticlesDir, fnFileNameEncode($sArticle).".md");
                 $sArticleFileContents = safe_file_get_contents($sArticleFile);
                 
                 $sArticleFileContents = str_replace($sFromTagLink, $sToTagLink, $sArticleFileContents);
@@ -568,12 +581,12 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             $sRepositoryDir = fnPath($sRepositoriesDir, $_POST['repository']);
             $sArticlesDir = fnPath($sRepositoryDir, 'articles');
             $sTagsDir = fnPath($sRepositoryDir, 'tags');
-            $sTagFile = fnPath($sTagsDir, $_POST['tag'].'.md');
+            $sTagFile = fnPath($sTagsDir, fnFileNameEncode($_POST['tag']).'.md');
             
             unlink($sTagFile);
             
             $aArticlesFiles = safe_glob(fnPath($sArticlesDir, "*.md"));
-            $sTagLink = "[".$_POST['tag']."](/tags/".rawurlencode($_POST['tag']).".md)";
+            $sTagLink = "[".$_POST['tag']."](/tags/".rawurlencode(fnFileNameEncode($_POST['tag'])).".md)";
             
             foreach ($aArticlesFiles as $sArticleFile) {
                 $sArticleFileContents = safe_file_get_contents($sArticleFile);
@@ -599,9 +612,9 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             
             $sRepositoryDir = fnPath($sRepositoriesDir, $_POST['repository']);
             $sArticlesDir = fnPath($sRepositoryDir, 'articles');
-            $sArticleFile = fnPath($sArticlesDir, $_POST['article'].'.md');
+            $sArticleFile = fnPath($sArticlesDir, fnFileNameEncode($_POST['article']).'.md');
             $sTagsDir = fnPath($sRepositoryDir, 'tags');
-            $sTagFile = fnPath($sTagsDir, $_POST['tag'].'.md');
+            $sTagFile = fnPath($sTagsDir, fnFileNameEncode($_POST['tag']).'.md');
             
             $sArticleFileContents = safe_file_get_contents($sArticleFile);
             $sTagFileContents = safe_file_get_contents($sTagFile);
@@ -610,8 +623,8 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 $sArticleFileContents .= "\n**********\n";
             }
             
-            $sArticleFileContents .= "[".$_POST['tag']."](/tags/".rawurlencode($_POST['tag']).".md)\n";
-            $sTagFileContents .= "[".$_POST['article']."](/articles/".rawurlencode($_POST['article']).".md)\n";
+            $sArticleFileContents .= "[".$_POST['tag']."](/tags/".rawurlencode(fnFileNameEncode($_POST['tag'])).".md)\n";
+            $sTagFileContents .= "[".$_POST['article']."](/articles/".rawurlencode(fnFileNameEncode($_POST['article'])).".md)\n";
             
             if (safe_file_put_contents($sArticleFile, $sArticleFileContents)===false) {
                 throw new Exception("Can't write to file '$aArticleFile'");
@@ -630,15 +643,15 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             
             $sRepositoryDir = fnPath($sRepositoriesDir, $_POST['repository']);
             $sArticlesDir = fnPath($sRepositoryDir, 'articles');
-            $sArticleFile = fnPath($sArticlesDir, $_POST['article'].'.md');
+            $sArticleFile = fnPath($sArticlesDir, fnFileNameEncode($_POST['article']).'.md');
             $sTagsDir = fnPath($sRepositoryDir, 'tags');
-            $sTagFile = fnPath($sTagsDir, $_POST['tag'].'.md');
+            $sTagFile = fnPath($sTagsDir, fnFileNameEncode($_POST['tag']).'.md');
             
             $sArticleFileContents = safe_file_get_contents($sArticleFile);
             $sTagFileContents = safe_file_get_contents($sTagFile);
             
-            $sTagLink = "[".$_POST['tag']."](/tags/".rawurlencode($_POST['tag']).".md)";
-            $sArticleLink = "[".$_POST['article']."](/articles/".rawurlencode($_POST['article']).".md)";
+            $sTagLink = "[".$_POST['tag']."](/tags/".rawurlencode(fnFileNameEncode($_POST['tag'])).".md)";
+            $sArticleLink = "[".$_POST['article']."](/articles/".rawurlencode(fnFileNameEncode($_POST['article'])).".md)";
             
             if (($iLinePos = strpos($sArticleFileContents, "**********"))!==false) {
                 if (($iLinkPos = strpos($sArticleFileContents, $sTagLink, $iLinePos))!==false) {
@@ -675,7 +688,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             if (!empty($_POST['search_text'])) {
                 if ($_POST['tag']=='__all__') {
                     foreach ($aInfo['aArticles'] as $sArticle) {
-                        $sArticleFile = fnPath($sArticlesDir, $sArticle.'.md');
+                        $sArticleFile = fnPath($sArticlesDir, fnFileNameEncode($sArticle).'.md');
                         
                         $sConents = safe_file_get_contents($sArticleFile);
                         
@@ -685,7 +698,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                     }
                 } else {
                     foreach ($aInfo['oTags']->{$_POST['tag']} as $sArticle) {
-                        $sArticleFile = fnPath($sArticlesDir, $sArticle.'.md');
+                        $sArticleFile = fnPath($sArticlesDir, fnFileNameEncode($sArticle).'.md');
                     
                         $sConents = safe_file_get_contents($sArticleFile);
                         
@@ -704,7 +717,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             
             $sUser = fnGetRepositoryUserName($_POST['repository']);
             //$sArticle = str_replace(' ', '%20', $_POST['article']);
-            $sArticle = rawurlencode($_POST['article']);
+            $sArticle = rawurlencode(fnFileNameEncode($_POST['article']));
             
             $sPageContents = fnHTTPRequest("https://github.com/$sUser/{$_POST['repository']}/blob/master/articles/{$sArticle}.md");
             
@@ -738,7 +751,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             $aResponse['data'] = [];
             
             foreach ($_FILES['files']['name'] as $iIndex => $sName) {
-                $sImagesFile = fnPath($sImagesDir, $sName);
+                $sImageFile = fnPath($sImagesDir, fnFileNameEncode($sName));
                 
                 $sErrorMessage = fnFileErrorCodeToMessage($_FILES['files']['error'][$iIndex]);
                 if (!empty($sErrorMessage)) {
@@ -746,13 +759,13 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 }
                 
                 //if (!is_file($sImagesFile)) {
-                    if (!move_uploaded_file($_FILES['files']['tmp_name'][$iIndex], $sImagesFile)) {
-                        throw new Exception("Can't move file to directory '$sImagesFile'");
+                    if (!move_uploaded_file($_FILES['files']['tmp_name'][$iIndex], $sImageFile)) {
+                        throw new Exception("Can't move file to directory '$sImageFile'");
                     }
                 //}
                 
                 //$aResponse['data'][] = str_replace($sRepositoryDir, '', $sImagesFile);
-                $aResponse['data'][] = basename($sImagesFile);
+                $aResponse['data'][] = $sName;
             }
             
             fnCommitAndPushRepository($sRepositoryDir);
@@ -783,7 +796,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 }
 
                 $sData = fnHTTPRequest($sURL);
-                $sImagesFile = fnPath($sImagesDir, $sFileName);
+                $sImagesFile = fnPath($sImagesDir, fnFileNameEncode($sFileName));
 
                 if (!safe_file_put_contents($sImagesFile, $sData)) {
                     throw new Exception("Can't write to file '$sImagesFile'");
@@ -819,7 +832,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             $aResponse['data'] = [];
             
             foreach ($_FILES['files']['name'] as $iIndex => $sName) {
-                $sFile = fnPath($sFilesDir, $sName);
+                $sFile = fnPath($sFilesDir, fnFileNameEncode($sName));
                 
                 $sErrorMessage = fnFileErrorCodeToMessage($_FILES['files']['error'][$iIndex]);
                 if (!empty($sErrorMessage)) {
@@ -833,7 +846,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 //}
                 
                 //$aResponse['data'][] = str_replace($sRepositoryDir, '', $sFile);
-                $aResponse['data'][] = basename($sFile);
+                $aResponse['data'][] = $sName;
             }
             
             fnCommitAndPushRepository($sRepositoryDir);
@@ -864,7 +877,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 }
 
                 $sData = fnHTTPRequest($sURL);
-                $sFilePath = fnPath($sFilesDir, $sFileName);
+                $sFilePath = fnPath($sFilesDir, fnFileNameEncode($sFileName));
 
                 if (!safe_file_put_contents($sFilePath, $sData)) {
                     throw new Exception("Can't write to file '$sFilePath'");
@@ -891,7 +904,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             
             foreach ($aResponse['data'] as &$sImage) {
                 //$sImage = str_replace($sRepositoryDir, '', $sImage);
-                $sImage = basename($sImage);
+                $sImage = fnFileNameDecode(basename($sImage));
             }
         }
         if ($_POST['action']=='remove_images') {
@@ -903,8 +916,10 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             $sImagesDir = fnPath($sRepositoryDir, 'images');
             
             foreach ($_POST['files'] as $sImage) {
-                if (!unlink(fnPath($sImagesDir, $sImage))) {
-                    throw new Exception("Can't delete file '$sImage'");
+                $sImageFilePath = fnPath($sImagesDir, fnFileNameEncode($sImage));
+                
+                if (!unlink($sImageFilePath)) {
+                    throw new Exception("Can't delete file '$sImageFilePath'");
                 }
             }
             
@@ -922,7 +937,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             $aResponse['data'] = safe_glob(fnPath($sFilesDir, "*"));
             
             foreach ($aResponse['data'] as &$sFile) {
-                $sFile = basename($sFile);
+                $sFile = fnFileNameDecode(basename($sFile));
             }
         }
         if ($_POST['action']=='remove_files') {
@@ -934,8 +949,10 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             $sFilesDir = fnPath($sRepositoryDir, 'files');
             
             foreach ($_POST['files'] as $sFile) {
-                if (!unlink(fnPath($sFilesDir, $sFile))) {
-                    throw new Exception("Can't delete file '$sFile'");
+                $sFilePath = fnPath($sFilesDir, fnFileNameEncode($sFile));
+                    
+                if (!unlink($sFilePath)) {
+                    throw new Exception("Can't delete file '$sFilePath'");
                 }
             }
             
