@@ -630,7 +630,9 @@ import Vue, { VueConstructor } from 'vue'
 
 import TurndownService from 'turndown'
 
-window.oTurndownService = new TurndownService();
+window.oTurndownService = new TurndownService({
+    headingStyle: 'atx'
+});
 
 export default {
     name: 'RepositoryTabContent',
@@ -2380,6 +2382,10 @@ export default {
             console.log('codemirror - paste');
             
             var oClipboardData = (oEvent.clipboardData || window.clipboardData);
+            
+            if (oClipboardData.types.indexOf('text/html') == -1) 
+                return;
+            
             var sText = oTurndownService.turndown(oClipboardData.getData('text/html'));
             
             var oLinksMatch;
@@ -2430,6 +2436,8 @@ export default {
                     {
                         oThis.$snotify.error(sError);
                     });
+            } else {
+                oCodeMirror.replaceSelection(sText);
             }
             
             oThis.bEditorDirty = true;
