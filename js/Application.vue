@@ -181,9 +181,10 @@ export default Vue.extend({
                     }
                 ).then(function(oResponse)
                 {
+                    this.bShowLoadingScreen = false;
+                    
                     if (oResponse.body.status=='error') {
                         this.$snotify.error(oResponse.body.message, 'Error');
-                        this.bShowLoadingScreen = false;
                         return;
                     }
                     
@@ -191,8 +192,6 @@ export default Vue.extend({
                     //this.aRepositories.push({sName:'c'});
                     //console.log(this.aRepositories);
                     //this.$forceUpdate();
-                    
-                    this.bShowLoadingScreen = false;
                 })
                 .catch(function(sError)
                 {
@@ -215,15 +214,15 @@ export default Vue.extend({
                     }
                 ).then(function(oResponse)
                 {
+                    this.bShowAddRepositoryButtonSpinner = false;
+                    
                     if (oResponse.body.status=='error') {
                         this.$snotify.error(oResponse.body.message, 'Error');
-                        this.bShowAddRepositoryButtonSpinner = false;
                         return;
                     }
+
                     //git@github.com:hightemp/docLinux.git
                     
-                    this.bShowAddRepositoryButtonSpinner = false;
-
                     this.aRepositories.push(oResponse.body.data);
                     
                     this.sRepositoryURL = '';                     
