@@ -41,7 +41,7 @@
                         </div>
                     </div>
                 </div>
-                <b-list-group>
+                <b-list-group class="tags-list-group">
                     <b-list-group-item
                         href="#"
                         class="d-flex justify-content-between align-items-center"
@@ -112,7 +112,7 @@
                         </div>
                     </div>
                 </div>
-                <b-list-group>
+                <b-list-group class="articles-list-group">
                     <b-list-group-item 
                         v-for="(sItem, iIndex) in aArticles"
                         href="#"
@@ -628,6 +628,12 @@ import '../lib/simplemde-markdown-editor/dist/simplemde.min.css';
 
 import Vue, { VueConstructor } from 'vue'
 
+import TurndownService from 'turndown'
+
+window.oTurndownService = new TurndownService({
+    headingStyle: 'atx'
+});
+
 export default {
     name: 'RepositoryTabContent',
     
@@ -1118,6 +1124,9 @@ export default {
                         this.oRepository.aArticles.splice(iIndex, 1, this.sNewArticle);
                     }
                     
+                    console.log(this.oRepository.sName+'_iActiveArticle', this.sNewArticle);
+                    localStorage.setItem(this.oRepository.sName+'_iActiveArticle', this.sNewArticle);
+                    
                     if (fnCallback) fnCallback.call(this);
                     
                     //this.fnPushRepository(true);
@@ -1372,7 +1381,7 @@ export default {
         },
         fnSelectArticle: function(iIndex)
         {
-            console.log('fnSelectArticle', iIndex);
+            console.log('fnSelectArticle', iIndex, this.aArticles[iIndex]);
             
             if (typeof this.aArticles[iIndex] == 'undefined') {
                 return;
@@ -1397,6 +1406,7 @@ export default {
                     }
                     
                     this.iActiveArticle = iIndex;
+                    console.log(this.oRepository.sName+'_iActiveArticle', this.aArticles[iIndex]);
                     localStorage.setItem(this.oRepository.sName+'_iActiveArticle', this.aArticles[iIndex]);
             
                     var oThis = this;
@@ -1564,11 +1574,22 @@ export default {
                     this.$snotify.error(sError);
                 });
         },
+        fnFileNameEncode: function(sString)
+        {
+            var aEscapedChars = ['%2A', '%27', '%3A', '%2F', '%3F', '%60', '%7C', '%3C', '%3E', '%30', '%26'];
+            var aChars =        ['*',   "'",   ":",   "/",   "?",   "`",   "|",   "<",   ">",   "\\",  "\""];
+            
+            for (var iIndex=0; iIndex<aChars.length; iIndex++) {
+                sString = sString.replace(aChars[iIndex], encodeURI(aEscapedChars[iIndex]));
+            }
+            
+            return sString;
+        },
         fnShowArticleGithubPage: function()
         {
             var sUser = this.oRepository.sUser;
             var sRepository = this.oRepository.sName;
-            var sArticle = this.sActiveArticle;
+            var sArticle = this.fnFileNameEncode(this.sActiveArticle);
             var sURL = "https://github.com/"+sUser+"/"+sRepository+"/blob/master/articles/"+sArticle+".md";
             
             var oWindow = window.open(sURL, '_blank');
@@ -1653,9 +1674,9 @@ export default {
                     .post(
                         '',
                         {
-                            action: 'add_image_from_url',
+                            action: 'add_images_from_urls',
                             repository: this.oRepository.sName,
-                            url: sURL
+                            urls: [sURL]
                         }
                     ).then(function(oResponse)
                     {
@@ -1666,7 +1687,7 @@ export default {
                             return;
                         }
 
-                        var sImage = oResponse.body.data;
+                        var sImage = oResponse.body.data[0];
                         var iIndex = this.aImagesModalFiles.indexOf(sImage);
                         
                         if (iIndex>-1) {
@@ -1875,9 +1896,9 @@ export default {
                     .post(
                         '',
                         {
-                            action: 'add_file_from_url',
+                            action: 'add_files_from_urls',
                             repository: this.oRepository.sName,
-                            url: sURL
+                            urls: [sURL]
                         }
                     ).then(function(oResponse)
                     {
@@ -1888,7 +1909,7 @@ export default {
                             return;
                         }
 
-                        var sFile = oResponse.body.data;
+                        var sFile = oResponse.body.data[0];
                         var iIndex = this.aFilesModalFiles.indexOf(sFile);
                         
                         if (iIndex>-1) {
@@ -2379,13 +2400,79 @@ export default {
             ]
         });
         
-        this.oSimpleMDE.codemirror.on('change', function(oCodeMirror){
+        this.oSimpleMDE.codemirror.on('change', function(oCodeMirror) {
             console.log('codemirror - onchange');
             oThis.bEditorDirty = true;
-            //yourTextarea.value = cMirror.getValue();
+        });
+        
+        this.oSimpleMDE.codemirror.on('paste', function(oCodeMirror, oEvent) {
+            console.log('codemirror - paste');
+            
+            var oClipboardData = (oEvent.clipboardData || window.clipboardData);
+            
+            if (oClipboardData.types.indexOf('text/html') == -1) 
+                return;
+            
+            var sText = oTurndownService.turndown(oClipboardData.getData('text/html'));
+            
+            var oLinksMatch;
+            var oURLMatch;
+            
+            if ((oLinksMatch = sText.match(/!\[[^\]]*\]\([^)]*\)/gu)) !== null) {
+                var aURLs = [];
+                
+                for (var iIndex=0; iIndex<oLinksMatch.length; iIndex++) {
+                    if ((oURLMatch = oLinksMatch[iIndex].match(/\((https?:.*?)\)/u)) !== null) {
+                        aURLs.push(oURLMatch[1]);
+                    }
+                }
+                
+                window.oApplication.bShowLoadingScreen = true;
+                
+                oThis
+                    .$http
+                    .post(
+                        '',
+                        {
+                            action: 'add_images_from_urls',
+                            repository: oThis.oRepository.sName,
+                            urls: aURLs
+                        }
+                    ).then(function(oResponse)
+                    {
+                        window.oApplication.bShowLoadingScreen = false;
+                        
+                        if (oResponse.body.status=='error') {
+                            oThis.$snotify.error(oResponse.body.message, 'Error');
+                            return;
+                        }
+
+                        for (var iDataIndex=0; iDataIndex<oResponse.body.data.length; iDataIndex++) {
+                            for (var iIndex=0; iIndex<oLinksMatch.length; iIndex++) {
+                                if (oLinksMatch[iIndex].indexOf(oResponse.body.data[iDataIndex]) !== -1) {
+                                    var sNewLink = oLinksMatch[iIndex].replace(/\(https?:.*?\)/u, "(/images/"+oResponse.body.data[iDataIndex]+")");
+                                    sText = sText.replace(oLinksMatch[iIndex], sNewLink);
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        oCodeMirror.replaceSelection(sText);
+                    })
+                    .catch(function(sError)
+                    {
+                        oThis.$snotify.error(sError);
+                    });
+            } else {
+                oCodeMirror.replaceSelection(sText);
+            }
+            
+            oThis.bEditorDirty = true;
+            oEvent.preventDefault();
         });
         
         oThis.fnSelectTag(localStorage.getItem(this.oRepository.sName+'_sActiveTag'));
+        console.log(this.oRepository.sName+'_iActiveArticle', localStorage.getItem(this.oRepository.sName+'_iActiveArticle'));
         oThis.fnSelectArticleWithName(localStorage.getItem(this.oRepository.sName+'_iActiveArticle'));
         
         var sTranslationProvider = localStorage.getItem(this.oRepository.sName+'_sTranslationProvider');
