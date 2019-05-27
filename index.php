@@ -136,6 +136,10 @@ function http_file_get_contents($sPath)
             'proxy' => str_replace("https", "tcp", getenv('HTTPS_PROXY')),
             'request_fulluri' => true,
         ];
+        $aContext['ssl'] = [
+            'verify_peer'      => false,
+            'verify_peer_name' => false,
+        ];
     }
     
     $resContext = stream_context_create($aContext);
