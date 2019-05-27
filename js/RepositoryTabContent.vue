@@ -921,6 +921,7 @@ export default {
                 .catch(function(sError)
                 {
                     this.$snotify.error(sError);
+                    window.oApplication.bShowLoadingScreen = false;
                 });            
         },
         fnAddTag: function(fnCallback)
@@ -956,6 +957,7 @@ export default {
                 .catch(function(sError)
                 {
                     this.$snotify.error(sError);
+                    window.oApplication.bShowLoadingScreen = false;
                 });
         },
         fnRemoveTag: function(fnCallback)
@@ -1001,6 +1003,7 @@ export default {
                 .catch(function(sError)
                 {
                     this.$snotify.error(sError);
+                    window.oApplication.bShowLoadingScreen = false;
                 });
         },
         
@@ -1134,6 +1137,7 @@ export default {
                 .catch(function(sError)
                 {
                     this.$snotify.error(sError);
+                    window.oApplication.bShowLoadingScreen = false;
                 });            
         },        
         fnAddArticle: function(fnCallback)
@@ -1175,6 +1179,7 @@ export default {
                 .catch(function(sError)
                 {
                     this.$snotify.error(sError);
+                    window.oApplication.bShowLoadingScreen = false;
                 });
         },
         fnRemoveArticle: function(fnCallback)
@@ -1231,6 +1236,7 @@ export default {
                 .catch(function(sError)
                 {
                     this.$snotify.error(sError);
+                    window.oApplication.bShowLoadingScreen = false;
                 });
         },
         fnAddArticleTag: function(sArticle, sTag)
@@ -1269,6 +1275,7 @@ export default {
                         .catch(function(sError)
                         {
                             oThis.$snotify.error(sError);
+                            window.oApplication.bShowLoadingScreen = false;
                         });                
                 }
             );
@@ -1316,6 +1323,7 @@ export default {
                         .catch(function(sError)
                         {
                             oThis.$snotify.error(sError);
+                            window.oApplication.bShowLoadingScreen = false;
                         });
                 }
             );
@@ -1448,12 +1456,12 @@ export default {
                     }
                 ).then(function(oResponse)
                 {
+                    oThis.bShowArticleViewContentsSpinner = false;
+                    
                     if (oResponse.body.status=='error') {
                         oThis.$snotify.error(oResponse.body.message, 'Error');
                         return;
                     }
-                    
-                    oThis.bShowArticleViewContentsSpinner = false;
                     
                     oThis.sArticleViewContents = oResponse.body.data;
             
@@ -1468,6 +1476,7 @@ export default {
                 .catch(function(sError)
                 {
                     this.$snotify.error(sError);
+                    oThis.bShowArticleViewContentsSpinner = false;
                 });
         },
         fnSearchArticle: function()
@@ -1572,6 +1581,7 @@ export default {
                 .catch(function(sError)
                 {
                     this.$snotify.error(sError);
+                    window.oApplication.bShowLoadingScreen = false;
                 });
         },
         fnFileNameEncode: function(sString)
@@ -1704,6 +1714,7 @@ export default {
                     .catch(function(sError)
                     {
                         this.$snotify.error(sError);
+                        window.oApplication.bShowLoadingScreen = false;
                     });
             }
         },
@@ -1741,6 +1752,7 @@ export default {
                 .catch(function(sError)
                 {
                     this.$snotify.error(sError);
+                    window.oApplication.bShowLoadingScreen = false;
                 });
         },
         fnImagesModalScroll: function()
@@ -1817,6 +1829,7 @@ export default {
                 .catch(function(sError)
                 {
                     this.$snotify.error(sError);
+                    window.oApplication.bShowLoadingScreen = false;
                 });
         },
         fnShowFilesModal: function()
@@ -1926,6 +1939,7 @@ export default {
                     .catch(function(sError)
                     {
                         this.$snotify.error(sError);
+                        window.oApplication.bShowLoadingScreen = false;
                     });
             }            
         },
@@ -1963,6 +1977,7 @@ export default {
                 .catch(function(sError)
                 {
                     this.$snotify.error(sError);
+                    window.oApplication.bShowLoadingScreen = false;
                 });
         },
         fnFilesModalScroll: function()
@@ -2462,6 +2477,7 @@ export default {
                     .catch(function(sError)
                     {
                         oThis.$snotify.error(sError);
+                        window.oApplication.bShowLoadingScreen = false;
                     });
             } else {
                 oCodeMirror.replaceSelection(sText);
