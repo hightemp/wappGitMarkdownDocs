@@ -46,10 +46,22 @@ body, html {
 
 .tags-sidebar {
     border-right: 1px solid rgba(0,0,0,.1);
+    height: 100%;
+}
+
+.tags-list-group {
+    height: calc(100% - 40px);
+    overflow-y: scroll;
 }
 
 .articles-sidebar {
     border-right: 1px solid rgba(0,0,0,.1);
+    height: 100%;
+}
+
+.articles-list-group {
+    height: calc(100% - 40px);
+    overflow-y: scroll;    
 }
 
 .page-content {

@@ -41,7 +41,7 @@
                         </div>
                     </div>
                 </div>
-                <b-list-group>
+                <b-list-group class="tags-list-group">
                     <b-list-group-item
                         href="#"
                         class="d-flex justify-content-between align-items-center"
@@ -112,7 +112,7 @@
                         </div>
                     </div>
                 </div>
-                <b-list-group>
+                <b-list-group class="articles-list-group">
                     <b-list-group-item 
                         v-for="(sItem, iIndex) in aArticles"
                         href="#"
