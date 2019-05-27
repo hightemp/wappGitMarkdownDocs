@@ -41,6 +41,14 @@ function fnFileErrorCodeToMessage($iCode)
     } 
 } 
 
+function fnEscapeFileName($sFileName)
+{
+    $sFileName = str_replace("/", "_", $sFileName);
+    $sFileName = str_replace("\\", "_", $sFileName);
+    
+    return $sFileName;
+}
+
 function fnHTTPRequest($sURL)
 {
     $sResult = '';
@@ -399,6 +407,9 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 throw new Exception("Empty repository name");
             }
             
+            $_POST['from_article'] = fnEscapeFileName($_POST['from_article']);
+            $_POST['to_article'] = fnEscapeFileName($_POST['to_article']);
+            
             $sRepositoryDir = fnPath($sRepositoriesDir, $_POST['repository']);
             $sArticlesDir = fnPath($sRepositoryDir, 'articles');
             $sTagsDir = fnPath($sRepositoryDir, 'tags');
@@ -431,6 +442,8 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 throw new Exception("Empty repository name");
             }
             
+            $_POST['article'] = fnEscapeFileName($_POST['article']);
+
             $sRepositoryDir = fnPath($sRepositoriesDir, $_POST['repository']);
             $sArticlesDir = fnPath($sRepositoryDir, 'articles');
             $sArticleFile = fnPath($sArticlesDir, $_POST['article'].'.md');
@@ -499,6 +512,8 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 throw new Exception("Empty repository name");
             }
             
+            $_POST['tag'] = fnEscapeFileName($_POST['tag']);
+            
             $sRepositoryDir = fnPath($sRepositoriesDir, $_POST['repository']);
             $sTagsDir = fnPath($sRepositoryDir, 'tags');
             $sTagFile = fnPath($sTagsDir, $_POST['tag'].'.md');
@@ -514,6 +529,9 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             if (empty($_POST['repository'])) {
                 throw new Exception("Empty repository name");
             }
+            
+            $_POST['from_tag'] = fnEscapeFileName($_POST['from_tag']);
+            $_POST['to_tag'] = fnEscapeFileName($_POST['to_tag']);
             
             $sRepositoryDir = fnPath($sRepositoriesDir, $_POST['repository']);
             $sArticlesDir = fnPath($sRepositoryDir, 'articles');
