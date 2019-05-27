@@ -1574,11 +1574,22 @@ export default {
                     this.$snotify.error(sError);
                 });
         },
+        fnFileNameEncode: function(sString)
+        {
+            var aEscapedChars = ['%2A', '%27', '%3A', '%2F', '%3F', '%60', '%7C', '%3C', '%3E', '%30', '%26'];
+            var aChars =        ['*',   "'",   ":",   "/",   "?",   "`",   "|",   "<",   ">",   "\\",  "\""];
+            
+            for (var iIndex=0; iIndex<aChars.length; iIndex++) {
+                sString = sString.replace(aChars[iIndex], encodeURI(aEscapedChars[iIndex]));
+            }
+            
+            return sString;
+        },
         fnShowArticleGithubPage: function()
         {
             var sUser = this.oRepository.sUser;
             var sRepository = this.oRepository.sName;
-            var sArticle = this.sActiveArticle;
+            var sArticle = this.fnFileNameEncode(this.sActiveArticle);
             var sURL = "https://github.com/"+sUser+"/"+sRepository+"/blob/master/articles/"+sArticle+".md";
             
             var oWindow = window.open(sURL, '_blank');
