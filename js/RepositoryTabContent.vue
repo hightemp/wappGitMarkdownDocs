@@ -2490,8 +2490,6 @@ export default {
                 }
             }
             
-            return;
-            
             if (oClipboardData.types.indexOf('text/html') == -1) 
                 return;
             
