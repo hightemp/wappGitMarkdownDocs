@@ -164,7 +164,7 @@ body, html {
 }
 
 .article-view-space {
-    flex: 0 0 calc(100% - 140px);
+    flex: 0 0 calc(100% - 175px);
 }
 
 .article-view-button {

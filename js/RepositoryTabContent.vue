@@ -135,6 +135,7 @@
                 </b-list-group>            
             </div>
             <div 
+                v-show="bShowEditor"
                 class="page-content col-xl-4" 
                 :class="{
                     'replacement-open': bShowReplacementBlock,
@@ -323,10 +324,19 @@
                     </div> 
                 </div>
             </div>
-            <div class="article-view col-xl-4">
+            <div 
+                class="article-view"
+                :class="{'col-xl-4':bShowEditor, 'col-xl-8':!bShowEditor}"
+            >
                 <div class="container-fluid">
                     <div class="buttons-row row flex-xl-nowrap2">
                         <div class="article-view-space">
+                        </div>
+                        <div class="article-view-button">
+                            <b-button 
+                                @click="fnToggleEditor"
+                                block
+                            ><i class="fa fa-pencil"></i></b-button>
                         </div>
                         <div class="article-view-button">
                             <b-button 
@@ -693,6 +703,8 @@ export default {
             sTranslationToLanguage: 'ru',
             
             sYoutubeVideoURL: '',
+            
+            bShowEditor: true,
             
             aImagesModalFiles: [],
             aImagesModalSelectedFiles: [],
@@ -2194,18 +2206,21 @@ export default {
         },
         fnTranslationProviderChange: function(sValue)
         {
-            console.log(sValue);
             localStorage.setItem(this.oRepository.sName+'_sTranslationProvider', sValue);
         },
         fnTranslationFromLanguageChange: function(sValue)
         {
-            console.log(sValue);
             localStorage.setItem(this.oRepository.sName+'_sTranslationFromLanguage', sValue);
         },
         fnTranslationToLanguageChange: function(sValue)
         {
-            console.log(sValue);
             localStorage.setItem(this.oRepository.sName+'_sTranslationToLanguage', sValue);
+        },
+        
+        fnToggleEditor: function()
+        {
+            this.bShowEditor = !this.bShowEditor;
+            localStorage.setItem(this.oRepository.sName+'_bShowEditor', this.bShowEditor ? '1' : '');
         },
         
         fnGetState: function (cm, pos) 
@@ -2557,14 +2572,19 @@ export default {
         oThis.fnSelectArticleWithName(localStorage.getItem(this.oRepository.sName+'_iActiveArticle'));
         
         var sTranslationProvider = localStorage.getItem(this.oRepository.sName+'_sTranslationProvider');
-        if (sTranslationProvider) 
+        if (sTranslationProvider !== null) 
             this.sTranslationProvider = sTranslationProvider;
         var sTranslationFromLanguage = localStorage.getItem(this.oRepository.sName+'_sTranslationFromLanguage');
-        if (sTranslationFromLanguage) 
+        if (sTranslationFromLanguage !== null) 
             this.sTranslationFromLanguage = sTranslationFromLanguage;
         var sTranslationToLanguage = localStorage.getItem(this.oRepository.sName+'_sTranslationToLanguage');
-        if (sTranslationToLanguage) 
+        if (sTranslationToLanguage !== null) 
             this.sTranslationToLanguage = sTranslationToLanguage;
+        
+        var bShowEditor = localStorage.getItem(this.oRepository.sName+'_bShowEditor');
+        if (bShowEditor !== null) {
+            this.bShowEditor = bShowEditor;
+        }
         
         (function(CodeMirror) 
         {
