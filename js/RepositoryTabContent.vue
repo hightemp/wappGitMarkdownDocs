@@ -2294,7 +2294,7 @@ export default {
     {
         console.log('tab mounted', this.oRepository, this.bActive);
         
-        var oThis = this;
+        var oThis = this;console.log('>>>', this, this.$el);
         
         this.oSimpleMDE = new SimpleMDE({ 
             autoDownloadFontAwesome: false,

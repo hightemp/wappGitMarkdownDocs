@@ -189,9 +189,6 @@ export default Vue.extend({
                     }
                     
                     this.aRepositories = oResponse.body.data;
-                    //this.aRepositories.push({sName:'c'});
-                    //console.log(this.aRepositories);
-                    //this.$forceUpdate();
                 })
                 .catch(function(sError)
                 {
