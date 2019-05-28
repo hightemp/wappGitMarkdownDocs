@@ -2299,9 +2299,6 @@ export default {
         this.oSimpleMDE = new SimpleMDE({ 
             autoDownloadFontAwesome: false,
             element: this.$el.querySelector('.page-content-textarea'),
-            extraKeys: {
-                "Ctrl-S": function() { oThis.fnPushRepository(); },
-            },
             toolbar: [
                 "bold",
                 "italic",
@@ -2414,6 +2411,10 @@ export default {
                 }
             ]
         });
+        
+        var oExtraKeys = this.oSimpleMDE.codemirror.getOption("extraKeys");
+        oExtraKeys["Ctrl-S"] = function() { oThis.fnPushRepository(); };
+        this.oSimpleMDE.codemirror.setOption("extraKeys", oExtraKeys);
         
         this.oSimpleMDE.codemirror.on('change', function(oCodeMirror) {
             console.log('codemirror - onchange');
