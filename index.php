@@ -2,8 +2,10 @@
 
 ini_set("max_execution_time", 0);
 setlocale(LC_ALL, 'C.UTF-8');
-ini_set("display_errors", 1);
-error_reporting(E_ALL);
+//ini_set("display_errors", 1);
+//error_reporting(E_ALL);
+ini_set("display_errors", 0);
+error_reporting(E_ERROR);
 
 // UPDATE: /etc/php/7.2/cli/php.ini
 // upload_max_filesize 1000000M
