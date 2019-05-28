@@ -41,8 +41,8 @@ function fnFileErrorCodeToMessage($iCode)
     } 
 } 
 
-$aEntities =     ['%2A', '%27', '%2F', '%3F', '%60', '%7C', '%3C', '%3E', '%30', '%26'];
-$aReplacements = ['*',   "'",   "/",   "?",   "`",   "|",   "<",   ">",   "\\",  "\""];
+$aEntities =     ['%3A', '%2A', '%27', '%2F', '%3F', '%60', '%7C', '%3C', '%3E', '%30', '%26'];
+$aReplacements = [':',   '*',   "'",   "/",   "?",   "`",   "|",   "<",   ">",   "\\",  "\""];
 
 function fnFileNameEncode($sString) 
 {
@@ -280,6 +280,14 @@ function fnGetRepositoryInfo($sRepositoryName)
     foreach ($aTagsFiles as $sTagFile) {
         $sTagFileContents = safe_file_get_contents($sTagFile);
         $sTag = fnFileNameDecode(str_replace(".md", '', basename($sTagFile)));
+        
+        if (preg_match_all("/^\[.*?\]\(.*?\)/m", $sTagFileContents, $aMatches)) {
+            foreach ($aMatches[0] as $sItem) {
+                $sTagFileContents = str_replace($sItem, "* ".$sItem, $sTagFileContents);
+            }
+            
+            safe_file_put_contents($sTagFile, $sTagFileContents);
+        }
         
         if (preg_match_all("/\[([^\]]+)\]/", $sTagFileContents, $aMatches)) {
             $aResult['oTags']->$sTag = $aMatches[1];
@@ -624,7 +632,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             }
             
             $sArticleFileContents .= "[".$_POST['tag']."](/tags/".rawurlencode(fnFileNameEncode($_POST['tag'])).".md)\n";
-            $sTagFileContents .= "[".$_POST['article']."](/articles/".rawurlencode(fnFileNameEncode($_POST['article'])).".md)\n";
+            $sTagFileContents .= "* [".$_POST['article']."](/articles/".rawurlencode(fnFileNameEncode($_POST['article'])).".md)\n";
             
             if (safe_file_put_contents($sArticleFile, $sArticleFileContents)===false) {
                 throw new Exception("Can't write to file '$aArticleFile'");
@@ -651,7 +659,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             $sTagFileContents = safe_file_get_contents($sTagFile);
             
             $sTagLink = "[".$_POST['tag']."](/tags/".rawurlencode(fnFileNameEncode($_POST['tag'])).".md)";
-            $sArticleLink = "[".$_POST['article']."](/articles/".rawurlencode(fnFileNameEncode($_POST['article'])).".md)";
+            $sArticleLink = "* [".$_POST['article']."](/articles/".rawurlencode(fnFileNameEncode($_POST['article'])).".md)";
             
             if (($iLinePos = strpos($sArticleFileContents, "**********"))!==false) {
                 if (($iLinkPos = strpos($sArticleFileContents, $sTagLink, $iLinePos))!==false) {

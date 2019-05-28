@@ -1586,13 +1586,13 @@ export default {
         },
         fnFileNameEncode: function(sString)
         {
-            var aEscapedChars = ['%2A', '%27', '%2F', '%3F', '%60', '%7C', '%3C', '%3E', '%30', '%26'];
-            var aChars =        [/\*/gu,  /'/gu,   /\//gu,  /\?/gu,  /`/gu,   /\|/gu,   /</gu,   /\>/gu,  /\\/gu,  /"/gu];
-            console.log(sString);
+            var aEscapedChars = ['%3A', '%2A',   '%27',   '%2F',   '%3F',   '%60',   '%7C',    '%3C',   '%3E',   '%30',   '%26'];
+            var aChars =        [/:/gu, /\*/gu,  /'/gu,   /\//gu,  /\?/gu,  /`/gu,   /\|/gu,   /</gu,   /\>/gu,  /\\/gu,  /"/gu];
+
             for (var iIndex=0; iIndex<aChars.length; iIndex++) {
                 sString = sString.replace(aChars[iIndex], encodeURI(aEscapedChars[iIndex]));
             }
-            console.log(sString);
+            
             return sString;
         },
         fnShowArticleGithubPage: function()
