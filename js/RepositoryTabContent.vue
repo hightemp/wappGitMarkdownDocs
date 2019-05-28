@@ -2294,7 +2294,7 @@ export default {
     {
         console.log('tab mounted', this.oRepository, this.bActive);
         
-        var oThis = this;console.log('>>>', this, this.$el);
+        var oThis = this;
         
         this.oSimpleMDE = new SimpleMDE({ 
             autoDownloadFontAwesome: false,
@@ -2421,10 +2421,76 @@ export default {
             oThis.bEditorDirty = true;
         });
         
+        /*
+        document.addEventListener('paste', function(e) {
+            console.log(e);   
+            
+            var items = (e.clipboardData || e.originalEvent.clipboardData).items;
+            console.log(JSON.stringify(items)); // will give you the mime types
+            for (var index in items) {
+                var item = items[index];
+                if (item.kind === 'file') {
+                  var blob = item.getAsFile();
+                  var reader = new FileReader();
+                  reader.onload = function(event){
+                    console.log(event.target.result)}; // data url!
+                  reader.readAsDataURL(blob);
+                }
+            }
+        });
+        
+        document.documentElement.addEventListener('paste', function(e) {
+            console.log(e);   
+        });
+        */
         this.oSimpleMDE.codemirror.on('paste', function(oCodeMirror, oEvent) {
             console.log('codemirror - paste');
             
             var oClipboardData = (oEvent.clipboardData || window.clipboardData);
+            
+            for (var iIndex in oClipboardData.items)
+            {
+                var oItem = oClipboardData.items[iIndex];
+                
+                if (oItem.kind == 'file') {
+                    window.oApplication.bShowLoadingScreen = true;
+                    
+                    var oFile = oItem.getAsFile();
+                    console.log('>>>', oFile);
+                    
+                    var oFormData = new FormData();
+
+                    oFormData.append('action', 'upload_images');
+                    oFormData.append('repository', oThis.oRepository.sName);
+                    oFormData.append('pasted_files[]', oFile);
+                    
+                    oThis
+                        .$http
+                        .post(
+                            '',
+                            oFormData
+                        ).then(function(oResponse)
+                        {
+                            window.oApplication.bShowLoadingScreen = false;
+
+                            if (oResponse.body.status=='error') {
+                                oThis.$snotify.error(oResponse.body.message, 'Error');
+                                return;
+                            }
+                            
+                            oCodeMirror.replaceSelection('![](/images/'+oResponse.body.data[0]+')');
+                        })
+                        .catch(function(sError)
+                        {
+                            oThis.$snotify.error(sError);
+                            window.oApplication.bShowLoadingScreen = false;
+                        });
+                        
+                    return;
+                }
+            }
+            
+            return;
             
             if (oClipboardData.types.indexOf('text/html') == -1) 
                 return;

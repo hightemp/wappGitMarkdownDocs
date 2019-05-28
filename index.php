@@ -754,13 +754,29 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 throw new Exception("Can't create dir");
             }
             
-            if (!isset($_FILES['files'])) {
+            if (!isset($_FILES['files']) && !isset($_FILES['pasted_files'])) {
                 throw new Exception("There is no file in request");
             }
             
             $aResponse['data'] = [];
             
-            foreach ($_FILES['files']['name'] as $iIndex => $sName) {
+            foreach ((array)@$_FILES['pasted_files']['name'] as $iIndex => $sName) {
+                $sNewFileName = md5_file($_FILES['pasted_files']['tmp_name'][$iIndex]);
+                $sImageFile = fnPath($sImagesDir, $sNewFileName);
+                
+                $sErrorMessage = fnFileErrorCodeToMessage($_FILES['pasted_files']['error'][$iIndex]);
+                if (!empty($sErrorMessage)) {
+                    throw new Exception($sErrorMessage);
+                }
+                
+                if (!move_uploaded_file($_FILES['pasted_files']['tmp_name'][$iIndex], $sImageFile)) {
+                    throw new Exception("Can't move file to directory '$sImageFile'");
+                }
+                
+                $aResponse['data'][] = $sNewFileName;                
+            }
+            
+            foreach ((array)@$_FILES['files']['name'] as $iIndex => $sName) {
                 $sImageFile = fnPath($sImagesDir, fnFileNameEncode($sName));
                 
                 $sErrorMessage = fnFileErrorCodeToMessage($_FILES['files']['error'][$iIndex]);
@@ -768,13 +784,10 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                     throw new Exception($sErrorMessage);
                 }
                 
-                //if (!is_file($sImagesFile)) {
-                    if (!move_uploaded_file($_FILES['files']['tmp_name'][$iIndex], $sImageFile)) {
-                        throw new Exception("Can't move file to directory '$sImageFile'");
-                    }
-                //}
+                if (!move_uploaded_file($_FILES['files']['tmp_name'][$iIndex], $sImageFile)) {
+                    throw new Exception("Can't move file to directory '$sImageFile'");
+                }
                 
-                //$aResponse['data'][] = str_replace($sRepositoryDir, '', $sImagesFile);
                 $aResponse['data'][] = $sName;
             }
             
@@ -841,7 +854,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             
             $aResponse['data'] = [];
             
-            foreach ($_FILES['files']['name'] as $iIndex => $sName) {
+            foreach ((array)@$_FILES['files']['name'] as $iIndex => $sName) {
                 $sFile = fnPath($sFilesDir, fnFileNameEncode($sName));
                 
                 $sErrorMessage = fnFileErrorCodeToMessage($_FILES['files']['error'][$iIndex]);
