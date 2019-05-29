@@ -286,6 +286,12 @@ body, html {
     cursor: pointer;
 }
 
+.replacement-block-toggle-buttons-col label {
+    width: 30px;
+    padding-left: 0px !important;
+    padding-right: 0px !important;
+}
+
 .replacement-block-buttons-col {
     flex: 0 0 80px;
     max-width: 80px;       

@@ -257,6 +257,14 @@
                         >
                             Replace All
                         </b-button>
+                        <b-form-checkbox 
+                            v-model="bSearchInSelection"
+                            button
+                            class="replacement-block-toggle-buttons-col"
+                            button-variant="info"
+                        >
+                            <i class="fa fa-i-cursor"></i>
+                        </b-form-checkbox>
                         <b-button 
                             class="replacement-block-toggle-buttons-col"
                             button-variant="secondary"
@@ -681,6 +689,7 @@ export default {
             bShowReplacementBlock: false,
             bShowTranslationBlock: false,
             
+            bSearchInSelection: false,
             bUseRegularExpression: false,
             bUseCaseSensetive: false,
             iSearchPosFrom: null,
@@ -2138,6 +2147,17 @@ export default {
             //var query = oCodeMirror.getSelection() || getSearchState(cm).lastQuery;
             var mQuery = this.fnPrepareQuery(this.sSearchQuery);
 
+            if (this.bSearchInSelection) {
+                var sSelection = oCodeMirror.getSelection();
+                var sText = this.sSearchQueryText;
+                
+                sSelection = sSelection.replace(mQuery, sText);
+                
+                oCodeMirror.replaceSelection(sSelection);
+                
+                return;
+            }
+
             if (bAll) {
                 this.fnEditorReplaceAll(mQuery, this.sSearchQueryText);
             } else {
@@ -2442,28 +2462,6 @@ export default {
             oThis.bEditorDirty = true;
         });
         
-        /*
-        document.addEventListener('paste', function(e) {
-            console.log(e);   
-            
-            var items = (e.clipboardData || e.originalEvent.clipboardData).items;
-            console.log(JSON.stringify(items)); // will give you the mime types
-            for (var index in items) {
-                var item = items[index];
-                if (item.kind === 'file') {
-                  var blob = item.getAsFile();
-                  var reader = new FileReader();
-                  reader.onload = function(event){
-                    console.log(event.target.result)}; // data url!
-                  reader.readAsDataURL(blob);
-                }
-            }
-        });
-        
-        document.documentElement.addEventListener('paste', function(e) {
-            console.log(e);   
-        });
-        */
         this.oSimpleMDE.codemirror.on('paste', function(oCodeMirror, oEvent) {
             console.log('codemirror - paste');
             
