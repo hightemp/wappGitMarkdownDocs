@@ -1715,7 +1715,7 @@ export default {
                             return;
                         }
 
-                        var sImage = oResponse.body.data[0];
+                        var sImage = oResponse.body.data[0]['sFileName'];
                         var iIndex = this.aImagesModalFiles.indexOf(sImage);
                         
                         if (iIndex>-1) {
@@ -2477,7 +2477,6 @@ export default {
                     window.oApplication.bShowLoadingScreen = true;
                     
                     var oFile = oItem.getAsFile();
-                    console.log('>>>', oFile);
                     
                     var oFormData = new FormData();
 
@@ -2550,8 +2549,8 @@ export default {
 
                         for (var iDataIndex=0; iDataIndex<oResponse.body.data.length; iDataIndex++) {
                             for (var iIndex=0; iIndex<oLinksMatch.length; iIndex++) {
-                                if (oLinksMatch[iIndex].indexOf(oResponse.body.data[iDataIndex]) !== -1) {
-                                    var sNewLink = oLinksMatch[iIndex].replace(/\(https?:.*?\)/u, "(/images/"+oResponse.body.data[iDataIndex]+")");
+                                if (oLinksMatch[iIndex].indexOf(oResponse.body.data[iDataIndex]['sURL']) !== -1) {
+                                    var sNewLink = oLinksMatch[iIndex].replace(/\(https?:.*?\)/u, "(/images/"+oResponse.body.data[iDataIndex]['sFileName']+")");
                                     sText = sText.replace(oLinksMatch[iIndex], sNewLink);
                                     break;
                                 }

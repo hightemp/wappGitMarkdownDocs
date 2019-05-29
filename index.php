@@ -372,7 +372,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 $sArticleFile = fnPath($sArticlesDir, fnFileNameEncode($_POST['article']).'.md');
                 
                 if (isset($_POST['tags'])) {
-                    $_POST['data'] .= "\n**********\n";
+                    $_POST['data'] .= "\n\n**********\n";
                     
                     foreach ($_POST['tags'] as $sTag) {
                         $_POST['data'] .= "[$sTag](/tags/".rawurlencode(fnFileNameEncode($sTag)).".md)\n";
@@ -488,7 +488,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 $sTagFileContents = safe_file_get_contents($sTagFile);
                 
                 if (($iLinePos = strpos($sArticleContents, "**********"))===false) {
-                    $sArticleFileContents .= "\n**********\n";
+                    $sArticleFileContents .= "\n\n**********\n";
                 }
                 
                 $sArticleFileContents .= "[".$_POST['tag']."](/tags/".rawurlencode(fnFileNameEncode($_POST['tag'])).".md)\n";
@@ -630,7 +630,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             $sTagFileContents = safe_file_get_contents($sTagFile);
             
             if (($iLinePos = strpos($sArticleFileContents, "**********"))===false) {
-                $sArticleFileContents .= "\n**********\n";
+                $sArticleFileContents .= "\n\n**********\n";
             }
             
             $sArticleFileContents .= "[".$_POST['tag']."](/tags/".rawurlencode(fnFileNameEncode($_POST['tag'])).".md)\n";
@@ -762,6 +762,11 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             
             foreach ((array)@$_FILES['pasted_files']['name'] as $iIndex => $sName) {
                 $sNewFileName = md5_file($_FILES['pasted_files']['tmp_name'][$iIndex]);
+                
+                if (preg_match("/^image\/(.*)$/i", $_FILES['pasted_files']['type'][$iIndex], $aMatches)) {
+                    $sNewFileName .= ".".$aMatches[1];
+                }
+                
                 $sImageFile = fnPath($sImagesDir, $sNewFileName);
                 
                 $sErrorMessage = fnFileErrorCodeToMessage($_FILES['pasted_files']['error'][$iIndex]);
@@ -777,7 +782,13 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             }
             
             foreach ((array)@$_FILES['files']['name'] as $iIndex => $sName) {
-                $sImageFile = fnPath($sImagesDir, fnFileNameEncode($sName));
+                $sNewFileName = md5_file($_FILES['files']['tmp_name'][$iIndex]);
+                
+                if (preg_match("/\.([^.]{1,5})$/i", $sName, $aMatches)) {
+                    $sNewFileName .= ".".$aMatches[1];
+                }
+                
+                $sImageFile = fnPath($sImagesDir, $sNewFileName);
                 
                 $sErrorMessage = fnFileErrorCodeToMessage($_FILES['files']['error'][$iIndex]);
                 if (!empty($sErrorMessage)) {
@@ -788,7 +799,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                     throw new Exception("Can't move file to directory '$sImageFile'");
                 }
                 
-                $aResponse['data'][] = $sName;
+                $aResponse['data'][] = $sNewFileName;
             }
             
             fnCommitAndPushRepository($sRepositoryDir);
@@ -811,21 +822,31 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             $sFileNames = [];
             
             foreach ((array)$_POST['urls'] as $sURL) {
-                $sFileName = basename($sURL);
+                $sData = fnHTTPRequest($sURL);
+                
+                $sNewFileName = md5($sData);
+                
+                if (preg_match("/\.([^.]{1,5})$/i", $sURL, $aMatches)) {
+                    $sNewFileName .= ".".$aMatches[1];
+                }
+                
+                //$sFileName = basename($sURL);
                 $aFileInfo = pathinfo($sURL);
 
-                if (empty($sFileName)) {
-                    throw new Exception("File name is empty");
-                }
+                //if (empty($sFileName)) {
+                //    throw new Exception("File name is empty");
+                //}
 
-                $sData = fnHTTPRequest($sURL);
-                $sImagesFile = fnPath($sImagesDir, fnFileNameEncode($sFileName));
+                $sImagesFile = fnPath($sImagesDir, $sNewFileName);
 
                 if (!safe_file_put_contents($sImagesFile, $sData)) {
                     throw new Exception("Can't write to file '$sImagesFile'");
                 }
                 
-                $sFileNames[] = $sFileName;
+                $sFileNames[] = [
+                    'sURL' => $sURL,
+                    'sFileName' => $sNewFileName
+                ];
             }
             
             $aResponse['data'] = $sFileNames;
@@ -855,21 +876,24 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             $aResponse['data'] = [];
             
             foreach ((array)@$_FILES['files']['name'] as $iIndex => $sName) {
-                $sFile = fnPath($sFilesDir, fnFileNameEncode($sName));
+                $sNewFileName = md5_file($_FILES['files']['tmp_name'][$iIndex]);
+                
+                if (preg_match("/\.([^.]{1,5})$/i", $sName, $aMatches)) {
+                    $sNewFileName .= ".".$aMatches[1];
+                }
+                
+                $sFile = fnPath($sFilesDir, $sNewFileName);
                 
                 $sErrorMessage = fnFileErrorCodeToMessage($_FILES['files']['error'][$iIndex]);
                 if (!empty($sErrorMessage)) {
                     throw new Exception($sErrorMessage);
                 }
                 
-                //if (!is_file($sFile)) {
-                    if (!move_uploaded_file($_FILES['files']['tmp_name'][$iIndex], $sFile)) {
-                        throw new Exception("Can't move file to directory");
-                    }
-                //}
+                if (!move_uploaded_file($_FILES['files']['tmp_name'][$iIndex], $sFile)) {
+                    throw new Exception("Can't move file to directory");
+                }
                 
-                //$aResponse['data'][] = str_replace($sRepositoryDir, '', $sFile);
-                $aResponse['data'][] = $sName;
+                $aResponse['data'][] = $sNewFileName;
             }
             
             fnCommitAndPushRepository($sRepositoryDir);
@@ -892,21 +916,31 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             $sFileNames = [];
             
             foreach ((array)$_POST['urls'] as $sURL) {
-                $sFileName = basename($sURL);
+                $sData = fnHTTPRequest($sURL);
+                
+                $sNewFileName = md5($sData);
+                
+                if (preg_match("/\.([^.]{1,5})$/i", $sURL, $aMatches)) {
+                    $sNewFileName .= ".".$aMatches[1];
+                }
+                
+                //$sFileName = basename($sURL);
                 $aFileInfo = pathinfo($sURL);
 
-                if (empty($sFileName)) {
-                    throw new Exception("File name is empty");
-                }
-
-                $sData = fnHTTPRequest($sURL);
-                $sFilePath = fnPath($sFilesDir, fnFileNameEncode($sFileName));
+                //if (empty($sFileName)) {
+                //    throw new Exception("File name is empty");
+                //}
+                
+                $sFilePath = fnPath($sFilesDir, $sNewFileName);
 
                 if (!safe_file_put_contents($sFilePath, $sData)) {
                     throw new Exception("Can't write to file '$sFilePath'");
                 }
                 
-                $sFileNames[] = $sFileName;
+                $sFileNames[] = [
+                    'sURL' => $sURL,
+                    'sFileName' => $sNewFileName
+                ];
             }
             
             $aResponse['data'] = $sFileNames;
