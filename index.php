@@ -184,7 +184,8 @@ function safe_glob($sPath)
 {
     $aResult = glob($sPath);
     
-    array_multisort(array_map('filemtime', $aResult), SORT_NUMERIC, SORT_ASC, $aResult);
+    //array_multisort(array_map('filemtime', $aResult), SORT_NUMERIC, SORT_ASC, $aResult);
+    array_multisort(array_map('filectime', $aResult), SORT_NUMERIC, SORT_ASC, $aResult);
     
     if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN' 
         && substr(phpversion(), 0, 1)<7) {
