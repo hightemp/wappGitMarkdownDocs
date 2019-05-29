@@ -25,6 +25,7 @@
     "mini-css-extract-plugin": "^0.6.0",
     "style-loader": "^0.23.1",
     "turndown": "^5.0.3",
+    "turndown-plugin-gfm": "^1.0.2",
     "vue": "^2.6.10",
     "vue-loader": "^15.7.0",
     "vue-resource": "^1.5.1",

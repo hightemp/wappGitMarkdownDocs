@@ -641,8 +641,14 @@ import Vue, { VueConstructor } from 'vue'
 import TurndownService from 'turndown'
 
 window.oTurndownService = new TurndownService({
-    headingStyle: 'atx'
+    headingStyle: 'atx',
+    codeBlockStyle: 'fenced'
 });
+
+var turndownPluginGfm = require('turndown-plugin-gfm');
+var gfm = turndownPluginGfm.gfm;
+
+window.oTurndownService.use(gfm);
 
 export default {
     name: 'RepositoryTabContent',
