@@ -2151,6 +2151,10 @@ export default {
                 var sSelection = oCodeMirror.getSelection();
                 var sText = this.sSearchQueryText;
                 
+                if (bAll) {
+                    mQuery = new RegExp(mQuery.source, "uig");
+                }
+                
                 sSelection = sSelection.replace(mQuery, sText);
                 
                 oCodeMirror.replaceSelection(sSelection);
