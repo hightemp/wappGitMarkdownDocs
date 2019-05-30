@@ -644,7 +644,7 @@ import '../lib/simplemde-markdown-editor/dist/simplemde.min.css';
 
 import Vue, { VueConstructor } from 'vue'
 
-import TurndownService from 'turndown'
+import TurndownService from '../lib/turndown/src/turndown.js'
 
 window.oTurndownService = new TurndownService({
     headingStyle: 'atx',
