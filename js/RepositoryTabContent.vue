@@ -1297,7 +1297,8 @@ export default {
                             
                             oThis.oRepository.oTags[sTag].push(sArticle);
                             
-                            oThis.fnSelectArticle(oThis.iActiveArticle);
+                            oThis.fnRefreshArticleViewer();
+                            //oThis.fnSelectArticle(oThis.iActiveArticle);
                         })
                         .catch(function(sError)
                         {
@@ -1345,7 +1346,8 @@ export default {
                             }
                             oThis.oRepository.oTags[sTag].splice(iIndex, 1);
                             
-                            oThis.fnSelectArticle(oThis.iActiveArticle);                    
+                            //oThis.fnSelectArticle(oThis.iActiveArticle); 
+                            oThis.fnRefreshArticleViewer();
                         })
                         .catch(function(sError)
                         {
@@ -1408,21 +1410,19 @@ export default {
             
             return typeof this.aArticles[iIndex] !== 'undefined';
         },
-        fnSelectArticleWithName: function(sName)
+        fnSelectArticleWithName: function(sName, bResetScroll=true)
         {
             console.log('fnSelectArticleWithName', sName);
             
             this.fnSelectArticle(this.aArticles.indexOf(sName));
         },
-        fnSelectArticle: function(iIndex)
+        fnSelectArticle: function(iIndex, bResetScroll=true)
         {
             console.log('fnSelectArticle', iIndex, this.aArticles[iIndex]);
             
             if (typeof this.aArticles[iIndex] == 'undefined') {
                 return;
             }
-            
-            this.iArticleViewScrollPosition = 0;
             
             this
                 .$http
@@ -1440,6 +1440,10 @@ export default {
                         return;
                     }
                     
+                    if (bResetScroll) {
+                        this.iArticleViewScrollPosition = 0;
+                    }
+            
                     this.iActiveArticle = iIndex;
                     console.log(this.oRepository.sName+'_iActiveArticle', this.aArticles[iIndex]);
                     localStorage.setItem(this.oRepository.sName+'_iActiveArticle', this.aArticles[iIndex]);
