@@ -61,7 +61,7 @@
                         :active="sActiveTag==sKey"
                         v-if="sTagFilterString=='' 
                             || sTagFilterString!='' 
-                            && sKey.indexOf(sTagFilterString)!=-1"
+                            && sKey.toLowerCase().indexOf(sTagFilterString.toLowerCase())!=-1"
                         @click="fnSelectTag(sKey)"
                     >
                         {{ sKey }}
@@ -125,7 +125,7 @@
                                 )
                                 || (sArticleFilterString!='' 
                                     && sArticleFilterString[0]!='%' 
-                                    && sItem.indexOf(sArticleFilterString)!=-1
+                                    && sItem.toLowerCase().indexOf(sArticleFilterString.toLowerCase())!=-1
                                 )
                             )"
                         @click="fnSelectArticle(iIndex)"
@@ -314,7 +314,7 @@
                                 v-for="(aItem, sKey) in oRepository.oTags"
                                 v-if="(sCurrentArticleTagFilterString=='' 
                                         || (sCurrentArticleTagFilterString!='' 
-                                            && sKey.indexOf(sCurrentArticleTagFilterString)!=-1)
+                                            && sKey.toLowerCase().indexOf(sCurrentArticleTagFilterString.toLowerCase())!=-1)
                                       )
                                       && (!bCurrentArticleFilterSelectedTags 
                                             || (bCurrentArticleFilterSelectedTags 
@@ -533,9 +533,7 @@
                     class="images-modal-list-item img-thumbnail d-flex"
                     v-bind:class="{ active: aImagesModalSelectedFiles.indexOf(oImage.sName)!=-1 }"
                     @click="fnToggleImageSelection(oImage.sName)"
-                    v-if="sImagesFilterString=='' 
-                            || (sImagesFilterString!='' 
-                                && sImage.indexOf(sImagesFilterString)!=-1)"
+                    v-if="fnImagesFilterCondition(oImage, iIndex)"
                 >
                     <b-img 
                         :src="'/repositories/'+oRepository.sName+'/images/'+oImage.sName" 
@@ -1653,6 +1651,38 @@ export default {
             this.sUploadImagesMode = 'update-modal';
             this.$refs.images_modal.hideFooter = true;
             this.$refs.images_modal.show();
+        },
+        fnFindInArray: function(aArray, sSearchString, bCaseSensative=true) 
+        { 
+            for (var iIndex=0; iIndex<aArray.length; iIndex++) {
+                if (!bCaseSensative) {
+                    if (aArray[iIndex]
+                        .toLowerCase()
+                        .indexOf(sSearchString.toLowerCase())!=-1) {
+                        return true;
+                    }
+                } else {
+                    if (aArray[iIndex]
+                        .indexOf(sSearchString)!=-1) {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        },
+        fnImagesFilterCondition: function(oImage, iIndex)
+        {
+            var oThis = this;
+            var sImagesFilterString = oThis.sImagesFilterString.replace(/^%/, '');
+            
+            return this.sImagesFilterString=='' 
+                || (this.sImagesFilterString!='' 
+                    && this.sImagesFilterString.indexOf('%')!=0
+                    && oImage.sName.indexOf(this.sImagesFilterString)!=-1)
+                || (this.sImagesFilterString!='' 
+                    && this.sImagesFilterString.indexOf('%')==0
+                    && this.fnFindInArray(oImage.aArticles, sImagesFilterString, false));
         },
         fnUpdateImagesList: function()
         {

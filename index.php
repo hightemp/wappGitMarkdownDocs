@@ -754,20 +754,20 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                     foreach ($aInfo['aArticles'] as $sArticle) {
                         $sArticleFile = fnPath($sArticlesDir, fnFileNameEncode($sArticle).'.md');
                         
-                        $sConents = safe_file_get_contents($sArticleFile);
+                        $sContents = safe_file_get_contents($sArticleFile);
                         
-                        if (@strpos($sConents, $_POST['search_text'])!==false) {
-                            $aResponse['data'] = $sArticle;
+                        if (preg_match("/".preg_quote($_POST['search_text'])."/iu", $sContents)) {
+                            $aResponse['data'][] = $sArticle;
                         }
                     }
                 } else {
                     foreach ($aInfo['oTags']->{$_POST['tag']} as $sArticle) {
                         $sArticleFile = fnPath($sArticlesDir, fnFileNameEncode($sArticle).'.md');
                     
-                        $sConents = safe_file_get_contents($sArticleFile);
+                        $sContents = safe_file_get_contents($sArticleFile);
                         
-                        if (@strpos($sConents, $_POST['search_text'])!==false) {
-                            $aResponse['data'] = $sArticle;
+                        if (preg_match("/".preg_quote($_POST['search_text'])."/iu", $sContents)!==false) {
+                            $aResponse['data'][] = $sArticle;
                         }
                     }
                 }
