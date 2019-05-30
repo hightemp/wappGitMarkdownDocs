@@ -180,6 +180,59 @@ function http_file_get_contents($sPath)
     return file_get_contents($sPath, false, $resContext);
 }
 
+function fnFindFilesInAtricle($sArticleName, $sRepositoryName, $aFilesPaths, $sType='all')
+{
+    global $sRepositoriesDir;
+    
+    $sRepositoryDir = fnPath($sRepositoriesDir, $sRepositoryName);
+    $sArticlesDir = fnPath($sRepositoryDir, 'articles');
+    $sArticleFilePath = fnPath($sArticlesDir, $sArticleName);
+    
+    $aFilesPaths = (array) $aFilesPaths;
+    
+    $sData = safe_file_get_contents($sArticleFile);
+        
+    if (($sType=="all" || $sType=="image") && preg_match("/!\[[^\]]*\]\(". preg_quote($sRelativeFilePath)."\)/iu", $sData)) {
+        $aArticles[] = fnFileNameDecode(basename($sArticleFile));
+    }
+
+    if (($sType=="all" || $sType=="link") && preg_match("/\[[^\]]*\]\(". preg_quote($sRelativeFilePath)."\)/iu", $sData)) {
+        $aArticles[] = fnFileNameDecode(basename($sArticleFile));
+    }
+}
+
+function fnFindFileInAtricles($sRepositoryName, &$aFilesInfos, $sType='all')
+{
+    global $sRepositoriesDir;
+    static $aAllArticles;
+    
+    $sRepositoryDir = fnPath($sRepositoriesDir, $sRepositoryName);
+    $sArticlesDir = fnPath($sRepositoryDir, 'articles');
+    $sArticlesGlobMask = fnPath($sArticlesDir, '*.md');
+    
+    if (!isset($aAllArticles)) {
+        $aAllArticles = safe_glob($sArticlesGlobMask);
+    }
+    
+    foreach ($aAllArticles as $sArticleFile) {
+        $sData = safe_file_get_contents($sArticleFile);
+        
+        foreach ($aFilesInfos as &$aFileInfo) {
+            if (!isset($aFileInfo['aArticles'])) {
+                $aFileInfo['aArticles'] = [];
+            }
+            
+            if (($sType=="all" || $sType=="image") && preg_match("/!\[[^\]]*]*\]\([^)]*?". preg_quote($aFileInfo['sName'])."[^)]*?\)/i", $sData)) {
+                $aFileInfo['aArticles'][] = fnFileNameDecode(basename($sArticleFile));
+            }
+
+            if (($sType=="all" || $sType=="link") && preg_match("/(?<!!)\[[^\]]*\]\([^)]*?". preg_quote($aFileInfo['sName'])."[^)]*?\)/i", $sData)) {
+                $aFileInfo['aArticles'][] = fnFileNameDecode(basename($sArticleFile));
+            }
+        }
+    }
+}
+
 function safe_glob($sPath)
 {
     $aResult = glob($sPath);
@@ -949,7 +1002,6 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             fnCommitAndPushRepository($sRepositoryDir);        
         }
         
-        
         if ($_POST['action']=='get_images') {
             if (empty($_POST['repository'])) {
                 throw new Exception("Empty repository name");
@@ -958,12 +1010,19 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             $sRepositoryDir = fnPath($sRepositoriesDir, $_POST['repository']);
             $sImagesDir = fnPath($sRepositoryDir, 'images');
             
-            $aResponse['data'] = safe_glob(fnPath($sImagesDir, "*"));
+            $aFiles = safe_glob(fnPath($sImagesDir, "*"));
             
-            foreach ($aResponse['data'] as &$sImage) {
-                //$sImage = str_replace($sRepositoryDir, '', $sImage);
-                $sImage = fnFileNameDecode(basename($sImage));
+            foreach ($aFiles as &$sImage) {
+                $sFileName = fnFileNameDecode(basename($sImage));
+                
+                $aResponse['data'][] = [
+                    "sName" => $sFileName,
+                    "iFileCTime" => filectime($sImage),
+                    "iFileMTime" => filemtime($sImage),
+                ];
             }
+            
+            fnFindFileInAtricles($_POST['repository'], $aResponse['data']);
         }
         if ($_POST['action']=='remove_images') {
             if (empty($_POST['repository'])) {

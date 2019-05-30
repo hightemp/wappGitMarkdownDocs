@@ -529,19 +529,19 @@
                 @scroll="fnImagesModalScroll"
             >
                 <div 
-                    v-for="(sImage, iIndex) in aImagesModalFiles"
+                    v-for="(oImage, iIndex) in aImagesModalFiles"
                     class="images-modal-list-item img-thumbnail d-flex"
-                    v-bind:class="{ active: aImagesModalSelectedFiles.indexOf(sImage)!=-1 }"
-                    @click="fnToggleImageSelection(sImage)"
+                    v-bind:class="{ active: aImagesModalSelectedFiles.indexOf(oImage.sName)!=-1 }"
+                    @click="fnToggleImageSelection(oImage.sName)"
                     v-if="sImagesFilterString=='' 
                             || (sImagesFilterString!='' 
                                 && sImage.indexOf(sImagesFilterString)!=-1)"
                 >
                     <b-img 
-                        :src="'/repositories/'+oRepository.sName+'/images/'+sImage" 
-                        :alt="sImage"
+                        :src="'/repositories/'+oRepository.sName+'/images/'+oImage.sName" 
+                        :alt="oImage.sName"
                         class="align-self-center"
-                        :hint="sImage"
+                        :hint="oImage.sName"
                     ></b-img>
                 </div>
             </div>
@@ -1552,6 +1552,18 @@ export default {
             
             this.fnReplaceSelection(cm, stat.image, options.insertTexts.image, url, bCursorToEnd);
         },
+        fnFindImage: function(sName)
+        {
+            var iLength = this.aImagesModalFiles.length;
+            
+            for (var iIndex=0; iIndex<iLength; iIndex++) {
+                if (this.aImagesModalFiles[iIndex].sName == sName) {
+                    return iIndex;
+                }
+            }
+            
+            return -1;
+        },
         fnUploadImages: function()
         {
             var oFiles = this.$refs.uploaded_images_input.$el.files;
@@ -1589,7 +1601,7 @@ export default {
                     if (this.sUploadImagesMode=='update-modal') {
                         for (var iIndex=0; iIndex<oResponse.body.data.length; iIndex++) {
                             var sImage = oResponse.body.data[iIndex];
-                            var iIndex = this.aImagesModalFiles.indexOf(sImage);
+                            var iIndex = this.fnFindImage(sImage);
                             
                             if (iIndex>-1) {
                                 this.aImagesModalFiles.splice(iIndex, 1);
@@ -1729,7 +1741,7 @@ export default {
                         }
 
                         var sImage = oResponse.body.data[0]['sFileName'];
-                        var iIndex = this.aImagesModalFiles.indexOf(sImage);
+                        var iIndex = this.fnFindImage(sImage);
                         
                         if (iIndex>-1) {
                             this.aImagesModalFiles.splice(iIndex, 1);
@@ -1772,7 +1784,7 @@ export default {
                     }
                     
                     for (var iIndex=0; iIndex<this.aImagesModalSelectedFiles.length; iIndex++) {
-                        var iImageIndex = this.aImagesModalFiles.indexOf(this.aImagesModalSelectedFiles[iIndex]);
+                        var iImageIndex = this.fnFindImage(this.aImagesModalSelectedFiles[iIndex]);
                         if (iImageIndex>-1) {
                             this.aImagesModalFiles.splice(iImageIndex, 1);
                         }
