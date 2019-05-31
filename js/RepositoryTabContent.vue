@@ -626,11 +626,11 @@
                     <div class="row">
                         <div class="col-xl-6 d-flex flex-row">
                             <div>
-                                <span class="btn btn-danger">-</span> <span>{{ iDiffRemovals }} Removals</span>
+                                <span class="btn btn-danger">-</span> <span><b>{{ iDiffRemovals }}</b> Removals</span>
                             </div>
                             &nbsp;
                             <div>
-                                <span class="btn btn-success">+</span> <span>{{ iDiffAdditions }} Additions</span>
+                                <span class="btn btn-success">+</span> <span><b>{{ iDiffAdditions }}</b> Additions</span>
                             </div>
                         </div>
                         <div class="col-xl-6 d-flex flex-row-reverse">
