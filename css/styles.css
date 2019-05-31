@@ -274,6 +274,50 @@ body, html {
 }
 
 
+.diff-modal-container {
+    height: 500px;
+}
+
+.diff-modal-row-1 {
+    height: calc(100% - 40px);
+}
+
+.diff-modal-row-2 {
+    height: 40px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+.diff-modal-column-1 {
+    width: 49%;
+    height: 100%;
+    border: 1px solid lightgray;
+    display: inline-block;
+    padding: 5px;
+    font-family: monospace;
+    overflow-y: scroll;
+    word-break: break-all;
+}
+
+.diff-modal-column-2 {
+    margin-left: 18px;
+    width: 49%;
+    height: 100%;
+    border: 1px solid lightgray;
+    display: inline-block;
+    padding: 5px;
+    font-family: monospace;
+    overflow-y: scroll;
+    word-break: break-all;
+}
+
+.diff-modal-reset-diff-button, 
+.diff-modal-find-diff-button {
+    margin-left: 10px;
+    width: 150px;
+}
+
+
 .replacement-block > * {
     margin-right: 5px;
     margin-bottom: 5px;

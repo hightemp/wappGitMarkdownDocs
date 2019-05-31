@@ -615,6 +615,71 @@
         </b-modal>
         
         <b-modal
+            id="diff-modal"
+            ref="diff_modal"
+            title="Diff"
+            :hide-footer="true"
+            size="xl"
+        >
+            <div class="diff-modal-container">
+                <div class="diff-modal-row-2">
+                    <div class="row">
+                        <div class="col-xl-6 d-flex flex-row">
+                            <div>
+                                <span class="btn btn-danger">-</span> <span>{{ iDiffRemovals }} Removals</span>
+                            </div>
+                            &nbsp;
+                            <div>
+                                <span class="btn btn-success">+</span> <span>{{ iDiffAdditions }} Additions</span>
+                            </div>
+                        </div>
+                        <div class="col-xl-6 d-flex flex-row-reverse">
+                            <b-button 
+                                v-if="bEnableDiffEditor1"
+                                variant="success"
+                                @click="fnFindDiff"
+                                class="diff-modal-find-diff-button"
+                            >
+                                Find difference
+                            </b-button>
+                            <b-button 
+                                v-if="!bEnableDiffEditor1"
+                                variant="success"
+                                @click="fnResetDiff"
+                                class="diff-modal-reset-diff-button"
+                            >
+                                Reset
+                            </b-button>
+                            <b-form-select 
+                                class="diff-method-select"
+                                :options="aDiffMethodsOptions"
+                                v-model="sDiffMethod"
+                            ></b-form-select>
+                        </div>
+                    </div>
+                </div>  
+                <div class="diff-modal-row-1">
+                    <div
+                        :contenteditable="bEnableDiffEditor1"
+                        ref="diff_modal_column_1"
+                        class="diff-modal-column-1"
+                        @scroll="fnDiffEditor1Scroll"
+                        @paste="fnDiffEditor1Paste"
+                        v-html="sDiffEditor1HTML"
+                    ></div>
+                    <div
+                        :contenteditable="bEnableDiffEditor2"
+                        ref="diff_modal_column_2"
+                        class="diff-modal-column-2"
+                        @scroll="fnDiffEditor2Scroll"
+                        @paste="fnDiffEditor2Paste"
+                        v-html="sDiffEditor2HTML"
+                    ></div>
+                </div>
+            </div>
+        </b-modal>
+        
+        <b-modal
             id="help-modal"
             ref="help_modal"
             title="Help"
@@ -651,6 +716,8 @@ import '../lib/simplemde-markdown-editor/dist/simplemde.min.css';
 import Vue, { VueConstructor } from 'vue'
 
 import TurndownService from '../lib/turndown/src/turndown.js'
+
+var Diff = require('diff');
 
 window.oTurndownService = new TurndownService({
     headingStyle: 'atx',
@@ -720,6 +787,46 @@ export default {
                 { value: 'ru', text: 'Russian' }
             ],
             sTranslationToLanguage: 'ru',
+            
+            bEnableDiffEditor1: true,
+            bEnableDiffEditor2: true,
+            aDiffMethodsOptions: [
+                {
+                    text: 'comparing character by character',
+                    value: 'diffChars'
+                },
+                {
+                    text: 'comparing word by word, ignoring whitespace',
+                    value: 'diffWords'
+                },
+                {
+                    text: 'comparing word by word, treating whitespace as significant',
+                    value: 'diffWordsWithSpace'
+                },
+                {
+                    text: 'comparing line by line',
+                    value: 'diffLines'
+                },
+                {
+                    text: 'comparing line by line, ignoring leading and trailing whitespace',
+                    value: 'diffTrimmedLines'
+                },
+                {
+                    text: 'comparing sentence by sentence',
+                    value: 'diffSentences'
+                },
+                {
+                    text: 'comparing CSS tokens',
+                    value: 'diffCss'
+                }
+            ],
+            sDiffMethod: 'diffChars',
+            iDiffRemovals: 0,
+            iDiffAdditions: 0,
+            sDiffText1: '',
+            sDiffText2: '',
+            sDiffEditor1HTML: '',
+            sDiffEditor2HTML: '',
             
             sYoutubeVideoURL: '',
             
@@ -1919,6 +2026,8 @@ export default {
         },
         fnUpdateFilesList: function()
         {
+            var oThis = this;
+            
             this
                 .$http
                 .post(
@@ -2062,6 +2171,139 @@ export default {
         fnFilesModalScroll: function()
         {
             this.iFilesModalScrollPosition = this.$refs.files_modal_list.scrollTop;
+        },
+        
+        fnShowDiffModal: function()
+        {
+            console.log('fnShowDiffModal');
+            this.$refs.diff_modal.hideFooter = true;
+            this.$refs.diff_modal.show();
+        },        
+        fnFindDiff: function()
+        {
+            var oElement1 = this.$refs.diff_modal_column_1;
+            var oElement2 = this.$refs.diff_modal_column_2;
+            
+            this.bEnableDiffEditor1 = false;
+            this.bEnableDiffEditor2 = false;
+            
+            this.sDiffText1 = oElement1.innerText;
+            this.sDiffText2 = oElement2.innerText;
+            
+            var oDiff = Diff[this.sDiffMethod](this.sDiffText1, this.sDiffText2);
+            
+            oElement1.innerHTML = '';
+            oElement2.innerHTML = '';
+            
+            this.iDiffRemovals = 0;
+            this.iDiffAdditions = 0;
+            
+            var oThis = this;
+            
+            oDiff.forEach(function(oPart) 
+            {
+                var sRed = 'rgb(255, 137, 131)';
+                var sGreen = 'rgb(107, 223, 184)';
+                var color1 = oPart.added ? sGreen : oPart.removed ? sRed : 'none';
+                var color2 = oPart.added ? sRed : oPart.removed ? sGreen : 'none';
+                
+                if (oPart.removed) {
+                    oThis.iDiffRemovals++;
+                }
+                if (oPart.added) {
+                    oThis.iDiffAdditions++;
+                }
+                
+                var oSpan = document.createElement('span');
+                oSpan.style.backgroundColor = color1;
+                oSpan.style.wordBreak = 'break-all';
+                if (oPart.added) {
+                    oSpan.innerHTML = "&emsp;".repeat(oPart.value.length);
+                } else {
+                    oSpan.innerText = oPart.value;
+                }
+                oElement1.appendChild(oSpan);
+                
+                oSpan = document.createElement('span');
+                oSpan.style.backgroundColor = color2;
+                oSpan.style.wordBreak = 'break-all';
+                if (oPart.removed) {
+                    oSpan.innerHTML = "&emsp;".repeat(oPart.value.length);
+                } else {
+                    oSpan.innerText = oPart.value;
+                }
+                oElement2.appendChild(oSpan);
+            });
+            
+            this.sDiffEditor1HTML = oElement1.innerHTML;
+            this.sDiffEditor2HTML = oElement2.innerHTML;
+        },        
+        fnResetDiff: function() {
+            var oElement1 = this.$refs.diff_modal_column_1;
+            var oElement2 = this.$refs.diff_modal_column_2;
+            
+            oElement1.innerText = this.sDiffText1;
+            oElement2.innerText = this.sDiffText2;
+
+            this.bEnableDiffEditor1 = true;
+            this.bEnableDiffEditor2 = true;            
+        },
+        fnDiffEditor1Scroll: function()
+        {
+            var oElement1 = this.$refs.diff_modal_column_1;
+            var oElement2 = this.$refs.diff_modal_column_2;
+            
+            oElement2.scrollTop = oElement1.scrollTop;
+        },
+        fnDiffEditor2Scroll: function()
+        {
+            var oElement1 = this.$refs.diff_modal_column_1;
+            var oElement2 = this.$refs.diff_modal_column_2;
+            
+            oElement1.scrollTop = oElement2.scrollTop;
+        },
+        fnInsertAtCursor: function(sText)
+        {
+            var oSelection, oRange;
+            
+            if (window.getSelection) {
+                oSelection = window.getSelection();
+                if (oSelection.getRangeAt && oSelection.rangeCount) {
+                    oRange = oSelection.getRangeAt(0);
+                    oRange.deleteContents();
+                    var oSpan = document.createElement('span');
+                    oSpan.innerText = sText;
+                    oRange.insertNode(oSpan);
+                }
+            } else if (document.selection && document.selection.createRange) {
+                document.selection.createRange().text = sText;
+            }
+        },
+        fnDiffEditor1Paste: function(oEvent)
+        {
+            var oClipboardData = (oEvent.originalEvent || oEvent).clipboardData;
+            
+            if (oClipboardData.types.indexOf('text/html') > -1) {
+                oEvent.preventDefault();
+
+                var oElement1 = this.$refs.diff_modal_column_1;
+
+                this.fnInsertAtCursor(oClipboardData.getData('text/plain'));
+                //oElement1.innerText = oClipboardData.getData('text/plain');
+            }
+        },
+        fnDiffEditor2Paste: function(oEvent)
+        {
+            var oClipboardData = (oEvent.originalEvent || oEvent).clipboardData;
+            
+            if (oClipboardData.types.indexOf('text/html') > -1) {
+                oEvent.preventDefault();
+
+                var oElement2 = this.$refs.diff_modal_column_2;
+
+                this.fnInsertAtCursor(oClipboardData.getData('text/plain'));
+                //oElement2.innerText = oClipboardData.getData('text/plain');
+            }
         },
         
         fnAddYoutubeVideo: function()
