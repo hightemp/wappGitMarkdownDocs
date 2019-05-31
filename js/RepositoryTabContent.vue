@@ -2178,7 +2178,24 @@ export default {
             console.log('fnShowDiffModal');
             this.$refs.diff_modal.hideFooter = true;
             this.$refs.diff_modal.show();
-        },        
+        },
+        fnReplaceSymbol(sSymbol, sReplaceText, sSearchText, sText)
+        {
+            var iIndex = 0;
+            
+            while (iIndex<sSearchText.length) {
+                iIndex = sSearchText.indexOf(sSymbol, iIndex+1);
+
+                if (iIndex==-1)
+                    break;
+                
+                sText = sText.substring(0, iIndex) 
+                    + sReplaceText
+                    + sText.substring(iIndex+1, sText.length-1);
+            }
+            
+            return sText;
+        },
         fnFindDiff: function()
         {
             var oElement1 = this.$refs.diff_modal_column_1;
@@ -2218,7 +2235,12 @@ export default {
                 oSpan.style.backgroundColor = color1;
                 oSpan.style.wordBreak = 'break-all';
                 if (oPart.added) {
-                    oSpan.innerHTML = "&emsp;".repeat(oPart.value.length);
+                    var sText = '0'.repeat(oPart.value.length)
+                    sText = oThis.fnReplaceSymbol("\n", "\n", oPart.value, sText);
+                    sText = sText.replace(/0/g, "&emsp;");
+                    sText = sText.replace(/\n/g, "<br>");
+                    
+                    oSpan.innerHTML = sText;
                 } else {
                     oSpan.innerText = oPart.value;
                 }
@@ -2228,7 +2250,12 @@ export default {
                 oSpan.style.backgroundColor = color2;
                 oSpan.style.wordBreak = 'break-all';
                 if (oPart.removed) {
-                    oSpan.innerHTML = "&emsp;".repeat(oPart.value.length);
+                    var sText = '0'.repeat(oPart.value.length)
+                    sText = oThis.fnReplaceSymbol("\n", "\n", oPart.value, sText);
+                    sText = sText.replace(/0/g, "&emsp;");
+                    sText = sText.replace(/\n/g, "<br>");
+                    
+                    oSpan.innerHTML = sText;
                 } else {
                     oSpan.innerText = oPart.value;
                 }
