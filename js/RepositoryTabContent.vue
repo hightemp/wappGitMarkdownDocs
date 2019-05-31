@@ -230,7 +230,7 @@
                             class="replacement-block-toggle-buttons-col"
                             button-variant="info"
                         >
-                            <i class="fa fa-registered"></i>
+                            <i class="fa fa-asterisk"></i>
                         </b-form-checkbox>
                         <b-form-checkbox 
                             v-model="bUseCaseSensetive"
@@ -339,6 +339,12 @@
                 <div class="container-fluid">
                     <div class="buttons-row row flex-xl-nowrap2">
                         <div class="article-view-space">
+                        </div>
+                        <div class="article-view-button">
+                            <b-button 
+                                @click="fnShowDiffModal"
+                                block
+                            ><i class="fa fa-align-justify"></i></b-button>
                         </div>
                         <div class="article-view-button">
                             <b-button 

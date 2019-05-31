@@ -164,13 +164,18 @@ body, html {
 }
 
 .article-view-space {
-    flex: 0 0 calc(100% - 175px);
+    flex: 0 0 calc(100% - 210px);
 }
 
 .article-view-button {
     flex: 0 0 30px;
     max-width: 30px;
     margin-right: 5px;
+}
+
+.article-view-button button {
+    padding-left: 0px;
+    padding-right: 0px;
 }
 
 .article-view-button:last-child {
