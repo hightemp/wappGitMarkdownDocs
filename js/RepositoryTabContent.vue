@@ -341,6 +341,15 @@
                         <div class="article-view-space">
                         </div>
                         <div class="article-view-button">
+                            <b-form-checkbox 
+                                v-model="bLockArticleViewScroll"
+                                button
+                                button-variant="info"
+                            >
+                                <i class="fa fa-lock"></i>
+                            </b-form-checkbox>
+                        </div>
+                        <div class="article-view-button">
                             <b-button 
                                 @click="fnShowDiffModal"
                                 block
@@ -827,6 +836,7 @@ export default {
             sDiffText2: '',
             sDiffEditor1HTML: '',
             sDiffEditor2HTML: '',
+            bIgnoreDiffScrollEvents: false,
             
             sYoutubeVideoURL: '',
             
@@ -859,6 +869,9 @@ export default {
             sArticleViewContents: '',
             iArticleViewScrollPosition: 0,
             
+            i_bLockArticleViewScroll: false,
+            bIgnoreArticleViewScrollEvents: false,
+            
             sActiveTag: "__all__",
             iActiveArticle: -1,
             sTagFilterString: "",
@@ -869,6 +882,20 @@ export default {
     },
     
     computed: {
+        bLockArticleViewScroll: {
+            set: function(bValue)
+            {
+                this.i_bLockArticleViewScroll = bValue;
+                
+                if (bValue) {
+                    this.fnArticleViewScroll();
+                }
+            },
+            get: function()
+            {
+                return this.i_bLockArticleViewScroll;
+            }
+        },
         aArticles: function() 
         {
             console.log('aArticles', this.oRepository.aArticles, this.oRepository.oTags[this.sActiveTag]);
@@ -1578,7 +1605,21 @@ export default {
         },
         fnArticleViewScroll: function()
         {
-            console.log("fnArticleViewScroll", this.$refs.article_view_contents.scrollTop);
+            var bIgnoreArticleViewScrollEvents = this.bIgnoreArticleViewScrollEvents;
+            this.bIgnoreArticleViewScrollEvents = false;
+            if (bIgnoreArticleViewScrollEvents) return false;
+            
+            var oCodeMirror = this.oSimpleMDE.codemirror;
+            
+            if (this.bLockArticleViewScroll) {
+                this.bIgnoreArticleViewScrollEvents = true;
+                
+                oCodeMirror.display.scroller.scrollTop =
+                    this.$refs.article_view_contents.scrollTop 
+                        / (this.$refs.article_view_contents.scrollHeight - this.$refs.article_view_contents.clientHeight)
+                        * (oCodeMirror.display.scroller.scrollHeight - oCodeMirror.display.scroller.clientHeight);
+            }
+            
             this.iArticleViewScrollPosition = this.$refs.article_view_contents.scrollTop;
         },
         fnRefreshArticleViewer: function()
@@ -2235,10 +2276,12 @@ export default {
                 oSpan.style.backgroundColor = color1;
                 oSpan.style.wordBreak = 'break-all';
                 if (oPart.added) {
-                    var sText = '0'.repeat(oPart.value.length)
+                    var sText = ' '.repeat(oPart.value.length)
                     sText = oThis.fnReplaceSymbol("\n", "\n", oPart.value, sText);
-                    sText = sText.replace(/0/g, "&emsp;");
+                    sText = oThis.fnReplaceSymbol("\r", "\r", oPart.value, sText);
+                    sText = sText.replace(/ /g, "&emsp;");
                     sText = sText.replace(/\n/g, "<br>");
+                    sText = sText.replace(/\r/g, "");
                     
                     oSpan.innerHTML = sText;
                 } else {
@@ -2250,10 +2293,12 @@ export default {
                 oSpan.style.backgroundColor = color2;
                 oSpan.style.wordBreak = 'break-all';
                 if (oPart.removed) {
-                    var sText = '0'.repeat(oPart.value.length)
+                    var sText = ' '.repeat(oPart.value.length)
                     sText = oThis.fnReplaceSymbol("\n", "\n", oPart.value, sText);
-                    sText = sText.replace(/0/g, "&emsp;");
+                    sText = oThis.fnReplaceSymbol("\r", "\r", oPart.value, sText);
+                    sText = sText.replace(/ /g, "&emsp;");
                     sText = sText.replace(/\n/g, "<br>");
+                    sText = sText.replace(/\r/g, "");
                     
                     oSpan.innerHTML = sText;
                 } else {
@@ -2277,17 +2322,29 @@ export default {
         },
         fnDiffEditor1Scroll: function()
         {
+            var bIgnoreDiffScrollEvents = this.bIgnoreDiffScrollEvents;
+            this.bIgnoreDiffScrollEvents = false;
+            if (bIgnoreDiffScrollEvents) return false;
+            
             var oElement1 = this.$refs.diff_modal_column_1;
             var oElement2 = this.$refs.diff_modal_column_2;
             
-            oElement2.scrollTop = oElement1.scrollTop;
+            this.bIgnoreDiffScrollEvents = true;
+            
+            oElement2.scrollTop = oElement1.scrollTop/(oElement1.scrollHeight - oElement1.clientHeight)*(oElement2.scrollHeight - oElement2.clientHeight);
         },
         fnDiffEditor2Scroll: function()
         {
+            var bIgnoreDiffScrollEvents = this.bIgnoreDiffScrollEvents;
+            this.bIgnoreDiffScrollEvents = false;
+            if (bIgnoreDiffScrollEvents) return false;
+            
             var oElement1 = this.$refs.diff_modal_column_1;
             var oElement2 = this.$refs.diff_modal_column_2;
             
-            oElement1.scrollTop = oElement2.scrollTop;
+            this.bIgnoreDiffScrollEvents = true;
+            
+            oElement1.scrollTop = oElement2.scrollTop/(oElement2.scrollHeight - oElement2.clientHeight)*(oElement1.scrollHeight - oElement1.clientHeight);
         },
         fnInsertAtCursor: function(sText)
         {
@@ -2785,6 +2842,22 @@ export default {
         this.oSimpleMDE.codemirror.on('change', function(oCodeMirror) {
             console.log('codemirror - onchange');
             oThis.bEditorDirty = true;
+        });
+        
+        this.oSimpleMDE.codemirror.on('scroll', function(oCodeMirror, oEvent) {
+            //console.log('codemirror - onscroll');
+            var bIgnoreArticleViewScrollEvents = oThis.bIgnoreArticleViewScrollEvents;
+            oThis.bIgnoreArticleViewScrollEvents = false;
+            if (bIgnoreArticleViewScrollEvents) return false;
+            
+            if (oThis.bLockArticleViewScroll) {
+                oThis.bIgnoreArticleViewScrollEvents = true;
+                
+                oThis.$refs.article_view_contents.scrollTop = 
+                    oCodeMirror.display.scroller.scrollTop
+                        / (oCodeMirror.display.scroller.scrollHeight - oCodeMirror.display.scroller.clientHeight)
+                        * (oThis.$refs.article_view_contents.scrollHeight - oThis.$refs.article_view_contents.clientHeight);
+            }
         });
         
         this.oSimpleMDE.codemirror.on('paste', function(oCodeMirror, oEvent) {
