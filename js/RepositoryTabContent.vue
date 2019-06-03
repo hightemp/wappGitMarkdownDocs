@@ -354,12 +354,15 @@
                                 @click="fnShowDiffModal"
                                 block
                             ><i class="fa fa-align-justify"></i></b-button>
-                        </div>
+                        </div>                        
                         <div class="article-view-button">
-                            <b-button 
-                                @click="fnToggleEditor"
-                                block
-                            ><i class="fa fa-pencil"></i></b-button>
+                            <b-form-checkbox 
+                                v-model="bShowEditor"
+                                button
+                                button-variant="info"
+                            >
+                                <i class="fa fa-pencil"></i>
+                            </b-form-checkbox>
                         </div>
                         <div class="article-view-button">
                             <b-button 
@@ -840,7 +843,7 @@ export default {
             
             sYoutubeVideoURL: '',
             
-            bShowEditor: true,
+            i_bShowEditor: true,
             
             aImagesModalFiles: [],
             aImagesModalSelectedFiles: [],
@@ -882,6 +885,17 @@ export default {
     },
     
     computed: {
+        bShowEditor: {
+            set: function(bValue)
+            {
+                this.i_bShowEditor = !!bValue;
+                localStorage.setItem(this.oRepository.sName+'_bShowEditor', this.i_bShowEditor ? '1' : '');
+            },
+            get: function()
+            {
+                return this.i_bShowEditor;
+            }
+        },
         bLockArticleViewScroll: {
             set: function(bValue)
             {
@@ -2624,13 +2638,7 @@ export default {
         {
             localStorage.setItem(this.oRepository.sName+'_sTranslationToLanguage', sValue);
         },
-        
-        fnToggleEditor: function()
-        {
-            this.bShowEditor = !this.bShowEditor;
-            localStorage.setItem(this.oRepository.sName+'_bShowEditor', this.bShowEditor ? '1' : '');
-        },
-        
+                
         fnGetState: function (cm, pos) 
         {
             pos = pos || cm.getCursor("start");
