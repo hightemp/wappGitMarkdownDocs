@@ -1621,6 +1621,8 @@ export default {
         {
             var bIgnoreArticleViewScrollEvents = this.bIgnoreArticleViewScrollEvents;
             this.bIgnoreArticleViewScrollEvents = false;
+            this.iArticleViewScrollPosition = this.$refs.article_view_contents.scrollTop;
+            
             if (bIgnoreArticleViewScrollEvents) return false;
             
             var oCodeMirror = this.oSimpleMDE.codemirror;
@@ -1632,9 +1634,7 @@ export default {
                     this.$refs.article_view_contents.scrollTop 
                         / (this.$refs.article_view_contents.scrollHeight - this.$refs.article_view_contents.clientHeight)
                         * (oCodeMirror.display.scroller.scrollHeight - oCodeMirror.display.scroller.clientHeight);
-            }
-            
-            this.iArticleViewScrollPosition = this.$refs.article_view_contents.scrollTop;
+            }            
         },
         fnRefreshArticleViewer: function()
         {
