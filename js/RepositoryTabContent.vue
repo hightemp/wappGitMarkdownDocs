@@ -153,7 +153,7 @@
                             </div>
                             <div class="page-content-button">
                                 <b-button 
-                                    variant="success" 
+                                    :variant="bEditorDirty ? 'success' : 'info'" 
                                     @click="fnPushRepository(false)"
                                     block
                                 >
@@ -773,6 +773,7 @@ export default {
             oSimpleMDE: null,
             oUploadedFile: null,
             
+            bPasteAsText: false,
             bShowReplacementBlock: false,
             bShowTranslationBlock: false,
             
@@ -1616,6 +1617,7 @@ export default {
                         function()
                         {
                             oThis.oSimpleMDE.value(oResponse.body.data);
+                            oThis.bEditorDirty = false;
                         }, 
                         100
                     );
@@ -2815,6 +2817,17 @@ export default {
                             oThis.sSearchQuery = oCodeMirror.getSelection();
                         }
                         
+                        var oToolbarButton = oEditor.toolbarElements["replace-text"];
+                        
+                        if (oThis.bShowReplacementBlock) {
+                            oToolbarButton.className = oToolbarButton.className.replace(/\s*active\s*/g, "");
+                        } else {
+                            oToolbarButton.className += " active";
+                        }
+
+                        oToolbarButton = oEditor.toolbarElements["translate-text"];
+                        oToolbarButton.className = oToolbarButton.className.replace(/\s*active\s*/g, "");
+                                
                         oThis.bShowTranslationBlock = false;
                         oThis.bShowReplacementBlock = !oThis.bShowReplacementBlock;
                         
@@ -2835,6 +2848,17 @@ export default {
                     name: "translate-text",
                     action: function(oEditor)
                     {
+                        var oToolbarButton = oEditor.toolbarElements["translate-text"];
+                        
+                        if (oThis.bShowTranslationBlock) {
+                            oToolbarButton.className = oToolbarButton.className.replace(/\s*active\s*/g, "");
+                        } else {
+                            oToolbarButton.className += " active";
+                        }
+                        
+                        oToolbarButton = oEditor.toolbarElements["replace-text"];
+                        oToolbarButton.className = oToolbarButton.className.replace(/\s*active\s*/g, "");
+                        
                         oThis.bShowReplacementBlock = false;
                         oThis.bShowTranslationBlock = !oThis.bShowTranslationBlock;
                     },
@@ -2849,6 +2873,23 @@ export default {
                     },
                     className: "fa fa-save",
                     title: "Save"
+                },
+                {
+                    name: "paste-as-text",
+                    action: function(oEditor)
+                    {
+                        var oToolbarButton = oEditor.toolbarElements["paste-as-text"];
+                        
+                        if (oThis.bPasteAsText) {
+                            oToolbarButton.className = oToolbarButton.className.replace(/\s*active\s*/g, "");
+                        } else {
+                            oToolbarButton.className += " active";
+                        }
+                        
+                        oThis.bPasteAsText = !oThis.bPasteAsText;                        
+                    },
+                    className: "fa fa-bars",
+                    title: "Paste as text"
                 }
             ]
         });
@@ -2857,52 +2898,118 @@ export default {
         oExtraKeys["Ctrl-S"] = function() { oThis.fnPushRepository(); };
         this.oSimpleMDE.codemirror.setOption("extraKeys", oExtraKeys);
         
-        this.oSimpleMDE.codemirror.on('change', function(oCodeMirror) {
-            console.log('codemirror - onchange');
-            oThis.bEditorDirty = true;
-        });
-        
-        this.oSimpleMDE.codemirror.on('scroll', function(oCodeMirror, oEvent) {
-            //console.log('codemirror - onscroll');
-            var bIgnoreArticleViewScrollEvents = oThis.bIgnoreArticleViewScrollEvents;
-            oThis.bIgnoreArticleViewScrollEvents = false;
-            if (bIgnoreArticleViewScrollEvents) return false;
-            
-            if (oThis.bLockArticleViewScroll) {
-                oThis.bIgnoreArticleViewScrollEvents = true;
-                
-                oThis.$refs.article_view_contents.scrollTop = 
-                    oCodeMirror.display.scroller.scrollTop
-                        / (oCodeMirror.display.scroller.scrollHeight - oCodeMirror.display.scroller.clientHeight)
-                        * (oThis.$refs.article_view_contents.scrollHeight - oThis.$refs.article_view_contents.clientHeight);
-            }
-        });
-        
-        this.oSimpleMDE.codemirror.on('paste', function(oCodeMirror, oEvent) {
-            console.log('codemirror - paste');
-            
-            var oClipboardData = (oEvent.clipboardData || window.clipboardData);
-            
-            for (var iIndex in oClipboardData.items)
+        this.oSimpleMDE.codemirror.on(
+            'change', 
+            function(oCodeMirror) 
             {
-                var oItem = oClipboardData.items[iIndex];
-                
-                if (oItem.kind == 'file') {
-                    window.oApplication.bShowLoadingScreen = true;
-                    
-                    var oFile = oItem.getAsFile();
-                    
-                    var oFormData = new FormData();
+                console.log('codemirror - onchange');
+                oThis.bEditorDirty = true;
+            }
+        );
+        
+        this.oSimpleMDE.codemirror.on(
+            'scroll', 
+            function(oCodeMirror, oEvent) 
+            {
+                //console.log('codemirror - onscroll');
+                var bIgnoreArticleViewScrollEvents = oThis.bIgnoreArticleViewScrollEvents;
+                oThis.bIgnoreArticleViewScrollEvents = false;
+                if (bIgnoreArticleViewScrollEvents) return false;
 
-                    oFormData.append('action', 'upload_images');
-                    oFormData.append('repository', oThis.oRepository.sName);
-                    oFormData.append('pasted_files[]', oFile);
-                    
+                if (oThis.bLockArticleViewScroll) {
+                    oThis.bIgnoreArticleViewScrollEvents = true;
+
+                    oThis.$refs.article_view_contents.scrollTop = 
+                        oCodeMirror.display.scroller.scrollTop
+                            / (oCodeMirror.display.scroller.scrollHeight - oCodeMirror.display.scroller.clientHeight)
+                            * (oThis.$refs.article_view_contents.scrollHeight - oThis.$refs.article_view_contents.clientHeight);
+                }
+            }
+        );
+        
+        this.oSimpleMDE.codemirror.on(
+            'paste', 
+            function(oCodeMirror, oEvent) 
+            {
+                console.log('codemirror - paste');
+
+                var oClipboardData = (oEvent.clipboardData || window.clipboardData);
+
+                for (var iIndex in oClipboardData.items)
+                {
+                    var oItem = oClipboardData.items[iIndex];
+
+                    if (oItem.kind == 'file') {
+                        window.oApplication.bShowLoadingScreen = true;
+
+                        var oFile = oItem.getAsFile();
+
+                        var oFormData = new FormData();
+
+                        oFormData.append('action', 'upload_images');
+                        oFormData.append('repository', oThis.oRepository.sName);
+                        oFormData.append('pasted_files[]', oFile);
+
+                        oThis
+                            .$http
+                            .post(
+                                '',
+                                oFormData
+                            ).then(function(oResponse)
+                            {
+                                window.oApplication.bShowLoadingScreen = false;
+
+                                if (oResponse.body.status=='error') {
+                                    oThis.$snotify.error(oResponse.body.message, 'Error');
+                                    return;
+                                }
+
+                                oCodeMirror.replaceSelection('![](/images/'+oResponse.body.data[0]+')');
+                            })
+                            .catch(function(sError)
+                            {
+                                oThis.$snotify.error(sError);
+                                window.oApplication.bShowLoadingScreen = false;
+                            });
+
+                        return;
+                    }
+                }
+
+                if (oThis.bPasteAsText) {
+                    var sText = oClipboardData.getData('text/plain');
+                    oCodeMirror.replaceSelection(sText);
+                    return;
+                }
+
+                if (oClipboardData.types.indexOf('text/html') == -1) 
+                    return;
+
+                var sText = oTurndownService.turndown(oClipboardData.getData('text/html'));
+
+                var oLinksMatch;
+                var oURLMatch;
+
+                if ((oLinksMatch = sText.match(/!\[[^\]]*\]\([^)]*\)/gu)) !== null) {
+                    var aURLs = [];
+
+                    for (var iIndex=0; iIndex<oLinksMatch.length; iIndex++) {
+                        if ((oURLMatch = oLinksMatch[iIndex].match(/\((https?:.*?)\)/u)) !== null) {
+                            aURLs.push(oURLMatch[1]);
+                        }
+                    }
+
+                    window.oApplication.bShowLoadingScreen = true;
+
                     oThis
                         .$http
                         .post(
                             '',
-                            oFormData
+                            {
+                                action: 'add_images_from_urls',
+                                repository: oThis.oRepository.sName,
+                                urls: aURLs
+                            }
                         ).then(function(oResponse)
                         {
                             window.oApplication.bShowLoadingScreen = false;
@@ -2911,80 +3018,32 @@ export default {
                                 oThis.$snotify.error(oResponse.body.message, 'Error');
                                 return;
                             }
-                            
-                            oCodeMirror.replaceSelection('![](/images/'+oResponse.body.data[0]+')');
+
+                            for (var iDataIndex=0; iDataIndex<oResponse.body.data.length; iDataIndex++) {
+                                for (var iIndex=0; iIndex<oLinksMatch.length; iIndex++) {
+                                    if (oLinksMatch[iIndex].indexOf(oResponse.body.data[iDataIndex]['sURL']) !== -1) {
+                                        var sNewLink = oLinksMatch[iIndex].replace(/\(https?:.*?\)/u, "(/images/"+oResponse.body.data[iDataIndex]['sFileName']+")");
+                                        sText = sText.replace(oLinksMatch[iIndex], sNewLink);
+                                        break;
+                                    }
+                                }
+                            }
+
+                            oCodeMirror.replaceSelection(sText);
                         })
                         .catch(function(sError)
                         {
                             oThis.$snotify.error(sError);
                             window.oApplication.bShowLoadingScreen = false;
                         });
-                        
-                    return;
+                } else {
+                    oCodeMirror.replaceSelection(sText);
                 }
-            }
-            
-            if (oClipboardData.types.indexOf('text/html') == -1) 
-                return;
-            
-            var sText = oTurndownService.turndown(oClipboardData.getData('text/html'));
-            
-            var oLinksMatch;
-            var oURLMatch;
-            
-            if ((oLinksMatch = sText.match(/!\[[^\]]*\]\([^)]*\)/gu)) !== null) {
-                var aURLs = [];
-                
-                for (var iIndex=0; iIndex<oLinksMatch.length; iIndex++) {
-                    if ((oURLMatch = oLinksMatch[iIndex].match(/\((https?:.*?)\)/u)) !== null) {
-                        aURLs.push(oURLMatch[1]);
-                    }
-                }
-                
-                window.oApplication.bShowLoadingScreen = true;
-                
-                oThis
-                    .$http
-                    .post(
-                        '',
-                        {
-                            action: 'add_images_from_urls',
-                            repository: oThis.oRepository.sName,
-                            urls: aURLs
-                        }
-                    ).then(function(oResponse)
-                    {
-                        window.oApplication.bShowLoadingScreen = false;
-                        
-                        if (oResponse.body.status=='error') {
-                            oThis.$snotify.error(oResponse.body.message, 'Error');
-                            return;
-                        }
 
-                        for (var iDataIndex=0; iDataIndex<oResponse.body.data.length; iDataIndex++) {
-                            for (var iIndex=0; iIndex<oLinksMatch.length; iIndex++) {
-                                if (oLinksMatch[iIndex].indexOf(oResponse.body.data[iDataIndex]['sURL']) !== -1) {
-                                    var sNewLink = oLinksMatch[iIndex].replace(/\(https?:.*?\)/u, "(/images/"+oResponse.body.data[iDataIndex]['sFileName']+")");
-                                    sText = sText.replace(oLinksMatch[iIndex], sNewLink);
-                                    break;
-                                }
-                            }
-                        }
-                        
-                        oCodeMirror.replaceSelection(sText);
-                    })
-                    .catch(function(sError)
-                    {
-                        oThis.$snotify.error(sError);
-                        window.oApplication.bShowLoadingScreen = false;
-                    });
-            } else {
-                oCodeMirror.replaceSelection(sText);
+                oThis.bEditorDirty = true;
+                oEvent.preventDefault();
             }
-            
-            oThis.bEditorDirty = true;
-            oEvent.preventDefault();
-        });
+        );
         
         oThis.fnSelectTag(localStorage.getItem(this.oRepository.sName+'_sActiveTag'));
         console.log(this.oRepository.sName+'_iActiveArticle', localStorage.getItem(this.oRepository.sName+'_iActiveArticle'));
