@@ -2979,6 +2979,9 @@ export default {
                 if (oThis.bPasteAsText) {
                     var sText = oClipboardData.getData('text/plain');
                     oCodeMirror.replaceSelection(sText);
+
+                    oEvent.preventDefault();
+
                     return;
                 }
 
@@ -3040,7 +3043,6 @@ export default {
                     oCodeMirror.replaceSelection(sText);
                 }
 
-                oThis.bEditorDirty = true;
                 oEvent.preventDefault();
             }
         );
