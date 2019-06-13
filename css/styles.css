@@ -50,8 +50,12 @@ body, html {
 }
 
 .tags-list-group {
-    height: calc(100% - 40px);
+    height: calc(100% - 78px);
     overflow-y: scroll;
+}
+
+.tags-list-item-empty {
+    background: #eee;
 }
 
 .articles-sidebar {
@@ -62,6 +66,10 @@ body, html {
 .articles-list-group {
     height: calc(100% - 40px);
     overflow-y: scroll;    
+}
+
+.articles-list-item-empty {
+    background: #eee;
 }
 
 .page-content {

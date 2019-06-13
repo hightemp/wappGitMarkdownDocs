@@ -41,23 +41,26 @@
                         </div>
                     </div>
                 </div>
+                
+                <b-list-group-item
+                    href="#"
+                    class="d-flex justify-content-between align-items-center"
+                    :active="sActiveTag=='__all__'"
+                    @click="fnSelectTag('__all__')"
+                >
+                    All
+                    <b-badge 
+                        :variant="sActiveTag=='__all__' ? 'light' : 'primary'" 
+                        pill
+                    >{{ fnGetArticlesCountByTagName('__all__') }}</b-badge>
+                </b-list-group-item>
+                
                 <b-list-group class="tags-list-group">
-                    <b-list-group-item
-                        href="#"
-                        class="d-flex justify-content-between align-items-center"
-                        :active="sActiveTag=='__all__'"
-                        @click="fnSelectTag('__all__')"
-                    >
-                        All
-                        <b-badge 
-                            :variant="sActiveTag=='__all__' ? 'light' : 'primary'" 
-                            pill
-                        >{{ fnGetArticlesCountByTagName('__all__') }}</b-badge>
-                    </b-list-group-item>
                     <b-list-group-item 
                         v-for="(aItem, sKey) in oRepository.oTags"
                         href="#"
                         class="d-flex justify-content-between align-items-center"
+                        :class="{'tags-list-item-empty': !fnGetArticlesCountByTagName(sKey) }"
                         :active="sActiveTag==sKey"
                         v-if="sTagFilterString=='' 
                             || sTagFilterString!='' 
@@ -117,6 +120,7 @@
                         v-for="(sItem, iIndex) in aArticles"
                         href="#"
                         :active="iActiveArticle==iIndex"
+                        :class="{'articles-list-item-empty': !fnCountArticleInTags(sItem) }"
                         v-if="sArticleFilterString=='' 
                             || (
                                 (sArticleFilterString!=''
@@ -1523,12 +1527,18 @@ export default {
             
             return aResult;
         },
+        fnCountArticleInTags: function(sArticle)
+        {
+            return this.fnFindArticleInTags(sArticle).length;
+        },
         fnFindArticleInTags: function(sArticle)
         {
             var aResult = [];
             
             for (var sTag in this.oRepository.oTags) {
-                aResult.push(this.oRepository.oTags[sTag].indexOf(sArticle));
+                if (this.oRepository.oTags[sTag].indexOf(sArticle)!=-1) {
+                    aResult.push(sTag);
+                }
             }
             
             return aResult;
