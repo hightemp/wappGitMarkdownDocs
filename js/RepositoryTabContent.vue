@@ -11,6 +11,18 @@
                                 v-model="sTagFilterString"
                             ></b-form-input>
                         </div>
+                        
+                        <div class="filter-buttons-col">
+                            <b-form-checkbox 
+                                v-model="bPinTag"
+                                :disabled="sActiveTag=='__all__'"
+                                button
+                                class="filter-toggle-buttons-col"
+                                button-variant="info"
+                            >
+                                <i class="fa fa-thumb-tack"></i>
+                            </b-form-checkbox>
+                        </div>
                         <div class="filter-buttons-col">
                             <b-button
                                 @click="fnShowRenameTagModal"
