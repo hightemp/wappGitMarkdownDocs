@@ -14,7 +14,7 @@
                         
                         <div class="filter-buttons-col">
                             <b-form-checkbox 
-                                v-model="bPinTag"
+                                v-model="bTagPinned"
                                 :disabled="sActiveTag=='__all__'"
                                 button
                                 class="filter-toggle-buttons-col"
@@ -65,6 +65,31 @@
                         :variant="sActiveTag=='__all__' ? 'light' : 'primary'" 
                         pill
                     >{{ fnGetArticlesCountByTagName('__all__') }}</b-badge>
+                </b-list-group-item>
+
+                <b-list-group-item 
+                    v-for="(sTag, iKey) in aPinnedTags"
+                    href="#"
+                    class="d-flex justify-content-between align-items-center"
+                    :class="{'tags-list-item-empty': !fnGetArticlesCountByTagName(sTag) }"
+                    :active="sActiveTag==sTag"
+                    v-if="
+                        (
+                            sTagFilterString=='' 
+                            || (
+                                sTagFilterString!='' 
+                                && sKey.toLowerCase().indexOf(sTagFilterString.toLowerCase())!=-1
+                            )
+                        ) 
+                        && aPinnedTags.indexOf(sTag)==-1
+                    "
+                    @click="fnSelectTag(sTag)"
+                >
+                    {{ sKey }}
+                    <b-badge 
+                        :variant="sActiveTag==sKey ? 'light' : 'primary'" 
+                        pill
+                    >{{ fnGetArticlesCountByTagName(sKey) }}</b-badge>
                 </b-list-group-item>
                 
                 <b-list-group class="tags-list-group">
@@ -897,11 +922,30 @@ export default {
             sTagFilterString: "",
             sArticleFilterString: "",
             sCurrentArticleTagFilterString: "",
-            bCurrentArticleFilterSelectedTags: false
+            bCurrentArticleFilterSelectedTags: false,
+            
+            aPinnedTags: []
         };
     },
     
     computed: {
+        bTagPinned: {
+            set: function(bValue)
+            {
+                if (bValue) {
+                    this.aPinnedTags.push(this.sActiveTag);
+                } else {
+                    var iIndex = this.aPinnedTags.indexOf(this.sActiveTag);
+                    this.aPinnedTags.splice(iIndex, 1);
+                }
+                console.log("bTagPinned set", this.aPinnedTags);
+            },
+            get: function()
+            {
+                console.log("bTagPinned get", this.aPinnedTags, this.aPinnedTags.indexOf(this.sActiveTag));
+                return this.aPinnedTags.indexOf(this.sActiveTag)!=-1;
+            }
+        },
         bShowEditor: {
             set: function(bValue)
             {
