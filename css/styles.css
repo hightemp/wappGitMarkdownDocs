@@ -163,6 +163,21 @@ body, html {
     overflow-y: scroll;
 }
 
+@keyframes shadow-pulse
+{
+     0% {
+          box-shadow: 0 0 0 0px rgba(0, 0, 0, 0.2);
+     }
+     100% {
+          box-shadow: 0 0 0 35px rgba(0, 0, 0, 0);
+     }
+}
+
+.pulse-button-success {
+    box-shadow: 0 0 0 0 #28a74580;
+    animation: shadow-pulse 1s infinite;    
+}
+
 .article-view-contents {
     height: calc(100% - 50px);
     overflow-y: scroll;

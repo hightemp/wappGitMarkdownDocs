@@ -166,12 +166,27 @@
                         :class="{'articles-list-item-empty': !fnCountArticleInTags(sItem) }"
                         v-if="sArticleFilterString=='' 
                             || (
-                                (sArticleFilterString!=''
+                                (
+                                    sArticleFilterString!=''
                                     && sArticleFilterString[0]=='%'
                                     && aArticlesSearchResults.indexOf(sItem)!=-1
                                 )
-                                || (sArticleFilterString!='' 
-                                    && sArticleFilterString[0]!='%' 
+                                || (
+                                    sArticleFilterString!=''
+                                    && sArticleFilterString[0]=='#'
+                                    && sArticleFilterString[1]=='#'
+                                    && !fnCountArticleInTags(sItem)
+                                    && sItem.toLowerCase().indexOf(sArticleFilterString.replace(/^##/,'').toLowerCase())!=-1
+                                )
+                                || (
+                                    sArticleFilterString!='' 
+                                    && (
+                                        sArticleFilterString[0]!='%' 
+                                        || (
+                                            sArticleFilterString[0]!='#'
+                                            && sArticleFilterString[1]!='#'
+                                        )
+                                    )
                                     && sItem.toLowerCase().indexOf(sArticleFilterString.toLowerCase())!=-1
                                 )
                             )"
@@ -196,7 +211,7 @@
                             </div>
                             <div class="page-content-button">
                                 <b-button 
-                                    :variant="bEditorDirty ? 'success' : 'info'" 
+                                    :variant="bEditorDirty ? 'success pulse-button-success' : 'info'" 
                                     @click="fnPushRepository(false)"
                                     block
                                 >
