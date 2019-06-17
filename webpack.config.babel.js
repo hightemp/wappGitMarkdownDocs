@@ -10,6 +10,10 @@ module.exports = {
     module: {
         rules: [
             {
+                test: /\.(aff|dic)$/i,
+                use: 'raw-loader',
+            },
+            {
                 test: /\.vue$/,
                 loader: 'vue-loader',
                 options: {
