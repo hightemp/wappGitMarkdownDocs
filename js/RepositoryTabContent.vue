@@ -963,6 +963,7 @@ export default {
                         '',
                         {
                             action: 'save_settings',
+                            repository: this.oRepository.sName,
                             settings: JSON.stringify(this.oSettings)
                         }
                     ).then(function(oResponse)

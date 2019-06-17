@@ -1141,6 +1141,8 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             $sContent = @file_get_contents($sSettingsFilePath);
             
             $aArray1 = json_decode($sContent, true);
+            if (is_null($aArray1)) $aArray1 = [];
+
             $aArray2 = json_decode($_POST['settings'], true);
             
             $aArray1 = array_merge($aArray1, $aArray2);
