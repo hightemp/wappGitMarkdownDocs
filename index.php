@@ -306,7 +306,8 @@ function fnGetRepositoryInfo($sRepositoryName)
         'sUser' => '',
         'sPath' => $sRepositoryDir,
         'aArticles' => [],
-        'oTags' => (object) []
+        'oTags' => (object) [],
+        'oSettings' => (object) [],
     ];
     
     if (!is_dir($sTagsDir)) {
@@ -352,6 +353,10 @@ function fnGetRepositoryInfo($sRepositoryName)
             $aResult['oTags']->$sTag = [];
         }
     }
+    
+    $sSettingsFilePath = fnPath($sRepositoryDir, ".settings");
+    $sContent = @file_get_contents($sSettingsFilePath);
+    $aResult['oSettings'] = json_decode($sContent, true);
     
     return $aResult;
 }
@@ -1127,6 +1132,31 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             } else {
                 throw new Exception("Wrong provider");
             }
+        }        
+        if ($_POST['action']=='save_settings') {
+            $sRepositoryDir = fnPath($sRepositoriesDir, $_POST['repository']);
+            
+            $sSettingsFilePath = fnPath($sRepositoryDir, ".settings");
+            
+            $sContent = @file_get_contents($sSettingsFilePath);
+            
+            $aArray1 = json_decode($sContent, true);
+            $aArray2 = json_decode($_POST['settings'], true);
+            
+            $aArray1 = array_merge($aArray1, $aArray2);
+            
+            file_put_contents($sSettingsFilePath, json_encode($aArray1));
+            
+            fnCommitAndPushRepository($sRepositoryDir);
+        }
+        if ($_POST['action']=='load_settings') {
+            $sRepositoryDir = fnPath($sRepositoriesDir, $_POST['repository']);
+            
+            $sSettingsFilePath = fnPath($sRepositoryDir, ".settings");
+            
+            $sContent = @file_get_contents($sSettingsFilePath);
+            
+            $aResponse['data'] = json_decode($sContent, true);
         }
     } catch (Exception $oException) {
         $aResponse['status'] = 'error';

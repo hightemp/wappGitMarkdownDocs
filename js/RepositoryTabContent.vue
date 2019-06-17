@@ -68,7 +68,7 @@
                 </b-list-group-item>
 
                 <b-list-group-item 
-                    v-for="(sTag, iKey) in aPinnedTags"
+                    v-for="(sTag, iKey) in oSettings.aPinnedTags"
                     href="#"
                     class="d-flex justify-content-between align-items-center"
                     :class="{'tags-list-item-empty': !fnGetArticlesCountByTagName(sTag) }"
@@ -78,18 +78,17 @@
                             sTagFilterString=='' 
                             || (
                                 sTagFilterString!='' 
-                                && sKey.toLowerCase().indexOf(sTagFilterString.toLowerCase())!=-1
+                                && sTag.toLowerCase().indexOf(sTagFilterString.toLowerCase())!=-1
                             )
-                        ) 
-                        && aPinnedTags.indexOf(sTag)==-1
+                        )
                     "
                     @click="fnSelectTag(sTag)"
                 >
-                    {{ sKey }}
+                    {{ sTag }}
                     <b-badge 
-                        :variant="sActiveTag==sKey ? 'light' : 'primary'" 
+                        :variant="sActiveTag==sTag ? 'light' : 'primary'" 
                         pill
-                    >{{ fnGetArticlesCountByTagName(sKey) }}</b-badge>
+                    >{{ fnGetArticlesCountByTagName(sTag) }}</b-badge>
                 </b-list-group-item>
                 
                 <b-list-group class="tags-list-group">
@@ -99,9 +98,16 @@
                         class="d-flex justify-content-between align-items-center"
                         :class="{'tags-list-item-empty': !fnGetArticlesCountByTagName(sKey) }"
                         :active="sActiveTag==sKey"
-                        v-if="sTagFilterString=='' 
-                            || sTagFilterString!='' 
-                            && sKey.toLowerCase().indexOf(sTagFilterString.toLowerCase())!=-1"
+                        v-if="
+                            (
+                                sTagFilterString=='' 
+                                || (
+                                    sTagFilterString!='' 
+                                    && sKey.toLowerCase().indexOf(sTagFilterString.toLowerCase())!=-1
+                                )
+                            )
+                            && oSettings.aPinnedTags.indexOf(sKey)==-1
+                        "
                         @click="fnSelectTag(sKey)"
                     >
                         {{ sKey }}
@@ -924,7 +930,9 @@ export default {
             sCurrentArticleTagFilterString: "",
             bCurrentArticleFilterSelectedTags: false,
             
-            aPinnedTags: []
+            oSettings: {
+                aPinnedTags: []
+            }
         };
     },
     
@@ -932,18 +940,51 @@ export default {
         bTagPinned: {
             set: function(bValue)
             {
+                console.log("bTagPinned set 1 ", bValue, this.sActiveTag);
+                var iIndex = this.oSettings.aPinnedTags.indexOf(this.sActiveTag);
+                
                 if (bValue) {
-                    this.aPinnedTags.push(this.sActiveTag);
+                    if (iIndex!=-1) {
+                        return;
+                    }
+                    this.oSettings.aPinnedTags.push(this.sActiveTag);
                 } else {
-                    var iIndex = this.aPinnedTags.indexOf(this.sActiveTag);
-                    this.aPinnedTags.splice(iIndex, 1);
+                    if (iIndex==-1) {
+                        return;
+                    }
+                    this.oSettings.aPinnedTags.splice(iIndex, 1);
                 }
-                console.log("bTagPinned set", this.aPinnedTags);
+                
+                window.oApplication.bShowLoadingScreen = true;
+            
+                this
+                    .$http
+                    .post(
+                        '',
+                        {
+                            action: 'save_settings',
+                            settings: JSON.stringify(this.oSettings)
+                        }
+                    ).then(function(oResponse)
+                    {
+                        window.oApplication.bShowLoadingScreen = false;
+
+                        if (oResponse.body.status=='error') {
+                            this.$snotify.error(oResponse.body.message, 'Error');
+                            return;
+                        }
+                    })
+                    .catch(function(sError)
+                    {
+                        this.$snotify.error(sError);
+                        window.oApplication.bShowLoadingScreen = false;
+                    });
+                console.log("bTagPinned set 2 ", this.oSettings.aPinnedTags);
             },
             get: function()
             {
-                console.log("bTagPinned get", this.aPinnedTags, this.aPinnedTags.indexOf(this.sActiveTag));
-                return this.aPinnedTags.indexOf(this.sActiveTag)!=-1;
+                console.log("bTagPinned get", this.oSettings.aPinnedTags, this.oSettings.aPinnedTags.indexOf(this.sActiveTag));
+                return this.oSettings.aPinnedTags.indexOf(this.sActiveTag)!=-1;
             }
         },
         bShowEditor: {
@@ -2794,6 +2835,10 @@ export default {
         console.log('tab mounted', this.oRepository, this.bActive);
         
         var oThis = this;
+        
+        for (var sKey in oThis.oRepository.oSettings) {
+            oThis.oSettings[sKey] = oThis.oRepository.oSettings[sKey];
+        }
         
         this.oSimpleMDE = new SimpleMDE({ 
             autoDownloadFontAwesome: false,
