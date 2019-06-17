@@ -3007,6 +3007,26 @@ export default {
                     },
                     className: "fa fa-bars",
                     title: "Paste as text"
+                },
+                {
+                    name: "paste-collapsable-block",
+                    action: function(oEditor)
+                    {
+                        var oCodeMirror = oThis.oSimpleMDE.codemirror;
+                        var sSelection = oCodeMirror.getSelection();
+                        
+                        oCodeMirror.replaceSelection(                        
+"\
+<details><summary>   </summary>\n\
+\n\
+"+sSelection+"\n\
+\n\
+</details>\n\
+"
+                        );
+                    },
+                    className: "fa fa-outdent",
+                    title: "Insert collapsable block"
                 }
             ]
         });
