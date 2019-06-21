@@ -67,31 +67,39 @@
                     >{{ fnGetArticlesCountByTagName('__all__') }}</b-badge>
                 </b-list-group-item>
 
-                <b-list-group-item 
-                    v-for="(sTag, iKey) in oSettings.aPinnedTags"
-                    href="#"
-                    class="d-flex justify-content-between align-items-center"
-                    :class="{'tags-list-item-empty': !fnGetArticlesCountByTagName(sTag) }"
-                    :active="sActiveTag==sTag"
-                    v-if="
-                        (
-                            sTagFilterString=='' 
-                            || (
-                                sTagFilterString!='' 
-                                && sTag.toLowerCase().indexOf(sTagFilterString.toLowerCase())!=-1
-                            )
-                        )
-                    "
-                    @click="fnSelectTag(sTag)"
+                <div 
+                    class="pinned-tags-group" 
+                    ref="pinned_tags_group"
                 >
-                    {{ sTag }}
-                    <b-badge 
-                        :variant="sActiveTag==sTag ? 'light' : 'primary'" 
-                        pill
-                    >{{ fnGetArticlesCountByTagName(sTag) }}</b-badge>
-                </b-list-group-item>
+                    <b-list-group-item 
+                        v-for="(sTag, iKey) in oSettings.aPinnedTags"
+                        href="#"
+                        class="d-flex justify-content-between align-items-center"
+                        :class="{'tags-list-item-empty': !fnGetArticlesCountByTagName(sTag) }"
+                        :active="sActiveTag==sTag"
+                        v-if="
+                            (
+                                sTagFilterString=='' 
+                                || (
+                                    sTagFilterString!='' 
+                                    && sTag.toLowerCase().indexOf(sTagFilterString.toLowerCase())!=-1
+                                )
+                            )
+                        "
+                        @click="fnSelectTag(sTag)"
+                    >
+                        {{ sTag }}
+                        <b-badge 
+                            :variant="sActiveTag==sTag ? 'light' : 'primary'" 
+                            pill
+                        >{{ fnGetArticlesCountByTagName(sTag) }}</b-badge>
+                    </b-list-group-item>
+                </div>
                 
-                <b-list-group class="tags-list-group">
+                <b-list-group 
+                    class="tags-list-group" 
+                    ref="tags_list_group" 
+                >
                     <b-list-group-item 
                         v-for="(aItem, sKey) in oRepository.oTags"
                         href="#"
@@ -2846,6 +2854,16 @@ export default {
         }
     },
     
+    updated: function()
+    {
+        var oThis = this;
+        
+        Vue.nextTick(function() 
+        {
+            
+        });
+    },
+   
     mounted: function()
     {
         console.log('tab mounted', this.oRepository, this.bActive);

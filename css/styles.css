@@ -47,11 +47,21 @@ body, html {
 .tags-sidebar {
     border-right: 1px solid rgba(0,0,0,.1);
     height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.pinned-tags-group {
+    display: flex;
+    flex-direction: column;
 }
 
 .tags-list-group {
-    height: calc(100% - 78px);
+    display: flex;
+    flex-direction: column;
+    flex: 1;
     overflow-y: scroll;
+    align-items: flex-start;
 }
 
 .tags-list-item-empty {
