@@ -101,6 +101,7 @@ body, html {
 
 .filter-row > div {
     padding: 5px 0px 5px 0px;
+    display: flex;
 }
 
 .filter-row .btn {
@@ -109,17 +110,17 @@ body, html {
 }
 
 .filter-input-col {
-    flex: 0 0 calc(100% - 120px);
-    max-width: calc(100% - 120px);
+    flex: 1;
 }
 
 .filter-buttons-col {
     flex: 0 0 30px;
-    max-width: 30px;    
+    margin-left: 1px;
 }
 
 .filter-toggle-buttons-col label,
 .filter-toggle-buttons-col {
+    min-width: 30px;
     display: block !important;
 }
 
@@ -202,12 +203,12 @@ body, html {
 }
 
 .article-view-space {
-    flex: 0 0 calc(100% - 245px);
+    flex: 1;
 }
 
 .article-view-button {
     flex: 0 0 30px;
-    max-width: 30px;
+    min-width: 30px;
     margin-right: 5px;
 }
 
@@ -221,12 +222,12 @@ body, html {
 }
 
 .page-content-space {
-    flex: 0 0 calc(100% - 35px);    
+    flex: 1;    
 }
 
 .page-content-button {
     flex: 0 0 30px;
-    max-width: 30px;
+    min-width: 30px;
     margin-right: 5px;
 }
 
