@@ -312,6 +312,9 @@ body, html {
     border-color: #007bff;
 }
 
+#MathJax_MenuFrame {
+    z-index: 9999;
+}
 
 .diff-modal-container {
     height: 500px;

@@ -410,6 +410,7 @@
                     <div class="buttons-row row flex-xl-nowrap2">
                         <div class="article-view-space">
                         </div>
+                        
                         <div class="article-view-button">
                             <b-form-checkbox 
                                 v-model="bLockArticleViewScroll"
@@ -420,12 +421,6 @@
                             </b-form-checkbox>
                         </div>
                         <div class="article-view-button">
-                            <b-button 
-                                @click="fnShowDiffModal"
-                                block
-                            ><i class="fa fa-align-justify"></i></b-button>
-                        </div>                        
-                        <div class="article-view-button">
                             <b-form-checkbox 
                                 v-model="bShowEditor"
                                 button
@@ -434,6 +429,19 @@
                                 <i class="fa fa-pencil"></i>
                             </b-form-checkbox>
                         </div>
+                        
+                        <div class="article-view-button">
+                            <b-button 
+                                @click="fnShowDiffModal"
+                                block
+                            ><i class="fa fa-align-justify"></i></b-button>
+                        </div>                        
+                        <div class="article-view-button">
+                            <b-button 
+                                @click="fnShowMathJaxModal"
+                                block
+                            ><i class="fa fa-times-rectangle-o"></i></b-button>
+                        </div>                        
                         <div class="article-view-button">
                             <b-button 
                                 @click="fnShowArticleGithubPage"
@@ -474,7 +482,7 @@
                 </div>
                 <div 
                     v-if="!bShowArticleViewContentsSpinner && fnArticleExists()"
-                    class="article-view-contents markdown-body"
+                    class="article-view-contents markdown-body mathjax"
                     ref="article_view_contents"
                     @scroll="fnArticleViewScroll"
                     v-html="sArticleViewContents"
@@ -482,6 +490,24 @@
                 </div>
             </div>
         </div>
+
+        <b-modal
+            id="mathjax-modal"
+            ref="mathjax_modal"
+            @show="fnResetMathJaxModal"
+            @ok="fnInsertMathJaxFromModal"
+        >            
+            <b-form-input
+                id="mathjax-input"
+                v-model="sMathJaxFormula"
+                ref="mathjax_input"
+            ></b-form-input>
+            <br>
+            <vue-mathjax 
+                :formula="sMathJaxFormula"
+                ref="mathjax_formula"
+            ></vue-mathjax>
+        </b-modal>
 
         <b-modal
             id="add-youtube-video-modal"
@@ -915,6 +941,8 @@ export default {
             sYoutubeVideoURL: '',
             
             i_bShowEditor: true,
+            
+            sMathJaxFormula: '',
             
             aImagesModalFiles: [],
             aImagesModalSelectedFiles: [],
@@ -2361,6 +2389,60 @@ export default {
             this.iFilesModalScrollPosition = this.$refs.files_modal_list.scrollTop;
         },
         
+        fnShowMathJaxModal: function()
+        {
+            this.$refs.mathjax_modal.hideFooter = true;
+            this.$refs.mathjax_modal.show();        
+        },
+        fnResetMathJaxModal: function()
+        {
+            
+        },
+        fnInsertMathJaxFromModal: function()
+        {
+            var oThis = this;
+            
+            var oSVG = this.$refs.mathjax_formula.$el.querySelector('svg');
+            
+            if (!oSVG) {
+                return;
+            }
+            
+            var oBlob = new Blob([oSVG.outerHTML], {type: "image/svg+xml"});
+            
+            window.oApplication.bShowLoadingScreen = true;
+
+            var oFormData = new FormData();
+
+            oFormData.append('action', 'upload_images');
+            oFormData.append('repository', oThis.oRepository.sName);
+            oFormData.append('pasted_files[]', oBlob);
+
+            oThis
+                .$http
+                .post(
+                    '',
+                    oFormData
+                ).then(function(oResponse)
+                {
+                    window.oApplication.bShowLoadingScreen = false;
+
+                    if (oResponse.body.status=='error') {
+                        oThis.$snotify.error(oResponse.body.message, 'Error');
+                        return;
+                    }
+
+                    var oCodeMirror = oThis.oSimpleMDE.codemirror;
+
+                    oCodeMirror.replaceSelection('![](/images/'+oResponse.body.data[0]+')');
+                })
+                .catch(function(sError)
+                {
+                    oThis.$snotify.error(sError);
+                    window.oApplication.bShowLoadingScreen = false;
+                });
+        },
+        
         fnShowDiffModal: function()
         {
             console.log('fnShowDiffModal');
@@ -3045,7 +3127,17 @@ export default {
                     },
                     className: "fa fa-outdent",
                     title: "Insert collapsable block"
-                }
+                },
+                {
+                    name: "insert-math",
+                    action: function(oEditor)
+                    {
+                        oThis.$refs.mathjax_modal.hideFooter = false;
+                        oThis.$refs.mathjax_modal.show();                       
+                    },
+                    className: "fa fa-times-rectangle-o",
+                    title: "Insert math formula"
+                },
             ]
         });
         

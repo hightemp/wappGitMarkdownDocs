@@ -823,7 +823,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             foreach ((array)@$_FILES['pasted_files']['name'] as $iIndex => $sName) {
                 $sNewFileName = md5_file($_FILES['pasted_files']['tmp_name'][$iIndex]);
                 
-                if (preg_match("/^image\/(.*)$/i", $_FILES['pasted_files']['type'][$iIndex], $aMatches)) {
+                if (preg_match("/^image\/(\w{1,5})(\+\w+)$/i", $_FILES['pasted_files']['type'][$iIndex], $aMatches)) {
                     $sNewFileName .= ".".$aMatches[1];
                 }
                 
@@ -844,7 +844,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             foreach ((array)@$_FILES['files']['name'] as $iIndex => $sName) {
                 $sNewFileName = md5_file($_FILES['files']['tmp_name'][$iIndex]);
                 
-                if (preg_match("/\.([^.]{1,5})$/i", $sName, $aMatches)) {
+                if (preg_match("/\.(\w{1,5})?$/i", $sName, $aMatches)) {
                     $sNewFileName .= ".".$aMatches[1];
                 }
                 
@@ -886,7 +886,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 
                 $sNewFileName = md5($sData);
                 
-                if (preg_match("/\.([^.]{1,5})$/i", $sURL, $aMatches)) {
+                if (preg_match("/\.(\w{1,5})$/i", $sURL, $aMatches)) {
                     $sNewFileName .= ".".$aMatches[1];
                 }
                 
@@ -938,7 +938,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             foreach ((array)@$_FILES['files']['name'] as $iIndex => $sName) {
                 $sNewFileName = md5_file($_FILES['files']['tmp_name'][$iIndex]);
                 
-                if (preg_match("/\.([^.]{1,5})$/i", $sName, $aMatches)) {
+                if (preg_match("/\.(\w{1,5})$/i", $sName, $aMatches)) {
                     $sNewFileName .= ".".$aMatches[1];
                 }
                 
@@ -980,7 +980,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 
                 $sNewFileName = md5($sData);
                 
-                if (preg_match("/\.([^.]{1,5})$/i", $sURL, $aMatches)) {
+                if (preg_match("/\.(\w{1,5})$/i", $sURL, $aMatches)) {
                     $sNewFileName .= ".".$aMatches[1];
                 }
                 
@@ -1185,6 +1185,16 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
 
 <body>
     <div id="application"></div>
+    <!--script type="text/x-mathjax-config">
+        MathJax.Hub.Config({
+            tex2jax: {
+                inlineMath: [["$","$"],["\\(","\\)"]],
+                processClass: "mathjax",
+                ignoreClass: "no-mathjax"
+            }
+        });
+    </script-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-AMS_SVG"></script>
     <script src="dist/main.js" type="text/javascript"></script>
 </body>
 

@@ -34,6 +34,11 @@ Vue.use(VueResource);
 
 Vue.http.options.emulateJSON = true;
 
+//import MathJax from 'mathjax'
+
+import VueMathjax from 'vue-mathjax'
+Vue.use(VueMathjax)
+
 console.log('start');
 
 window.addEventListener("unhandledrejection", function (event) {
