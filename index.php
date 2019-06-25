@@ -1188,8 +1188,8 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
     <script type="text/x-mathjax-config">
         MathJax.Hub.Config({
             tex2jax: {
-                inlineMath: [["$","$"]],
-                displayMath: [['$$', '$$']],
+                inlineMath: [["$","$"], ["\\(", "\\)"]],
+                displayMath: [['$$', '$$'], ["\\[", "\\]"]],
                 processClass: "mathjax",
                 ignoreClass: "no-mathjax"
             }
