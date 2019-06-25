@@ -86,7 +86,7 @@
                                 )
                             )
                         "
-                        @click="fnSelectTag(sTag)"
+                        @dblclick="fnSelectTag(sTag, true)"
                     >
                         {{ sTag }}
                         <b-badge 
@@ -116,7 +116,7 @@
                             )
                             && oSettings.aPinnedTags.indexOf(sKey)==-1
                         "
-                        @click="fnSelectTag(sKey)"
+                        @dblclick="fnSelectTag(sKey, true)"
                     >
                         {{ sKey }}
                         <b-badge 
