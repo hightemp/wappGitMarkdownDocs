@@ -1185,15 +1185,16 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
 
 <body>
     <div id="application"></div>
-    <!--script type="text/x-mathjax-config">
+    <script type="text/x-mathjax-config">
         MathJax.Hub.Config({
             tex2jax: {
-                inlineMath: [["$","$"],["\\(","\\)"]],
+                inlineMath: [["$","$"]],
+                displayMath: [['$$', '$$']],
                 processClass: "mathjax",
                 ignoreClass: "no-mathjax"
             }
         });
-    </script-->
+    </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-AMS_SVG"></script>
     <script src="dist/main.js" type="text/javascript"></script>
 </body>

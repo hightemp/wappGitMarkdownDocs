@@ -1831,7 +1831,7 @@ export default {
                             console.log('MathJsx', oThis.$refs.article_view_contents);
                             MathJax.Hub.Queue(["Typeset", MathJax.Hub, oThis.$refs.article_view_contents]);
                         }, 
-                        100
+                        300
                     );
                 })
                 .catch(function(sError)
