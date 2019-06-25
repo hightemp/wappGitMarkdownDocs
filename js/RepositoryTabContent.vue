@@ -500,6 +500,7 @@
             <b-form-input
                 id="mathjax-input"
                 v-model="sMathJaxFormula"
+                placeholder="$$x = {-b \pm \sqrt{b^2-4ac} \over 2a}$$"
                 ref="mathjax_input"
             ></b-form-input>
             <br>
@@ -1827,6 +1828,8 @@ export default {
                         function()
                         {
                             oThis.$refs.article_view_contents.scrollTop = oThis.iArticleViewScrollPosition;
+                            console.log('MathJsx', oThis.$refs.article_view_contents);
+                            MathJax.Hub.Queue(["Typeset", MathJax.Hub, oThis.$refs.article_view_contents]);
                         }, 
                         100
                     );
@@ -2402,13 +2405,54 @@ export default {
         {
             var oThis = this;
             
+            var aEscapes = [
+                [/\\/g, '\\\\'],
+                [/\*/g, '\\*'],
+                [/^-/g, '\\-'],
+                [/^\+ /g, '\\+ '],
+                [/^(=+)/g, '\\$1'],
+                [/^(#{1,6}) /g, '\\$1 '],
+                [/`/g, '\\`'],
+                [/^~~~/g, '\\~~~'],
+                [/\[/g, '\\['],
+                [/\]/g, '\\]'],
+                [/^</g, '\\<'],
+                [/^>/g, '\\>'],
+                [/_/g, '\\_'],
+                [/^(\d+)\. /g, '$1\\. ']
+            ];
+            
+            var sFormula = oThis.sMathJaxFormula;
+            
+            sFormula = aEscapes.reduce(function (sAccumulator, aEscape) {
+                return sAccumulator.replace(aEscape[0], aEscape[1])
+            }, sFormula);
+            
+            var oCodeMirror = oThis.oSimpleMDE.codemirror;
+            oCodeMirror.replaceSelection(sFormula);
+            
+            /*
             var oSVG = this.$refs.mathjax_formula.$el.querySelector('svg');
             
             if (!oSVG) {
                 return;
             }
             
-            var oBlob = new Blob([oSVG.outerHTML], {type: "image/svg+xml"});
+            var oSerializer = new XMLSerializer();
+            var sSource = oSerializer.serializeToString(oSVG);
+
+            //add name spaces.
+            if(!sSource.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)){
+                sSource = sSource.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
+            }
+            if(!sSource.match(/^<svg[^>]+"http\:\/\/www\.w3\.org\/1999\/xlink"/)){
+                sSource = sSource.replace(/^<svg/, '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
+            }
+
+            //add xml declaration
+            sSource = '<?xml version="1.0" standalone="no"?>\r\n' + sSource;
+            
+            var oBlob = new Blob([sSource], {type: "image/svg+xml"});
             
             window.oApplication.bShowLoadingScreen = true;
 
@@ -2441,6 +2485,7 @@ export default {
                     oThis.$snotify.error(sError);
                     window.oApplication.bShowLoadingScreen = false;
                 });
+            */
         },
         
         fnShowDiffModal: function()
@@ -3294,25 +3339,6 @@ export default {
             }
         );
         
-        oThis.fnSelectTag(localStorage.getItem(this.oRepository.sName+'_sActiveTag'));
-        console.log(this.oRepository.sName+'_iActiveArticle', localStorage.getItem(this.oRepository.sName+'_iActiveArticle'));
-        oThis.fnSelectArticleWithName(localStorage.getItem(this.oRepository.sName+'_iActiveArticle'));
-        
-        var sTranslationProvider = localStorage.getItem(this.oRepository.sName+'_sTranslationProvider');
-        if (sTranslationProvider !== null) 
-            this.sTranslationProvider = sTranslationProvider;
-        var sTranslationFromLanguage = localStorage.getItem(this.oRepository.sName+'_sTranslationFromLanguage');
-        if (sTranslationFromLanguage !== null) 
-            this.sTranslationFromLanguage = sTranslationFromLanguage;
-        var sTranslationToLanguage = localStorage.getItem(this.oRepository.sName+'_sTranslationToLanguage');
-        if (sTranslationToLanguage !== null) 
-            this.sTranslationToLanguage = sTranslationToLanguage;
-        
-        var bShowEditor = localStorage.getItem(this.oRepository.sName+'_bShowEditor');
-        if (bShowEditor !== null) {
-            this.bShowEditor = bShowEditor;
-        }
-        
         (function(CodeMirror) 
         {
             var Pos = CodeMirror.Pos;
@@ -3596,7 +3622,26 @@ export default {
                   this.setSelections(ranges, 0)
               })        
         
-        })(this.oSimpleMDE.CodeMirror);        
+        })(this.oSimpleMDE.CodeMirror);
+        
+        oThis.fnSelectTag(localStorage.getItem(this.oRepository.sName+'_sActiveTag'));
+        console.log(this.oRepository.sName+'_iActiveArticle', localStorage.getItem(this.oRepository.sName+'_iActiveArticle'));
+        oThis.fnSelectArticleWithName(localStorage.getItem(this.oRepository.sName+'_iActiveArticle'));
+        
+        var sTranslationProvider = localStorage.getItem(this.oRepository.sName+'_sTranslationProvider');
+        if (sTranslationProvider !== null) 
+            this.sTranslationProvider = sTranslationProvider;
+        var sTranslationFromLanguage = localStorage.getItem(this.oRepository.sName+'_sTranslationFromLanguage');
+        if (sTranslationFromLanguage !== null) 
+            this.sTranslationFromLanguage = sTranslationFromLanguage;
+        var sTranslationToLanguage = localStorage.getItem(this.oRepository.sName+'_sTranslationToLanguage');
+        if (sTranslationToLanguage !== null) 
+            this.sTranslationToLanguage = sTranslationToLanguage;
+        
+        var bShowEditor = localStorage.getItem(this.oRepository.sName+'_bShowEditor');
+        if (bShowEditor !== null) {
+            this.bShowEditor = bShowEditor;
+        }
     },
     
     created: function()
