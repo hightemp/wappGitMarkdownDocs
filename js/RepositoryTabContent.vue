@@ -432,6 +432,12 @@
                         
                         <div class="article-view-button">
                             <b-button 
+                                @click="fnShowHeadersModal"
+                                block
+                            ><i class="fa fa-list"></i></b-button>
+                        </div>                        
+                        <div class="article-view-button">
+                            <b-button 
                                 @click="fnShowDiffModal"
                                 block
                             ><i class="fa fa-align-justify"></i></b-button>
@@ -491,6 +497,26 @@
             </div>
         </div>
 
+        <b-modal
+            id="headers-modal"
+            ref="headers_modal"
+            :hide-footer="true"
+        >
+            <b-tabs>
+                <b-tab title="Headers">
+                    <ul>
+                        <li v-for="(oItem, iKey) in aHeaders">
+                            <b>{{ oItem.sTitle }}</b>
+                            <a :href="oItem.sHref">{{ oItem.sHref }}</a>
+                        </li>
+                    </ul>
+                </b-tab>
+                <b-tab title="Markdown">
+                    <textarea ref="headers_modal_markdown_textarea" style="width:100%;height:400px">{{ sHeadersMarkdown }}</textarea>
+                </b-tab>
+            </b-tabs>
+        </b-modal>
+        
         <b-modal
             id="mathjax-modal"
             ref="mathjax_modal"
@@ -943,6 +969,9 @@ export default {
             
             i_bShowEditor: true,
             
+            aHeaders: [],
+            sHeadersMarkdown: '',
+                
             sMathJaxFormula: '',
             
             aImagesModalFiles: [],
@@ -1127,6 +1156,40 @@ export default {
                 {
                     this.$snotify.error(sError);
                 });            
+        },
+        fnShowHeadersModal: function()
+        {
+            this.aHeaders = [];
+            
+            var oHeaders = this.$refs.article_view_contents.querySelectorAll('h1,h2,h3,h4,h5,h6');
+            this.sHeadersMarkdown = '';
+            var iCurrentLevel = 0;
+            
+            for (var iIndex=1; iIndex<oHeaders.length; iIndex++) {
+                var sID = oHeaders[iIndex].querySelector('a').getAttribute('id');
+                var iLevel = oHeaders[iIndex].tagName.replace('H', '')*1;
+
+                if (iLevel==1) {
+                    continue;
+                }
+                
+                if (iLevel>iCurrentLevel) {
+                    iCurrentLevel = iLevel - 2;
+                }
+                if (iLevel<iCurrentLevel) {
+                    iCurrentLevel = iLevel - 2;
+                }
+                
+                this.sHeadersMarkdown += '  '.repeat(iCurrentLevel)+'* ['+oHeaders[iIndex].innerText+'](#'+sID+")\n";
+                
+                this.aHeaders.push({
+                    iLevel: iLevel,
+                    sTitle: oHeaders[iIndex].innerText,
+                    sHref: '#'+sID
+                });
+            }
+            
+            this.$refs.headers_modal.show();
         },
         fnCheckNewTagForm: function()
         {
