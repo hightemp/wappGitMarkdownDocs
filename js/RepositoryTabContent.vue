@@ -76,7 +76,7 @@
                         href="#"
                         class="d-flex justify-content-between align-items-center"
                         :class="{'tags-list-item-empty': !fnGetArticlesCountByTagName(sTag) }"
-                        :active="sActiveTag==sTag"
+                        :active="aSelectedTags.indexOf(sTag)!=-1"
                         v-if="
                             (
                                 sTagFilterString=='' 
@@ -86,7 +86,8 @@
                                 )
                             )
                         "
-                        @dblclick="fnSelectTag(sTag, true)"
+                        @click="fnSelectTag(sTag, true)"
+                        @dblclick="fnSelectTag(sTag)"
                     >
                         {{ sTag }}
                         <b-badge 
@@ -105,7 +106,7 @@
                         href="#"
                         class="d-flex justify-content-between align-items-center"
                         :class="{'tags-list-item-empty': !fnGetArticlesCountByTagName(sKey) }"
-                        :active="sActiveTag==sKey"
+                        :active="aSelectedTags.indexOf(sKey)!=-1"
                         v-if="
                             (
                                 sTagFilterString=='' 
@@ -115,8 +116,10 @@
                                 )
                             )
                             && oSettings.aPinnedTags.indexOf(sKey)==-1
+                            && fnDoTagsHaveCollisions(sKey)
                         "
-                        @dblclick="fnSelectTag(sKey, true)"
+                        @click="fnSelectTag(sKey, true)"
+                        @dblclick="fnSelectTag(sKey)"
                     >
                         {{ sKey }}
                         <b-badge 
@@ -1005,6 +1008,7 @@ export default {
             bIgnoreArticleViewScrollEvents: false,
             
             sActiveTag: "__all__",
+            aSelectedTags: [],
             iActiveArticle: -1,
             sTagFilterString: "",
             sArticleFilterString: "",
@@ -1097,6 +1101,11 @@ export default {
         aArticles: function() 
         {
             console.log('aArticles', this.oRepository.aArticles, this.oRepository.oTags[this.sActiveTag]);
+            
+            if (this.aSelectedTags.length>1) {
+                return this.fnGetSelectedTagsArticles();
+            }
+
             if (this.sActiveTag=="__all__") {
                 return this.oRepository.aArticles;
             }
@@ -1403,7 +1412,55 @@ export default {
                     window.oApplication.bShowLoadingScreen = false;
                 });
         },
-        
+        fnGetSelectedTagsArticles(sWithTag)
+        {
+            var aResult = [];            
+            var aSelectedTags = [];
+            
+            for (var iIndexST=0; iIndexST<this.aSelectedTags.length; iIndexST++) {
+                aSelectedTags.push(this.aSelectedTags[iIndexST]);
+            }
+            
+            if (sWithTag) {
+                aSelectedTags.push(sWithTag);
+            }
+            
+            aResult = [];
+            
+            var aSelectedTagArticles = this.oRepository.oTags[aSelectedTags[0]];
+            
+            for (var iIndexSTA=0; iIndexSTA<aSelectedTagArticles.length; iIndexSTA++) {
+                aResult.push(aSelectedTagArticles[iIndexSTA]);
+            }
+
+            for (var iIndexST=1; iIndexST<aSelectedTags.length; iIndexST++) {
+                var sTag = aSelectedTags[iIndexST];
+
+                for (var iIndex1=0; iIndex1<aResult.length; iIndex1++) {
+                    var iArticleIndex = this.oRepository.oTags[sTag].indexOf(aResult[iIndex1]);
+
+                    if (iArticleIndex==-1) {
+                        aResult.splice(iIndex1, 1);
+                        iIndex1--;
+                    }
+                }
+            }
+            
+            return aResult;
+        },
+        fnDoTagsHaveCollisions(sTag)
+        {
+            if (this.sActiveTag=='__all__') {
+                return true;
+            }
+            
+            if (this.aSelectedTags.indexOf(sTag)!=-1) {
+                return true;
+            }
+            
+            return this.fnGetSelectedTagsArticles(sTag).length > 0;
+        },
+                
         fnCheckNewArticleForm: function()
         {
             console.log('fnCheckNewArticleForm');
@@ -1770,11 +1827,28 @@ export default {
             
             return this.oRepository.oTags[sTag].length;
         },
-        fnSelectTag: function(sTagName)
+        fnSelectTag: function(sTagName, bAddToSelection)
         {
             this.iActiveArticle = -1;
-            this.sActiveTag = sTagName;
-            localStorage.setItem(this.oRepository.sName+'_sActiveTag', sTagName);
+            
+            if (bAddToSelection && this.sActiveTag != '__all__') {
+                var iIndex = this.aSelectedTags.indexOf(sTagName);
+                
+                if (iIndex != -1) {
+                    this.aSelectedTags.splice(iIndex, 1);
+                } else {
+                    this.aSelectedTags.push(sTagName);
+                }
+                
+                if (!this.aSelectedTags.length) {
+                    return this.fnSelectTag('__all__');
+                }
+            } else {
+                this.sActiveTag = sTagName;
+                this.aSelectedTags = [sTagName];
+                localStorage.setItem(this.oRepository.sName+'_sActiveTag', sTagName);
+            }
+            localStorage.setItem(this.oRepository.sName+'_aSelectedTags', JSON.stringify(this.aSelectedTags));
         },
         fnArticleExists: function(iIndex)
         {
@@ -3688,8 +3762,16 @@ export default {
         
         })(this.oSimpleMDE.CodeMirror);
         
+        var sSelectedTags = localStorage.getItem(this.oRepository.sName+'_aSelectedTags');
+        
         oThis.fnSelectTag(localStorage.getItem(this.oRepository.sName+'_sActiveTag'));
-        console.log(this.oRepository.sName+'_iActiveArticle', localStorage.getItem(this.oRepository.sName+'_iActiveArticle'));
+        
+        console.log('oThis.fnSelectTag', this.oRepository.sName+'_iActiveArticle', localStorage.getItem(this.oRepository.sName+'_iActiveArticle'));
+        
+        if (sSelectedTags !== null) {
+            this.aSelectedTags = JSON.parse(sSelectedTags);
+        }
+
         oThis.fnSelectArticleWithName(localStorage.getItem(this.oRepository.sName+'_iActiveArticle'));
         
         var sTranslationProvider = localStorage.getItem(this.oRepository.sName+'_sTranslationProvider');
