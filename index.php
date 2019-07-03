@@ -527,7 +527,7 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
             fnCommitAndPushRepository($sRepositoryDir);
         }
         
-        if ($_POST['action']=='create_article') {
+        if ($_POST['action']=='add_article') {
             if (empty($_POST['repository'])) {
                 throw new Exception("Empty repository name");
             }
@@ -540,25 +540,27 @@ if(!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
                 throw new Exception("Can't write to file '$sArticleFile'");
             }
             
-            if ($_POST['tag']!='__all__') {
-                $sTagsDir = fnPath($sRepositoryDir, 'tags');
-                $sTagFile = fnPath($sTagsDir, fnFileNameEncode($_POST['tag']).'.md');
-                
-                $sArticleFileContents = safe_file_get_contents($sArticleFile);
-                $sTagFileContents = safe_file_get_contents($sTagFile);
-                
-                if (($iLinePos = strpos($sArticleContents, "**********"))===false) {
-                    $sArticleFileContents .= "\n\n**********\n";
-                }
-                
-                $sArticleFileContents .= "[".$_POST['tag']."](/tags/".rawurlencode(fnFileNameEncode($_POST['tag'])).".md)\n";
-                $sTagFileContents .= "[".$_POST['article']."](/articles/".rawurlencode(fnFileNameEncode($_POST['article'])).".md)\n";
-                
-                if (safe_file_put_contents($sArticleFile, $sArticleFileContents)===false) {
-                    throw new Exception("Can't write to file '$aArticleFile'");
-                }
-                if (safe_file_put_contents($sTagFile, $sTagFileContents)===false) {
-                    throw new Exception("Can't write to file '$sTagFile'");
+            if (!in_array('__all__', $_POST['tags'])) {
+                foreach ($_POST['tags'] as $sTag) {
+                    $sTagsDir = fnPath($sRepositoryDir, 'tags');
+                    $sTagFile = fnPath($sTagsDir, fnFileNameEncode($sTag).'.md');
+
+                    $sArticleFileContents = safe_file_get_contents($sArticleFile);
+                    $sTagFileContents = safe_file_get_contents($sTagFile);
+
+                    if (($iLinePos = strpos($sArticleFileContents, "**********"))===false) {
+                        $sArticleFileContents .= "\n\n**********\n";
+                    }
+
+                    $sArticleFileContents .= "[".$sTag."](/tags/".rawurlencode(fnFileNameEncode($sTag)).".md)\n";
+                    $sTagFileContents .= "[".$_POST['article']."](/articles/".rawurlencode(fnFileNameEncode($_POST['article'])).".md)\n";
+
+                    if (safe_file_put_contents($sArticleFile, $sArticleFileContents)===false) {
+                        throw new Exception("Can't write to file '$aArticleFile'");
+                    }
+                    if (safe_file_put_contents($sTagFile, $sTagFileContents)===false) {
+                        throw new Exception("Can't write to file '$sTagFile'");
+                    }
                 }
             }
             

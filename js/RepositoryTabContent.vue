@@ -1605,9 +1605,9 @@ export default {
                 .post(
                     '',
                     {
-                        action: 'create_article',
+                        action: 'add_article',
                         repository: this.oRepository.sName,
-                        tag: this.sActiveTag,
+                        tags: this.aSelectedTags,
                         article: this.sNewArticle
                     }
                 ).then(function(oResponse)
@@ -1622,10 +1622,13 @@ export default {
                     this.oRepository.aArticles.push(this.sNewArticle);
                     
                     if (this.sActiveTag!='__all__') {
-                        this.oRepository.oTags[this.sActiveTag].push(this.sNewArticle);
-                        this.fnSelectArticle(this.oRepository.oTags[this.sActiveTag].length-1);
+                        for (var iIndex=0; iIndex<this.aSelectedTags.length; iIndex++) {
+                            this.oRepository.oTags[this.aSelectedTags[iIndex]].push(this.sNewArticle);
+                        }
+                        //this.fnSelectArticle(this.oRepository.oTags[this.sActiveTag].length-1);
+                        this.fnSelectArticleWithName(this.sNewArticle);
                     } else {
-                        this.fnSelectArticle(this.oRepository.aArticles.length-1);
+                        this.fnSelectArticleWithName(this.sNewArticle);
                     }
                     
                     if (fnCallback) fnCallback.call(this);
@@ -1848,6 +1851,7 @@ export default {
                 this.aSelectedTags = [sTagName];
                 localStorage.setItem(this.oRepository.sName+'_sActiveTag', sTagName);
             }
+            console.log('localStorage.setItem', this.oRepository.sName+'_aSelectedTags', this.aSelectedTags);
             localStorage.setItem(this.oRepository.sName+'_aSelectedTags', JSON.stringify(this.aSelectedTags));
         },
         fnArticleExists: function(iIndex)
