@@ -3431,7 +3431,7 @@ export default {
                     var aURLs = [];
 
                     for (var iIndex=0; iIndex<oLinksMatch.length; iIndex++) {
-                        if ((oURLMatch = oLinksMatch[iIndex].match(/\((https?:.*?)\)/u)) !== null) {
+                        if ((oURLMatch = oLinksMatch[iIndex].match(/\((https?:.*?)(\s+["'].*?["'])?\)/u)) !== null) {
                             aURLs.push(oURLMatch[1]);
                         }
                     }
