@@ -15,7 +15,7 @@
                         <div class="filter-buttons-col">
                             <b-form-checkbox 
                                 v-model="bTagPinned"
-                                :disabled="sActiveTag=='__all__'"
+                                :disabled="sActiveTag==__ALL__"
                                 button
                                 class="filter-toggle-buttons-col"
                                 button-variant="info"
@@ -26,7 +26,7 @@
                         <div class="filter-buttons-col">
                             <b-button
                                 @click="fnShowRenameTagModal"
-                                :disabled="sActiveTag=='__all__'"
+                                :disabled="sActiveTag==__ALL__"
                                 block
                             >
                                 <i class="fa fa-pencil"></i>
@@ -45,7 +45,7 @@
                             <b-button 
                                 variant="danger" 
                                 @click="fnRemoveTag()"
-                                :disabled="sActiveTag=='__all__'"
+                                :disabled="sActiveTag==__ALL__"
                                 block
                             >
                                 <i class="fa fa-trash"></i>
@@ -57,14 +57,14 @@
                 <b-list-group-item
                     href="#"
                     class="d-flex justify-content-between align-items-center"
-                    :active="sActiveTag=='__all__'"
-                    @click="fnSelectTag('__all__')"
+                    :active="sActiveTag==__ALL__"
+                    @click="fnSelectTag(__ALL__)"
                 >
                     All
                     <b-badge 
-                        :variant="sActiveTag=='__all__' ? 'light' : 'primary'" 
+                        :variant="sActiveTag==__ALL__ ? 'light' : 'primary'" 
                         pill
-                    >{{ fnGetArticlesCountByTagName('__all__') }}</b-badge>
+                    >{{ fnGetArticlesCountByTagName(__ALL__) }}</b-badge>
                 </b-list-group-item>
 
                 <div 
@@ -867,6 +867,8 @@ var gfm = turndownPluginGfm.gfm;
 
 window.oTurndownService.use(gfm);
 
+const __ALL__ = '__all__';
+
 export default {
     name: 'RepositoryTabContent',
     
@@ -1399,7 +1401,7 @@ export default {
                     var sActiveTag = this.sActiveTag;
                     var sArticle = this.oRepository.oTags[sActiveTag][this.iActiveArticle];
                         
-                    this.fnSelectTag('__all__');
+                    this.fnSelectTag(__ALL__);
                     this.fnSelectArticleWithName(sArticle);
                     
                     delete this.oRepository.oTags[sActiveTag];
@@ -1450,7 +1452,7 @@ export default {
         },
         fnDoTagsHaveCollisions(sTag)
         {
-            if (this.sActiveTag=='__all__') {
+            if (this.sActiveTag==__ALL__) {
                 return true;
             }
             
@@ -1621,7 +1623,7 @@ export default {
                     
                     this.oRepository.aArticles.push(this.sNewArticle);
                     
-                    if (this.sActiveTag!='__all__') {
+                    if (this.sActiveTag!=__ALL__) {
                         for (var iIndex=0; iIndex<this.aSelectedTags.length; iIndex++) {
                             this.oRepository.oTags[this.aSelectedTags[iIndex]].push(this.sNewArticle);
                         }
@@ -1771,7 +1773,7 @@ export default {
                             if (oThis.iActiveArticle == iIndex) {
                                 var sArticle = oThis.oRepository.oTags[sTag][iIndex];
                                 
-                                oThis.fnSelectTag('__all__');
+                                oThis.fnSelectTag(__ALL__);
                                 oThis.fnSelectArticleWithName(sArticle);
                             }
                             oThis.oRepository.oTags[sTag].splice(iIndex, 1);
@@ -1824,7 +1826,7 @@ export default {
         },
         fnGetArticlesCountByTagName: function(sTag)
         {
-            if (sTag=='__all__') {
+            if (sTag==__ALL__) {
                 return this.oRepository.aArticles.length;
             }
             
@@ -1832,9 +1834,11 @@ export default {
         },
         fnSelectTag: function(sTagName, bAddToSelection)
         {
+            console.log('fnSelectTag', { sTagName, bAddToSelection });
+
             this.iActiveArticle = -1;
             
-            if (bAddToSelection && this.sActiveTag != '__all__') {
+            if (bAddToSelection && this.sActiveTag != __ALL__) {
                 var iIndex = this.aSelectedTags.indexOf(sTagName);
                 
                 if (iIndex != -1) {
@@ -1844,9 +1848,16 @@ export default {
                 }
                 
                 if (!this.aSelectedTags.length) {
-                    return this.fnSelectTag('__all__');
+                    return this.fnSelectTag(__ALL__);
                 }
             } else {
+                var aTag = this.oRepository.oTags[sTagName];
+
+                if (!aTag && sTagName != __ALL__) {
+                    console.error('!this.oRepository.oTags[sTagName]', aTag, sTagName);
+                    sTagName = __ALL__;
+                }
+
                 this.sActiveTag = sTagName;
                 this.aSelectedTags = [sTagName];
                 localStorage.setItem(this.oRepository.sName+'_sActiveTag', sTagName);
@@ -3768,7 +3779,13 @@ export default {
         
         var sSelectedTags = localStorage.getItem(this.oRepository.sName+'_aSelectedTags');
         
-        oThis.fnSelectTag(localStorage.getItem(this.oRepository.sName+'_sActiveTag'));
+        var sActiveTag = localStorage.getItem(this.oRepository.sName+'_sActiveTag')
+
+        if (sActiveTag) {
+            oThis.fnSelectTag(sActiveTag);
+        } else {
+            oThis.fnSelectTag(__ALL__);
+        }
         
         console.log('oThis.fnSelectTag', this.oRepository.sName+'_iActiveArticle', localStorage.getItem(this.oRepository.sName+'_iActiveArticle'));
         
