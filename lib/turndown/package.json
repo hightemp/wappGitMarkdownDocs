@@ -10,7 +10,8 @@
     "jsdom": false
   },
   "dependencies": {
-    "jsdom": "^11.9.0"
+    "jsdom": "^11.9.0",
+    "snyk": "^1.316.1"
   },
   "devDependencies": {
     "browserify": "^16.2.3",
@@ -42,7 +43,9 @@
     "build-umd": "rollup -c config/rollup.config.umd.js && rollup -c config/rollup.config.browser.umd.js",
     "build-iife": "rollup -c config/rollup.config.iife.js",
     "build-test": "browserify test/turndown-test.js --outfile test/turndown-test.browser.js",
-    "prepublish": "npm run build",
-    "test": "npm run build && npm run build-test && standard ./src/**/*.js && node test/turndown-test.js"
-  }
+    "prepublish": "npm run snyk-protect && npm run build",
+    "test": "npm run build && npm run build-test && standard ./src/**/*.js && node test/turndown-test.js",
+    "snyk-protect": "snyk protect"
+  },
+  "snyk": true
 }
