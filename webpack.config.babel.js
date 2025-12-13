@@ -1,46 +1,56 @@
 
+const path = require('path')
+
 const { VueLoaderPlugin } = require('vue-loader')
 
 module.exports = {
-    mode: 'development', //'production',
+    // режим задаем через CLI: webpack --mode=development|production
     devtool: 'eval-source-map',
-    entry: [
-        './js/main.js'
-    ],
+
+    entry: ['./js/main.js'],
+
+    output: {
+        path: path.resolve(__dirname, 'dist'),
+        filename: 'main.js'
+    },
+
     module: {
         rules: [
+            // словари typo-js (aff/dic) – импортируем как строку
             {
                 test: /\.(aff|dic)$/i,
-                use: 'raw-loader',
+                type: 'asset/source'
             },
+
             {
                 test: /\.vue$/,
                 loader: 'vue-loader',
                 options: {
-                    extractCSS: true,
                     loaders: {
-                        js: 'babel-loader!eslint-loader'
+                        js: 'babel-loader'
                     }
                 }
             },
+
             {
                 test: /\.js$/,
-                //exclude: /node_modules\/(?!vue-resource|vue|vue-snotify|simplemde|bootstrap-vue)/,
                 use: {
-                    loader: 'babel-loader',
+                    loader: 'babel-loader'
                 }
             },
+
             {
                 test: /\.css$/,
-                use: ['style-loader', 'css-loader'],
+                use: ['style-loader', 'css-loader']
             },
+
+            // картинки/шрифты: инлайним как data: URL (поведение как у base64-inline-loader)
             {
-                test: /\.(jpe?g|png|ttf|eot|svg|woff(2)?)(\?[a-z0-9=&.]+)?$/,
-                use: 'base64-inline-loader'
+                test: /\.(jpe?g|png|ttf|eot|svg|woff2?)$/i,
+                type: 'asset/inline'
             }
-        ],
+        ]
     },
-    plugins: [
-        new VueLoaderPlugin()
-    ]
+
+    plugins: [new VueLoaderPlugin()]
 }
