@@ -1,4 +1,6 @@
 /repositories
 /node_modules
+/dist
 .directory
 /nbproject
+*.log
